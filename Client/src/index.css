@@ -72,3 +72,12 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+.solidBackground{
+  background-color: #f9f9f9;
+  opacity: 1;
+}
+
+.clickable {
+  cursor: pointer
+}
