@@ -15,7 +15,7 @@ interface Props {
 function ArticleModal({ handleClose, open, article}: Props) {
     return(
         <>
-            <Modal sx={{height: '80vh', width: '80vw', py: '10vw', px: '10vh'}}
+            <Modal sx={{height: '80%', width: '80%', py: '10%', px: '10%'}}
                 open={open}
                 onClose={handleClose}
                 aria-labelledby='modal-modal-title'
@@ -23,10 +23,11 @@ function ArticleModal({ handleClose, open, article}: Props) {
             >
                 <Box
                     className='solidBackground'
+                    sx={{height: '80%', width: '80%', py: '10%', px: '10%'}}
                 >
                     {article ?(
                         <>
-                            <Typography variant="h1">{article.name}</Typography>
+                            <Typography variant="h3">{article.name}</Typography>
                             <p>{article.description}</p>
                         </>
                     ) : (
