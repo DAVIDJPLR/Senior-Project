@@ -3,7 +3,8 @@ import mysql.connector
 from mysql.connector import Error
 
 from flask import Flask, request, render_template, redirect, url_for, abort
-from flask import flash
+from flask import flash, jsonify
+from flask_cors import CORS, cross_origin
 from flask_sqlalchemy import SQLAlchemy
 
 import json
@@ -12,6 +13,8 @@ scriptdir = os.path.abspath(os.path.dirname(__file__))
 dbpath = os.path.join(scriptdir, 'banking.sqlite3')
 
 app = Flask(__name__)
+cors = CORS(app, resources={r"/search/": {"origins": "http://localhost:5173/"}})
+app.config['CORS_HEADERS'] = 'Content-Type'
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{dbpath}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -40,8 +43,9 @@ def post_article_form():
         return redirect(url_for('get_article_contact'))
     
 @app.get("/search/")
+@cross_origin()
 def view_articles_search():
-    articles = []
+    articles: list = []
 
     try:
         connection = mysql.connector.connect(
@@ -66,7 +70,7 @@ def view_articles_search():
                     "image_name": row[4]
                 })
 
-            return articles
+            return { "articles": articles }
     except Error as e:
         print("Error while connecting to MySQL: ", e)
     finally:

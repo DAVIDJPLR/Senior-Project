@@ -2,8 +2,9 @@ import { Modal, Typography, Box }  from '@mui/material';
 
 interface Article{
     id: number,
-    name: string
-    description: string
+    title: string,
+    description: string,
+    content: string
 }
 
 interface Props {
@@ -23,12 +24,12 @@ function ArticleModal({ handleClose, open, article}: Props) {
             >
                 <Box
                     className='solidBackground'
-                    sx={{height: '80%', width: '80%', py: '10%', px: '10%'}}
+                    sx={{height: '50%', width: '80%', py: '10%', px: '10%'}}
                 >
                     {article ?(
                         <>
-                            <Typography variant="h3">{article.name}</Typography>
-                            <p>{article.description}</p>
+                            <Typography variant="h3">{article.title}</Typography>
+                            <p>{article.content}</p>
                         </>
                     ) : (
                         <h1>No Article Available</h1>
