@@ -17,6 +17,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config['SECRET_KEY'] = 'correcthorsebatterystaple'
 
+
 db = SQLAlchemy(app)
 
 from forms import ArticleForm
