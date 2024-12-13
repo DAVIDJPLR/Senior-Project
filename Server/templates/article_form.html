@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title> Create Article </title>
+
+</head>
+<body>
+	<div>
+		<h1 class="text-center">Create New Article</h1>
+		<main>
+			<form method="POST">
+			  {{form.hidden_tag()}}
+		
+			  {{form.title.label}}
+			  {{form.title()}}
+			  <br>
+			  {{form.content.label}}
+			  {{form.content()}}
+			  <br>
+			  {{form.description.label}}
+			  {{form.description()}}
+			  <br>
+			  {{form.image_name.label}}
+			  {{form.image_name()}}
+			  <br>
+			  {{form.submit()}}
+			</form>
+		</main>
+	</div>
+</body>
+</html>
