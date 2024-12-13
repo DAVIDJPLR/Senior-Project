@@ -1,5 +1,5 @@
-import os
-from flask import Flask, render_template
+from flask import Flask, request, render_template, redirect, url_for, abort
+from flask import flash
 from flask_sqlalchemy import SQLAlchemy
 
 scriptdir = os.path.dirname(os.path.abspath(__file__))
@@ -23,6 +23,8 @@ class Article(db.Model):
     usefulness = db.Column(db.Float, nullable=False)
 
 db = SQLAlchemy(app)
+
+from forms import ArticleForm
 
 @app.get("/")
 def main():
