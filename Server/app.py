@@ -6,6 +6,8 @@ from flask import Flask, request, render_template, redirect, url_for, abort
 from flask import flash
 from flask_sqlalchemy import SQLAlchemy
 
+import json
+
 scriptdir = os.path.abspath(os.path.dirname(__file__))
 dbpath = os.path.join(scriptdir, 'banking.sqlite3')
 
@@ -55,9 +57,16 @@ def view_articles_search():
             cursor.execute(query)
 
             rows = cursor.fetchall()
-            print("Rows in the Articles table:")
             for row in rows:
-                articles.append(Article(id=row[0], title=row[1], content=row[2], description=row[3], image_name=row[4]))
+                articles.append({
+                    "id": row[0],
+                    "title": row[1],
+                    "content": row[2],
+                    "description": row[3],
+                    "image_name": row[4]
+                })
+
+            return articles
     except Error as e:
         print("Error while connecting to MySQL: ", e)
     finally:
