@@ -14,6 +14,9 @@ dbpath = os.path.join(scriptdir, 'banking.sqlite3')
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{dbpath}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+app.config['SECRET_KEY'] = 'correcthorsebatterystaple'
+
 
 db = SQLAlchemy(app)
 
@@ -25,19 +28,53 @@ def main():
         "message": "Hello World"
     }
 
-# TODO: add route to post article form
-@app.post('/articles/')
-def post_article_form():
+@app.get('/create-article/')
+def get_author_form():
     form = ArticleForm()
-    if form.validate():
-        article = Article(title=form.title.data, content=form.content.data)
-        db.session.add(article)
-        db.session.commit()
-        return redirect(url_for('get_article_form'))
-    if not form.validate():
-        for field,msg in form.errors.items():
-            flash(f"{field}: {msg}")
-        return redirect(url_for('get_article_contact'))
+    return render_template('article_form.html', form=form)
+
+@app.post('/create-article/')
+def post_article_form():
+
+    try:
+        connection = mysql.connector.connect(
+            host='10.18.103.22',
+            database='helpgccedu',
+            user='root',
+            password='C0dePr0j$'
+        )
+        if connection.is_connected():
+
+            cursor = connection.cursor()
+
+            form = ArticleForm()
+            if form.validate():
+                article = Article(title=form.title.data, content=form.content.data, description = form.description.data, image_name = form.image_name.data)
+                
+                query = """
+                INSERT INTO Articles (Title, Content, Article_Description, Image)
+                VALUES (%s, %s, %s, %s);
+                """
+
+                print(article.title)
+                print(article.content)
+
+                cursor.execute(query, (article.title, article.content, article.description, article.image_name))
+                connection.commit()          
+
+                return redirect(url_for('view_articles_search'))
+            if not form.validate():
+                for field,msg in form.errors.items():
+                    flash(f"{field}: {msg}")
+                    return redirect(url_for('view_articles_search'))
+                
+    except Error as e:
+        print("Error while connecting to MySQL: ", e)
+    finally:
+        if 'connection' in locals() and connection.is_connected():
+            cursor.close()
+            connection.close()
+            print("MySQL Connection is closed")
     
 @app.get("/search/")
 def view_articles_search():
@@ -75,15 +112,13 @@ def view_articles_search():
             connection.close()
             print("MySQL Connection is closed")
 
-    return render_template("search.html", articles=articles)
-
 class Article(db.Model):
     __tablename__ = 'Articles'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.Unicode, nullable=False)
-    content = db.Column(db.Unicode, nullable=False)
-    description = db.Column(db.Unicode, nullable=False)
-    image_name = db.Column(db.Unicode, nullable=False)
+    content = db.Column(db.Unicode)
+    description = db.Column(db.Unicode)
+    image_name = db.Column(db.Unicode)
     def __str__(self):
         return f"Article name: {self.title}"
     
