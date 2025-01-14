@@ -57,37 +57,36 @@ function UserArticleSearch() {
     }
 
     return(
-        <Container sx={{height: '100vh', py: 0}}>
-        <Typography variant='h1' sx={{ my: 4, textAlign: 'top'}}>Articles</Typography>
-        <Box 
-            sx={{ 
-            display:'flex', 
-            flexDirection: 'column',
-            justifyContent: "space-between",
-            gap: 2
-            }}
-        >
-            {articleList.map((article) => (
-            <Paper 
-                sx={{height: 125}} key={article.id} elevation={3}
-                onClick={() => {
-                    setCurrentArticle(article);
-                    handleArticleTileClick();
+        <div style={{ height: '80%', width: "100%", paddingTop: 0, paddingBottom: 0 }}>
+            <div 
+                style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    gap: '16px'
                 }}
-                className='clickable'
             >
-                <Typography variant="h3">{article.title}</Typography>
-                <Typography sx={{textAlign: 'left', px: 2}}>{article.description}</Typography>
-            </Paper>
-            ))}
-        </Box>
-        <Box sx={{height: 20}}></Box>
-        <ArticleModal
-            handleClose={handleCloseArticleModal}
-            open={articleModalStatus}
-            article={currentArticle}
-        />
-        </Container>
+                {articleList.map((article) => (
+                <Paper 
+                    sx={{height: 125}} key={article.id} elevation={3}
+                    onClick={() => {
+                        setCurrentArticle(article);
+                        handleArticleTileClick();
+                    }}
+                    className='clickable'
+                >
+                    <Typography variant="h3">{article.title}</Typography>
+                    <Typography sx={{textAlign: 'left', px: 2}}>{article.description}</Typography>
+                </Paper>
+                ))}
+            </div>
+            <div style={{height: 20}}></div>
+            <ArticleModal
+                handleClose={handleCloseArticleModal}
+                open={articleModalStatus}
+                article={currentArticle}
+            />
+        </div>
     );
 }
 
