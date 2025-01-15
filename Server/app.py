@@ -6,7 +6,7 @@ from flask import Flask, request, render_template, redirect, url_for, abort
 from flask import flash
 from flask_sqlalchemy import SQLAlchemy
 
-import json
+import json, datetime
 
 scriptdir = os.path.abspath(os.path.dirname(__file__))
 dbpath = os.path.join(scriptdir, 'banking.sqlite3')
@@ -31,7 +31,8 @@ def main():
 @app.get('/create-article/')
 def get_author_form():
     form = ArticleForm()
-    return render_template('article_form.html', form=form)
+    return render_template('article_form.html', form=form) # Change this to return a JSON object
+    # of the article we just created; NO RENDER TEMPLATE
 
 @app.post('/create-article/')
 def post_article_form():
@@ -76,9 +77,13 @@ def post_article_form():
             connection.close()
             print("MySQL Connection is closed")
     
-@app.get("/search/")
+@app.get("/articles/search/")
 def view_articles_search():
     articles = []
+    search = request.args.get("search")
+    user = request.args.get("user")
+    time = datetime.datetime.now()
+
 
     try:
         connection = mysql.connector.connect(
@@ -90,7 +95,7 @@ def view_articles_search():
         if connection.is_connected():
             cursor = connection.cursor()
 
-            query = "SELECT * FROM Articles;"
+            query = f"SELECT * FROM Articles WHERE Title LIKE '%{search}%';"
             cursor.execute(query)
 
             rows = cursor.fetchall()
@@ -102,6 +107,9 @@ def view_articles_search():
                     "description": row[3],
                     "image_name": row[4]
                 })
+
+            query = f"INSERT INTO Searches (User, Time, Search) VALUES ({user}, {time}, {search})"
+            cursor.execute(query)
 
             return articles
     except Error as e:
