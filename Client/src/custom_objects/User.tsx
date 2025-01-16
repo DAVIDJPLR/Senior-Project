@@ -1,5 +1,10 @@
+import { AdminPrivilege } from "./AdminPrivilege"
+
 export interface User{
-    id: number,
-    name: string,
-    email: string,
+    ID: number,
+    Email: string,
+    Device: string,
+    Major: string,
+    GradYear: number,
+    AdminPrivileges: AdminPrivilege[]
 }
