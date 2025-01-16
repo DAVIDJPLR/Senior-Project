@@ -1,6 +1,6 @@
 export interface Article{
-    id: number,
-    title: string,
-    description: string,
-    content: string
+    ID: number,
+    Title: string,
+    Article_Description: string,
+    Content: string
 }

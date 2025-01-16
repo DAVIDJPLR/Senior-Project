@@ -19,22 +19,22 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
     useEffect(() => {
         const someArticles: Article[] = [
             {
-                id: 1,
-                title: "Article 1",
-                description: "This is the first article",
-                content: "This is the content of the first article"
+                ID: 1,
+                Title: "Article 1",
+                Article_Description: "This is the first article",
+                Content: "This is the content of the first article"
             },
             {
-                id: 2,
-                title: "Article 2",
-                description: "This is the second article",
-                content: "This is the content of the second article"
+                ID: 2,
+                Title: "Article 2",
+                Article_Description: "This is the second article",
+                Content: "This is the content of the second article"
             },
             {
-                id: 3,
-                title: "Article 3",
-                description: "This is the third article",
-                content: "This is the content of the third article"
+                ID: 3,
+                Title: "Article 3",
+                Article_Description: "This is the third article",
+                Content: "This is the content of the third article"
             },
         ]
 
@@ -54,7 +54,7 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
             <SearchBar searchval={searchVal} setSearchVal={setsearchVal} handleKeyUp={handleKeyUp}></SearchBar>
             <div style={{height: "10px"}}></div>            
             {articles?.map((article) => {
-                return <ArticleCard article={article} lineNumber={3} key={article.id}/>;
+                return <ArticleCard article={article} lineNumber={3} key={article.ID}/>;
             })}
         </div>
     )
