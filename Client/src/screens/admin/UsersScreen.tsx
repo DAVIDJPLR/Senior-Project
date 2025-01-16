@@ -3,9 +3,11 @@ import { Screen } from "../../custom_objects/Screens";
 import { User } from "../../custom_objects/User";
 import { AdminPrivilege } from "../../custom_objects/AdminPrivilege";
 import AdminCard from "../../components/AdminCard";
-import { Typography } from "@mui/material";
+import { Typography, Button } from "@mui/material";
 import SearchBar from "../../components/SearchBar";
 import { useState } from "react";
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import { Add } from "@mui/icons-material";
 
 interface Props{
     currentScreen: Screen
@@ -34,6 +36,8 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
     const users: User[] = [
         {
             ID: 1,
+            FirstName: "David",
+            LastName: "Le Roux",
             Email: "dlaroux@azavar.com",
             Device: "device",
             Major: "Major",
@@ -42,6 +46,8 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
         },
         {
             ID: 2,
+            FirstName: "David",
+            LastName: "Le Roux",
             Email: "djpleroux@gmail.com",
             Device: "device",
             Major: "Major",
@@ -50,6 +56,8 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
         },
         {
             ID: 3,
+            FirstName: "David",
+            LastName: "Le Roux",
             Email: "lerouxdj21@gcc.edu",
             Device: "device",
             Major: "Major",
@@ -67,10 +75,14 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
     return(
         <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center"}}>
             <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
-            <div style={{height: "10%"}}></div>
-            <SearchBar searchval={searchVal} setSearchVal={setsearchVal} handleKeyUp={handleKeyUp}></SearchBar>
+            <div style={{width: "90%", height: "10%", display: "flex", flexDirection: "column", alignItems: "end", justifyContent: "center"}}>
+                <Button variant="outlined" sx={{height: "40px", width: "40px", borderWidth: "0px", padding: 0, borderRadius: "50%", display: "flex", justifyContent: "center", minWidth: 0, zIndex: 9999}}>
+                    <AddCircleOutlineIcon sx={{height: "40px", width: "40px"}}></AddCircleOutlineIcon>
+                </Button>
+            </div>
+            <SearchBar setSearchVal={setsearchVal} handleKeyUp={handleKeyUp} size={'small'}></SearchBar>
             <Typography style={{fontSize: "24px", fontWeight: "600"}}>Current Administrators</Typography>
-            {users.map((user) => <AdminCard user={user}></AdminCard>)}
+            {users.map((user) => <AdminCard user={user} key={user.ID}></AdminCard>)}
         </div>
     )
 }
