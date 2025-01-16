@@ -1,11 +1,5 @@
 import { Modal, Typography, Box }  from '@mui/material';
-
-interface Article{
-    id: number,
-    title: string,
-    description: string,
-    content: string
-}
+import { Article } from '../custom_objects/Article';
 
 interface Props {
     handleClose: () => void;
@@ -28,8 +22,8 @@ function ArticleModal({ handleClose, open, article}: Props) {
                 >
                     {article ?(
                         <>
-                            <Typography variant="h3">{article.title}</Typography>
-                            <p>{article.content}</p>
+                            <Typography variant="h3">{article.Title}</Typography>
+                            <p>{article.Content}</p>
                         </>
                     ) : (
                         <h1>No Article Available</h1>

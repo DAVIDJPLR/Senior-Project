@@ -12,8 +12,8 @@ function ArticleCard({ article, lineNumber }: Props){
     const heightString: string = height.toString() + "px";
     return (
         <div style={{width: "85%", height: heightString, display: "flex", flexDirection: "column", alignItems: "center", border: "1px solid grey", borderRadius: "20px", margin: "10px"}}>
-            <Typography style={{ fontSize: "18px", textAlign: "center", width: "95%", paddingTop: "5px", overflow: "hidden", fontWeight: "600", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical",}}>{article.title}</Typography>
-            <Typography style={{ fontSize: "16px", textAlign: "left", width: "95%", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: lineNumberString, WebkitBoxOrient: "vertical",}}>{article.description}</Typography>
+            <Typography style={{ fontSize: "18px", textAlign: "center", width: "95%", paddingTop: "5px", overflow: "hidden", fontWeight: "600", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical",}}>{article.Title}</Typography>
+            <Typography style={{ fontSize: "16px", textAlign: "left", width: "95%", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: lineNumberString, WebkitBoxOrient: "vertical",}}>{article.Article_Description}</Typography>
         </div>
     );
 }
