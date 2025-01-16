@@ -51,7 +51,7 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
         <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center"}}>
             <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></StudentAppBar>
             <div style={{height: "10%"}}></div>
-            <SearchBar searchval={searchVal} setSearchVal={setsearchVal} handleKeyUp={handleKeyUp}></SearchBar>
+            <SearchBar setSearchVal={setsearchVal} handleKeyUp={handleKeyUp} size={"medium"}></SearchBar>
             <div style={{height: "10px"}}></div>            
             {articles?.map((article) => {
                 return <ArticleCard article={article} lineNumber={3} key={article.ID}/>;
