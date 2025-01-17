@@ -4,7 +4,8 @@ import { Screen } from "../../custom_objects/Screens";
 import { useState, useEffect } from "react";
 import { Article } from "../../custom_objects/Article";
 import ArticleCard from "../../components/ArticleCard";
-import { Typography, Modal, Grid2, Button, TextField } from "@mui/material";
+import ArticleModal from "../../components/ArticleModal";
+import { Typography, Modal, Button, TextField } from "@mui/material";
 
 interface Props{
     currentScreen: Screen
@@ -18,6 +19,9 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
     const [articles, setArticles] = useState<Article[]>([]);
 
     const [openNoResultFoundModal, setOpenNoResultFoundModal] = useState(false);
+
+    const [currentArticle, setCurrentArticle] = useState<Article | null>(null);
+    const [openArticleModal, setOpenArticleModal] = useState(false);
 
     useEffect(() => {
         if (openNoResultFoundModal){
@@ -45,13 +49,20 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
             <SearchBar setSearchVal={setsearchVal} handleKeyUp={handleKeyUp} size={"medium"}></SearchBar>
             <div style={{ flexShrink: 0, height: "10px"}}></div>            
             {articles?.map((article) => {
-                return <ArticleCard article={article} lineNumber={3} key={article.ID}/>;
+                return <ArticleCard onClick={() => {
+                    setCurrentArticle(article);
+                    setOpenArticleModal(true)
+                }} article={article} lineNumber={3} key={article.ID}/>;
             })}
             {hasSearched && <Typography onClick={() => {
                 setOpenNoResultFoundModal(true);
             }} sx={{color: '#2872c2', cursor: 'pointer', textDecoration: 'underline', fontSize: '18px', fontWeight: '600', position: 'fixed', bottom: 20, ackdropFilter: 'blur(5px)', backgroundColor: 'rgba(255, 255, 255, 0.7)', padding: '10px', borderRadius: '8px'}}>I didn't find a solution</Typography>}
        
             <NoResultFoundModal open={openNoResultFoundModal} setOpen={setOpenNoResultFoundModal}/>
+            <ArticleModal handleClose={() => {
+                setOpenArticleModal(false);
+                setCurrentArticle(null);
+                }} open={openArticleModal} article={currentArticle}></ArticleModal>
         </div>
     )
 }
