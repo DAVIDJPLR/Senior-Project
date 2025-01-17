@@ -56,7 +56,7 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
             })}
             {hasSearched && <Typography onClick={() => {
                 setOpenNoResultFoundModal(true);
-            }} sx={{color: '#2872c2', cursor: 'pointer', textDecoration: 'underline', fontSize: '18px', fontWeight: '600', position: 'fixed', bottom: 20, ackdropFilter: 'blur(5px)', backgroundColor: 'rgba(255, 255, 255, 0.7)', padding: '10px', borderRadius: '8px'}}>I didn't find a solution</Typography>}
+            }} sx={{color: 'text.secondary', cursor: 'pointer', textDecoration: 'underline', fontSize: '18px', fontWeight: '600', position: 'fixed', bottom: 20, ackdropFilter: 'blur(5px)', backgroundColor: 'rgba(255, 255, 255, 0.7)', padding: '10px', borderRadius: '8px'}}>I didn't find a solution</Typography>}
        
             <NoResultFoundModal open={openNoResultFoundModal} setOpen={setOpenNoResultFoundModal}/>
             <ArticleModal handleClose={() => {
@@ -93,7 +93,7 @@ function NoResultFoundModal({ open, setOpen }: NoResultFoundModalProps){
                         id="outlined-multiline-static"
                         label="What problem are you having?"
                         multiline
-                        rows={20}
+                        rows={18}
                         defaultValue=""
                         onChange={(e) => setProblemDescription(e.target.value)}
                         variant="outlined"
@@ -101,7 +101,7 @@ function NoResultFoundModal({ open, setOpen }: NoResultFoundModalProps){
                     ></TextField>
                 </div>
                 <div style={{height: "10%", width: "100%", display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
-                    <Button variant="contained" sx={{height: "64px", width: "152px"}} onClick={() => {
+                    <Button variant="contained" sx={{height: "64px", width: "152px", backGroundColor: "primary"}} onClick={() => {
                         setOpen(false);
                         console.log(problemDescription);
                     }}>Submit</Button>

@@ -16,19 +16,19 @@ function StudentAppBar ({ currentScreen, setCurrentScreen }: Props){
                 <Grid2 key={"App_Bar_Nav"} sx={{width: '100%', height: "100%"}}>
                     <Grid2 container alignItems={"center"} justifyContent={"center"} direction={"row"} spacing={3} sx={{width: "100%", height: "100%"}}>
                         <Grid2 key={"Browse"}>
-                            {(currentScreen === StudentScreen.Browse) ? <Typography sx={{color: 'black', fontSize: '20px', fontWeight: '600'}}>Browse</Typography> : <Typography onClick={() => {setCurrentScreen(StudentScreen.Browse);}} sx={{color: '#2872c2', cursor: 'pointer', textDecoration: 'underline', fontSize: '18px', fontWeight: '600'}}>Browse</Typography>}
+                            {(currentScreen === StudentScreen.Browse) ? <Typography sx={{color: 'black', fontSize: '20px', fontWeight: '600'}}>Browse</Typography> : <Typography onClick={() => {setCurrentScreen(StudentScreen.Browse);}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline', fontSize: '18px', fontWeight: '600'}}>Browse</Typography>}
                         </Grid2>
                         <Grid2 key={"Divider_1"}>
                             <Divider orientation="vertical" variant="middle" flexItem sx={{ borderColor: 'black', height: "16px"}}></Divider>
                         </Grid2>
                         <Grid2 key={"Home"}>
-                        {(currentScreen === StudentScreen.Home) ? <Typography sx={{color: 'black', fontSize: '20px', fontWeight: '600'}}>Home</Typography> : <Typography onClick={() => {setCurrentScreen(StudentScreen.Home);}} sx={{color: '#2872c2', cursor: 'pointer', textDecoration: 'underline', fontSize: '18px', fontWeight: '600'}}>Home</Typography>}
+                        {(currentScreen === StudentScreen.Home) ? <Typography sx={{color: 'black', fontSize: '20px', fontWeight: '600'}}>Home</Typography> : <Typography onClick={() => {setCurrentScreen(StudentScreen.Home);}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline', fontSize: '18px', fontWeight: '600'}}>Home</Typography>}
                         </Grid2>
                         <Grid2 key={"Divider_2"}>
                             <Divider orientation="vertical" variant="middle" flexItem sx={{ borderColor: 'black', height: "16px"}}></Divider>
                         </Grid2>
                         <Grid2 key={"Recently_Viewed"}>
-                        {(currentScreen === StudentScreen.Recently_Viewed) ? <Typography sx={{color: 'black', fontSize: '20px', fontWeight: '600'}}>Recently Viewed</Typography> : <Typography onClick={() => {setCurrentScreen(StudentScreen.Recently_Viewed);}} sx={{color: '#2872c2', cursor: 'pointer', textDecoration: 'underline', fontSize: '18px', fontWeight: '600'}}>Recently Viewed</Typography>}  
+                        {(currentScreen === StudentScreen.Recently_Viewed) ? <Typography sx={{color: 'black', fontSize: '20px', fontWeight: '600'}}>Recently Viewed</Typography> : <Typography onClick={() => {setCurrentScreen(StudentScreen.Recently_Viewed);}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline', fontSize: '18px', fontWeight: '600'}}>Recently Viewed</Typography>}  
                         </Grid2>
                     </Grid2>
                 </Grid2>

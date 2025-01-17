@@ -8,7 +8,6 @@ import AdminArticles from "./screens/admin/ArticlesScreen";
 import AdminBacklog from "./screens/admin/BacklogScreen";
 import AdminHome from "./screens/admin/SplashScreen";
 import AdminUsers from "./screens/admin/UsersScreen";
-
 import './global.css';
 
 function App() {
