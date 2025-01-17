@@ -81,7 +81,7 @@ def post_article_form():
 def view_articles_search():
     articles = []
     search = request.args.get("search")
-    user = request.args.get("user")
+    userID = request.args.get("userID")
     time = datetime.datetime.now()
 
 
@@ -108,8 +108,12 @@ def view_articles_search():
                     "image_name": row[4]
                 })
 
-            query = f"INSERT INTO Searches (User, Time, Search) VALUES ({user}, {time}, {search})"
-            cursor.execute(query)
+            query = """
+                INSERT INTO Searches (SearchQuery, UserID, Timestamp)
+                VALUES (%s, %s, %s);
+                """
+            cursor.execute(query, (search, userID, time))
+            connection.commit()
 
             return articles
     except Error as e:
