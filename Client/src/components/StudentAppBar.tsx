@@ -8,7 +8,7 @@ interface Props{
 
 function StudentAppBar ({ currentScreen, setCurrentScreen }: Props){
     return (
-        <AppBar elevation={1} sx={{width: "100%", height: "8%", backgroundColor: 'transparent'}}>
+        <AppBar elevation={1} sx={{width: "100%", height: "8%", backgroundColor: 'white'}}>
             <Grid2 container direction={"row"} sx={{width: "100%", height: "100%"}}>
                 {/* <Grid2 key={"Left_Space"} sx={{width: "10%"}}>
 
