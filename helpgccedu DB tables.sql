@@ -6,12 +6,16 @@ CREATE TABLE IF NOT EXISTS Articles (
     Content VARCHAR(5000),
     Article_Description VARCHAR (500),
     Image VARCHAR(100),
+    ThumbsUp INT,
+    ThumbsDown INT,
     PRIMARY KEY (ID)
 );
 
 CREATE TABLE IF NOT EXISTS Users(
 	ID INT NOT NULL AUTO_INCREMENT,
     Email VARCHAR(50),
+    FName VARCHAR(20),
+    LName VARCHAR(20),
     Device VARCHAR(50),
     Major VARCHAR(50),
     GradYear INT,
@@ -82,6 +86,28 @@ CREATE TABLE IF NOT EXISTS Admins (
     primary key (UserID, PrivilegeID),
     foreign key (PrivilegeID) references AdminPrivileges(ID),
     foreign key (UserID) references Users(ID)
+);
+
+# Make SearchTime NOT NULL once Alex updates code
+CREATE TABLE IF NOT EXISTS Searches (
+	SearchID INT NOT NULL AUTO_INCREMENT,
+    SearchQuery VARCHAR(500) NOT NULL,
+    SearchTime timestamp,
+    NoSolutionID INT,
+    UserID INT,
+    TopResult INT,
+    SecondResult INT,
+    ThirdResult INT,
+    FourthResult INT,
+    FifthResult INT,
+    primary key (SearchID),
+    foreign key (UserID) references Users(ID),
+    foreign key (NoSolutionID) references NoSolutions(ID),
+    foreign key (TopResult) references Articles(ID),
+    foreign key (SecondResult) references Articles(ID),
+    foreign key (ThirdResult) references Articles(ID),
+    foreign key (FourthResult) references Articles(ID),
+    foreign key (FifthResult) references Articles(ID)
 );
 
 CREATE INDEX idx_feedback_articleid ON Feedback(ArticleID);
