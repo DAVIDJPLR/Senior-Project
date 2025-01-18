@@ -2,7 +2,7 @@ import os
 import mysql.connector
 from mysql.connector import Error
 
-from flask import Flask, request, render_template, redirect, url_for, abort
+from flask import Flask, request, render_template, redirect, url_for, abort, jsonify
 from flask import flash
 from flask_sqlalchemy import SQLAlchemy
 
@@ -28,11 +28,56 @@ def main():
         "message": "Hello World"
     }
 
-@app.get('/create-article/')
-def get_author_form():
-    form = ArticleForm()
-    return render_template('article_form.html', form=form) # Change this to return a JSON object
-    # of the article we just created; NO RENDER TEMPLATE
+@app.get('/article/')
+def get_article():
+
+    title = request.args.get("title")
+    articleData = []
+
+    try:
+        connection = mysql.connector.connect(
+            host='10.18.103.22',
+            database='helpgccedu',
+            user='root',
+            password='C0dePr0j$'
+        )
+
+        if connection.is_connected():
+            cursor = connection.cursor()
+
+            query = f"SELECT * FROM Articles WHERE Title = '{title}';"
+            cursor.execute(query)
+
+            rows = cursor.fetchall()
+            for row in rows:
+                articleData.append({
+                    "id": row[0],
+                    "title": row[1],
+                    "content": row[2],
+                    "description": row[3],
+                    "image_name": row[4]
+                })
+    
+            returnableArticle = {
+                'id': articleData[0],
+                'title': articleData[1],
+                'content': articleData[2],
+                'description': articleData[3],
+                'image_name': articleData[4]
+            }
+
+            connection.commit()          
+
+            return jsonify({'article': returnableArticle}), 200 # Change this to return a JSON object
+            # of the article we just created; NO RENDER TEMPLATE
+    except Error as e:
+        print("Error while connecting to MySQL: ", e)
+    finally:
+        if 'connection' in locals() and connection.is_connected():
+            cursor.close()
+            connection.close()
+            print("MySQL Connection is closed")
+
 
 @app.post('/create-article/')
 def post_article_form():
