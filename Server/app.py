@@ -10,7 +10,7 @@ from flask_sqlalchemy import SQLAlchemy
 import json
 
 scriptdir = os.path.abspath(os.path.dirname(__file__))
-dbpath = os.path.join(scriptdir, 'banking.sqlite3')
+dbpath = os.path.join(scriptdir, 'helpgccedu.sqlite3')
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/search/": {"origins": "http://localhost:5173/"}})
