@@ -5,13 +5,16 @@ from mysql.connector import Error
 from flask import Flask, request, render_template, redirect, url_for, abort, jsonify
 from flask import flash
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS, cross_origin
 
 import json, datetime
 
 scriptdir = os.path.abspath(os.path.dirname(__file__))
-dbpath = os.path.join(scriptdir, 'banking.sqlite3')
+dbpath = os.path.join(scriptdir, 'helpgccedu.sqlite3')
 
 app = Flask(__name__)
+cors = CORS(app, resources={r"/search/": {"origins": "http://localhost:5173/"}})
+app.config['CORS_HEADERS'] = 'Content-Type'
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{dbpath}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
@@ -31,7 +34,7 @@ def main():
 @app.get('/article/')
 def get_article():
 
-    title = request.args.get("title")
+    title = request.args.get("title", "How to connect to the GCC WiFi")
     articleData = []
 
     try:
@@ -43,33 +46,37 @@ def get_article():
         )
 
         if connection.is_connected():
-            cursor = connection.cursor()
 
-            query = f"SELECT * FROM Articles WHERE Title = '{title}';"
-            cursor.execute(query)
+            try:
+                cursor = connection.cursor()
 
-            rows = cursor.fetchall()
-            for row in rows:
-                articleData.append({
-                    "id": row[0],
-                    "title": row[1],
-                    "content": row[2],
-                    "description": row[3],
-                    "image_name": row[4]
-                })
+                query = f"SELECT * FROM helpgccedu.Articles WHERE Title = '{title}';"
+                cursor.execute(query)
+
+                rows = cursor.fetchall()
+                for row in rows:
+                    articleData.append({
+                        "id": row[0],
+                        "title": row[1],
+                        "content": row[2],
+                        "description": row[3],
+                        "image_name": row[4]
+                    })
     
-            returnableArticle = {
-                'id': articleData[0],
-                'title': articleData[1],
-                'content': articleData[2],
-                'description': articleData[3],
-                'image_name': articleData[4]
-            }
+                returnableArticle = {
+                    'id': articleData[0]['id'],
+                    'title': articleData[0]['title'],
+                    'content': articleData[0]['content'],
+                    'description': articleData[0]['description'],
+                    'image_name': articleData[0]['image_name']
+                }
 
-            connection.commit()          
+                connection.commit()          
 
-            return jsonify({'article': returnableArticle}), 200 # Change this to return a JSON object
-            # of the article we just created; NO RENDER TEMPLATE
+                return jsonify({'article': returnableArticle}), 200
+            except Exception as e:
+                return jsonify({'error': 'Internal Server Error'}), 500
+
     except Error as e:
         print("Error while connecting to MySQL: ", e)
     finally:
@@ -79,8 +86,13 @@ def get_article():
             print("MySQL Connection is closed")
 
 
-@app.post('/create-article/')
+@app.post('/article/')
 def post_article_form():
+
+    title = request.args.get("title", "Oh no my Iphone broke")
+    content = request.args.get("content", "Dropped in toilet")
+    description = request.args.get("description", "Whoops")
+    image_name = request.args.get("image_name", "ahh.jpg")
 
     try:
         connection = mysql.connector.connect(
@@ -90,29 +102,24 @@ def post_article_form():
             password='C0dePr0j$'
         )
         if connection.is_connected():
-
-            cursor = connection.cursor()
-
-            form = ArticleForm()
-            if form.validate():
-                article = Article(title=form.title.data, content=form.content.data, description = form.description.data, image_name = form.image_name.data)
+            try:
+                cursor = connection.cursor()
                 
                 query = """
                 INSERT INTO Articles (Title, Content, Article_Description, Image)
                 VALUES (%s, %s, %s, %s);
                 """
 
-                print(article.title)
-                print(article.content)
+                print(title)
+                print(content)
 
-                cursor.execute(query, (article.title, article.content, article.description, article.image_name))
+                cursor.execute(query, (title, content, description, image_name))
                 connection.commit()          
 
-                return redirect(url_for('view_articles_search'))
-            if not form.validate():
-                for field,msg in form.errors.items():
-                    flash(f"{field}: {msg}")
-                    return redirect(url_for('view_articles_search'))
+                return redirect(url_for('get_article'))
+            
+            except Exception as e:
+                return jsonify({'error': 'Internal Server Error'}), 500
                 
     except Error as e:
         print("Error while connecting to MySQL: ", e)
@@ -125,10 +132,9 @@ def post_article_form():
 @app.get("/articles/search/")
 def view_articles_search():
     articles = []
-    search = request.args.get("search")
-    userID = request.args.get("userID")
+    search = request.args.get("search", "GCC WiFi")
+    userID = request.args.get("userID", 1)
     time = datetime.datetime.now()
-
 
     try:
         connection = mysql.connector.connect(
@@ -138,29 +144,35 @@ def view_articles_search():
             password='C0dePr0j$'
         )
         if connection.is_connected():
-            cursor = connection.cursor()
 
-            query = f"SELECT * FROM Articles WHERE Title LIKE '%{search}%';"
-            cursor.execute(query)
+            try:
+                cursor = connection.cursor()
 
-            rows = cursor.fetchall()
-            for row in rows:
-                articles.append({
-                    "id": row[0],
-                    "title": row[1],
-                    "content": row[2],
-                    "description": row[3],
-                    "image_name": row[4]
-                })
+                query = f"SELECT * FROM Articles WHERE Title LIKE '%{search}%';"
+                cursor.execute(query)
 
-            query = """
-                INSERT INTO Searches (SearchQuery, UserID, Timestamp)
-                VALUES (%s, %s, %s);
-                """
-            cursor.execute(query, (search, userID, time))
-            connection.commit()
+                rows = cursor.fetchall()
+                for row in rows:
+                    articles.append({
+                        "id": row[0],
+                        "title": row[1],
+                        "content": row[2],
+                        "description": row[3],
+                        "image_name": row[4]
+                    })
 
-            return articles
+                query = """
+                    INSERT INTO Searches (SearchQuery, UserID, SearchTime)
+                    VALUES (%s, %s, %s);
+                    """
+                cursor.execute(query, (search, userID, time))
+                connection.commit()
+
+                return articles
+            
+            except Exception as e:
+                return jsonify({'error': 'Internal Server Error'}), 500
+
     except Error as e:
         print("Error while connecting to MySQL: ", e)
     finally:
@@ -178,53 +190,3 @@ class Article(db.Model):
     image_name = db.Column(db.Unicode)
     def __str__(self):
         return f"Article name: {self.title}"
-    
-# def connect_to_mysql():
-#     try:
-#         connection = mysql.connector.connect(
-#             host='10.18.103.22',
-#             database='helpgccedu',
-#             user='root',
-#             password='C0dePr0j$'
-#         )
-#         if connection.is_connected():
-#             db_info = connection.get_server_info()
-#             print("Connected to MYSQL Server version", db_info)
-
-#             cursor = connection.cursor()
-#             cursor.execute("SELECT DATABASE();")
-#             record = cursor.fetchone()
-#             print("You're connected to the database:", record[0])
-
-#             # query = "SELECT * FROM Articles;"
-#             # cursor.execute(query)
-
-#             # rows = cursor.fetchall()
-#             # print("Rows in the Articles table:")
-#             # for row in rows:
-#             #     print(row)
-
-#             query = """
-#             SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, COLUMN_KEY, COLUMN_DEFAULT
-#             FROM information_schema.COLUMNS
-#             WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s;
-#             """
-#             cursor.execute(query, ('helpgccedu', 'Articles'))
-
-#             # Fetch and print column metadata
-#             columns = cursor.fetchall()
-#             print("Columns in the Articles table:")
-#             for column in columns:
-#                 print(f"Name: {column[0]}, Type: {column[1]}, Nullable: {column[2]}, Key: {column[3]}, Default: {column[4]}")
-
-#     except Error as e:
-#         print("Error while connecting to MySQL: ", e)
-
-#     finally:
-#         if 'connection' in locals() and connection.is_connected():
-#             cursor.close()
-#             connection.close()
-#             print("MySQL Connection is closed")
-
-# # if __name__ == '__main__':
-# #     connect_to_mysql()
