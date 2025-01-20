@@ -3,11 +3,13 @@ import { Screen } from "../../custom_objects/Screens";
 import { User } from "../../custom_objects/User";
 import { AdminPrivilege } from "../../custom_objects/AdminPrivilege";
 import AdminCard from "../../components/AdminCard";
-import { Typography, Button, Popover, Modal } from "@mui/material";
+import { Typography, Button, Popover, Modal, Table, TableBody, TableRow, TableCell, TableContainer } from "@mui/material";
 import SearchBar from "../../components/SearchBar";
 import { useState } from "react";
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import UserCard from "../../components/UserCard";
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
 
 interface Props{
     currentScreen: Screen
@@ -17,7 +19,12 @@ interface Props{
 function AdminUsers({ currentScreen, setCurrentScreen }: Props){
 
     const [searchVal, setSearchVal] = useState("");
+
+    const [openAdminModal, setOpenAdminModal] = useState(false)
+
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+    const [selectedAdmin, setSelectedAdmin] = useState<User | null>(null)
 
     const privileges: AdminPrivilege[] = [
         {
@@ -98,7 +105,11 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
             </div>
             <SearchBar setSearchVal={setSearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={'small'} />
             <Typography style={{ fontSize: "24px", fontWeight: "600" }}>Current Administrators</Typography>
-            {users.map((user) => <AdminCard user={user} key={user.ID} />)}
+            {users.map((user) => <AdminCard user={user} key={user.ID} 
+                onClick={() => {
+                    setSelectedAdmin(user);
+                    setOpenAdminModal(true);
+                }} />)}
             <Popover
                 id={id}
                 open={open}
@@ -116,28 +127,96 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
             >
                 <UserModal />
             </Popover>
+
+            <AdminModal open={openAdminModal} handleClose={ () => {setOpenAdminModal(false)} } selectedAdmin={selectedAdmin}></AdminModal>
         </div>
     );
 }
 
 interface AdminModalProps{
     open: boolean,
-    handleClose: () => void
+    handleClose: () => void,
+    selectedAdmin: User | null
 }
 
-function AdminModal({ open, handleClose }: AdminModalProps) {
+function AdminModal({ open, handleClose, selectedAdmin }: AdminModalProps) {
+
+    const [adminPrivileges, setAdminPrivileges] = useState<AdminPrivilege[]>(
+        selectedAdmin?.AdminPrivileges || []
+    );
+    
+    const privileges: AdminPrivilege[] = [
+        { ID: 1, PrivilegeName: 'Privilege 1' },
+        { ID: 2, PrivilegeName: 'Privilege 2' },
+        { ID: 3, PrivilegeName: 'Privilege 3' },
+        { ID: 4, PrivilegeName: 'Privilege 4' },
+        { ID: 5, PrivilegeName: 'Privilege 5' },
+    ];
+
+    const togglePrivilege = (privilege: AdminPrivilege) => {
+        if (adminPrivileges.some((p) => p.ID === privilege.ID)) {
+            // Remove the privilege
+            setAdminPrivileges((prev) => prev.filter((p) => p.ID !== privilege.ID));
+        } else {
+            // Add the privilege
+            setAdminPrivileges((prev) => [...prev, privilege]);
+        }
+    };
+
     return(
         <Modal 
             open={open}
             onClose={handleClose}
             aria-labelledby="modal-modal-title"
             aria-describedby="modal-modal-description"
-            sx={{display: 'flex', alignItems: 'center', justifyContent: 'center', height: "100%", width: "100%"}}
+            sx={{display: 'flex', alignItems: 'center', justifyContent: 'center', height: "100%", width: "100%", zIndex: 9999}}
         >
             <div
-                style={{height: '70%', width: '80%', backgroundColor: 'white', padding: '20px', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}
+                style={{height: '70%', width: '60%', backgroundColor: 'white', padding: '10px', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}
             >
-
+                <Typography sx={{fontSize: "22px", fontWeight: "600"}}>{selectedAdmin?.FirstName} {selectedAdmin?.LastName}</Typography>
+                <Typography   sx={{fontSize: "12px", fontweight: "500", textDecoration: "underline", color: "secondary.main", cursor: "pointer"}}>{selectedAdmin?.Email}</Typography>
+                <TableContainer sx={{ maxHeight: '70%', width: '90%', margin: "10px", border: "1px solid grey" }}>
+                    <Table>
+                        <TableBody>
+                            {privileges.map((privilege) =>(
+                                <TableRow key={privilege.ID}>
+                                    <TableCell sx={{width: "70%"}}>{privilege.PrivilegeName}</TableCell>
+                                    <TableCell sx={{width: "10%"}}>
+                                        <CheckIcon
+                                            onClick={() => togglePrivilege(privilege)}
+                                            sx={{
+                                                cursor: 'pointer',
+                                                color: adminPrivileges.some(
+                                                    (p) => p.ID === privilege.ID
+                                                )
+                                                    ? 'green'
+                                                    : 'grey',
+                                            }}
+                                        />
+                                    </TableCell>
+                                    <TableCell sx={{width: "10%"}}>
+                                        <CloseIcon
+                                            onClick={() => togglePrivilege(privilege)}
+                                            sx={{
+                                                cursor: 'pointer',
+                                                color: adminPrivileges.some(
+                                                    (p) => p.ID === privilege.ID
+                                                )
+                                                    ? 'grey'
+                                                    : 'red',
+                                            }}
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+                <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: "20px"}}>
+                    <Button variant="contained">Delete Admin</Button>
+                    <Button variant="contained" sx={{backgroundColor: "green"}}>Save Changes</Button>
+                </div>
             </div>
         </Modal>
     );
@@ -154,9 +233,11 @@ function UserModal() {
     };
 
     return (
-        <div style={{width: "40vw", height: "50vh", paddingTop: '16px', backgroundColor: 'white', borderRadius: '8px', display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-            <SearchBar setSearchVal={setSearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={'small'} />
-            {users.slice(0, 3).map((user) => <UserCard user={user} key={user.ID} onClick={() => {}} />)}
+        <div style={{width: "55vw", height: "50vh", paddingTop: '16px', backgroundColor: 'white', borderRadius: '8px', display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+            <SearchBar setSearchVal={setSearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={'small'}/>
+            <div style={{width: "100%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto"}}>
+                {users.map((user) => <UserCard user={user} key={user.ID} onClick={() => {}} />)}
+            </div>
         </div>
     );
 }
