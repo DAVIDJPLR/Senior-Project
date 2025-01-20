@@ -7,7 +7,6 @@ import { Typography, Button } from "@mui/material";
 import SearchBar from "../../components/SearchBar";
 import { useState } from "react";
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import { Add } from "@mui/icons-material";
 
 interface Props{
     currentScreen: Screen
@@ -79,6 +78,7 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
                 <Button variant="outlined" sx={{height: "40px", width: "40px", borderWidth: "0px", padding: 0, borderRadius: "50%", display: "flex", justifyContent: "center", minWidth: 0, zIndex: 9999}}>
                     <AddCircleOutlineIcon sx={{height: "40px", width: "40px"}}></AddCircleOutlineIcon>
                 </Button>
+                
             </div>
             <SearchBar setSearchVal={setsearchVal} handleKeyUp={handleKeyUp} size={'small'}></SearchBar>
             <Typography style={{fontSize: "24px", fontWeight: "600"}}>Current Administrators</Typography>

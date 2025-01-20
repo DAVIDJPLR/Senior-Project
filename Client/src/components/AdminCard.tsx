@@ -19,7 +19,7 @@ function AdminCard({ user }: Props){
                     <Typography style={{ fontSize: "12px", textAlign: "center", width: "95%", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical",}}>{user.Email}</Typography>
                 </Grid2>
                 <Grid2 sx={{width: "33%"}}>
-                    <Typography style={{ fontSize: "12px", textAlign: "right", width: "95%", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", color: '#2872c2', cursor: 'pointer', textDecoration: 'underline'}}>Manage User</Typography>
+                    <Typography sx={{ fontSize: "12px", textAlign: "right", width: "95%", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", color: 'text.secondary', cursor: 'pointer', textDecoration: 'underline'}}>Manage User</Typography>
                 </Grid2>
             </Grid2>
             <Typography style={{ fontSize: "12px", textAlign: "center", width: "95%", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical",}}>{privilegeString}</Typography>
