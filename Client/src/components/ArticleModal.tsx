@@ -31,7 +31,6 @@ function ArticleModal({ handleClose, open, article}: Props) {
             sx={{display: 'flex', alignItems: 'center', justifyContent: 'center', height: "100%", width: "100%"}}
         >
             <div
-                className='solidBackground'
                 style={{height: '70%', width: '80%', backgroundColor: 'white', padding: '20px', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}
             >
                 {article ?(
