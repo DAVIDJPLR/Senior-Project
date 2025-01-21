@@ -31,6 +31,8 @@ def main():
         "message": "Hello World"
     }
 
+from models import Article, AdminPrivilege, Feedback, NoSolution, Search, Tag, User
+
 @app.get('/article/')
 def get_article():
 
@@ -50,25 +52,19 @@ def get_article():
             try:
                 cursor = connection.cursor()
 
-                query = f"SELECT * FROM helpgccedu.Articles WHERE Title = '{title}';"
-                cursor.execute(query)
+                #query = f"SELECT * FROM helpgccedu.Articles WHERE Title = '{title}';"
 
-                rows = cursor.fetchall()
-                for row in rows:
-                    articleData.append({
-                        "id": row[0],
-                        "title": row[1],
-                        "content": row[2],
-                        "description": row[3],
-                        "image_name": row[4]
-                    })
+                art = db.Article.query.filter(Article.title == title).all()
+
+
+                #cursor.execute(query)
     
                 returnableArticle = {
-                    'id': articleData[0]['id'],
-                    'title': articleData[0]['title'],
-                    'content': articleData[0]['content'],
-                    'description': articleData[0]['description'],
-                    'image_name': articleData[0]['image_name']
+                    'id': art.id,
+                    'title': art.title,
+                    'content': art.content,
+                    'description': art.article_description,
+                    'image_name': art.image
                 }
 
                 connection.commit()          
@@ -105,16 +101,13 @@ def post_article_form():
             try:
                 cursor = connection.cursor()
                 
-                query = """
-                INSERT INTO Articles (Title, Content, Article_Description, Image)
-                VALUES (%s, %s, %s, %s);
-                """
+                art = Article(title=title, content=content, article_description=description, image=image_name)
 
-                print(title)
-                print(content)
+                db.session.add(art)
+                db.session.commit()
 
-                cursor.execute(query, (title, content, description, image_name))
-                connection.commit()          
+                #cursor.execute(query, (title, content, description, image_name))
+                #connection.commit()          
 
                 return redirect(url_for('get_article'))
             
@@ -148,25 +141,30 @@ def view_articles_search():
             try:
                 cursor = connection.cursor()
 
-                query = f"SELECT * FROM Articles WHERE Title LIKE '%{search}%';"
-                cursor.execute(query)
+                #query = f"SELECT * FROM Articles WHERE Title LIKE '%{search}%';"
+                #cursor.execute(query)
 
-                rows = cursor.fetchall()
-                for row in rows:
+                art_list = db.Article.query.filter(Article.title.contains(search)).all()
+
+                for art in art_list:
                     articles.append({
-                        "id": row[0],
-                        "title": row[1],
-                        "content": row[2],
-                        "description": row[3],
-                        "image_name": row[4]
+                        "id": art.id,
+                        "title": art.title,
+                        "content": art.content,
+                        "description": art.article_description,
+                        "image_name": art.image
                     })
 
-                query = """
-                    INSERT INTO Searches (SearchQuery, UserID, SearchTime)
-                    VALUES (%s, %s, %s);
-                    """
-                cursor.execute(query, (search, userID, time))
-                connection.commit()
+                # query = """
+                #     INSERT INTO Searches (SearchQuery, UserID, SearchTime)
+                #     VALUES (%s, %s, %s);
+                #     """
+                
+                query = Search(searchID=userID, searchQuery=search, searchTime=time)
+                db.session.add(query)
+
+                # cursor.execute(query, (search, userID, time))
+                # connection.commit()
 
                 return articles
             
@@ -181,12 +179,12 @@ def view_articles_search():
             connection.close()
             print("MySQL Connection is closed")
 
-class Article(db.Model):
-    __tablename__ = 'Articles'
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.Unicode, nullable=False)
-    content = db.Column(db.Unicode)
-    description = db.Column(db.Unicode)
-    image_name = db.Column(db.Unicode)
-    def __str__(self):
-        return f"Article name: {self.title}"
+# class Article(db.Model):
+#     __tablename__ = 'Articles'
+#     id = db.Column(db.Integer, primary_key=True)
+#     title = db.Column(db.Unicode, nullable=False)
+#     content = db.Column(db.Unicode)
+#     description = db.Column(db.Unicode)
+#     image_name = db.Column(db.Unicode)
+#     def __str__(self):
+#         return f"Article name: {self.title}"
