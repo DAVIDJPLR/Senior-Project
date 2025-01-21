@@ -12,7 +12,7 @@ import './global.css';
 
 function App() {
 
-    const [admin, setAdmin] = useState(true);
+    const [admin, setAdmin] = useState(false);
     const [currentScreen, setCurrentScreen] = useState<Screen>(StudentScreen.Home)
 
     useEffect(() => {

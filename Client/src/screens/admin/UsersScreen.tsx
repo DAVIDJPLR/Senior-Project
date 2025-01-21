@@ -5,7 +5,7 @@ import { AdminPrivilege } from "../../custom_objects/AdminPrivilege";
 import AdminCard from "../../components/AdminCard";
 import { Typography, Button, Popover, Modal, Table, TableBody, TableRow, TableCell, TableContainer } from "@mui/material";
 import SearchBar from "../../components/SearchBar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import UserCard from "../../components/UserCard";
 import CheckIcon from '@mui/icons-material/Check';
@@ -144,6 +144,10 @@ function AdminModal({ open, handleClose, selectedAdmin }: AdminModalProps) {
     const [adminPrivileges, setAdminPrivileges] = useState<AdminPrivilege[]>(
         selectedAdmin?.AdminPrivileges || []
     );
+
+    useEffect(() => {
+        setAdminPrivileges(selectedAdmin?.AdminPrivileges || [])
+    }, [open]);
     
     const privileges: AdminPrivilege[] = [
         { ID: 1, PrivilegeName: 'Privilege 1' },
@@ -233,7 +237,7 @@ function UserModal() {
     };
 
     return (
-        <div style={{width: "55vw", height: "50vh", paddingTop: '16px', backgroundColor: 'white', borderRadius: '8px', display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+        <div style={{width: "40vw", height: "50vh", paddingTop: '16px', backgroundColor: 'white', borderRadius: '8px', display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
             <SearchBar setSearchVal={setSearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={'small'}/>
             <div style={{width: "100%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto"}}>
                 {users.map((user) => <UserCard user={user} key={user.ID} onClick={() => {}} />)}
