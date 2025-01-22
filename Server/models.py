@@ -1,19 +1,19 @@
 from flask_sqlalchemy import SQLAlchemy
 from app import db
 
-ViewHistory = db.Table(
-    'ViewHistory',
-    db.Column('articleID', db.Integer, db.ForeignKey('Articles.ID'), primary_key=True),
-    db.Column('userID', db.Integer, db.ForeignKey('Users.ID'), primary_key=True),
-    db.Column('view_time', db.DateTime, default=db.func.now(), primary_key=True)
-)
+# ViewHistory = db.Table(
+#     'ViewHistory',
+#     db.Column('articleID', db.Integer, db.ForeignKey('Articles.ID'), primary_key=True),
+#     db.Column('userID', db.Integer, db.ForeignKey('Users.ID'), primary_key=True),
+#     db.Column('view_time', db.DateTime, default=db.func.now(), primary_key=True)
+# )
 
-EditHistory = db.Table(
-    'EditHistory',
-    db.Column('articleID', db.Integer, db.ForeignKey('Articles.ID'), primary_key=True),
-    db.Column('userID', db.Integer, db.ForeignKey('Users.ID'), primary_key=True),
-    db.Column('edit_time', db.DateTime, default=db.func.now(), primary_key=True)
-)
+# EditHistory = db.Table(
+#     'EditHistory',
+#     db.Column('articleID', db.Integer, db.ForeignKey('Articles.ID'), primary_key=True),
+#     db.Column('userID', db.Integer, db.ForeignKey('Users.ID'), primary_key=True),
+#     db.Column('edit_time', db.DateTime, default=db.func.now(), primary_key=True)
+# )
 
 Admins = db.Table(
     'Admins',
@@ -27,6 +27,24 @@ ArticleTags = db.Table(
     db.Column('tagID', db.Integer, db.ForeignKey('Tags.ID'), primary_key=True)
 )
 
+class EditHistory(db.Model):
+    __tablename__= 'EditHistory'
+    ArticleID = db.Column(db.Integer, db.ForeignKey('Articles.ID'), nullable=False)
+    UserID = db.Column(db.Integer, db.ForeignKey('Users.ID'), nullable=False)
+    Edit_Time = db.Column(db.DateTime, default=db.func.now(), primary_key=True)
+    
+    User = db.relationship('User', back_populates='Edits', lazy='select')
+    Article = db.relationship('Article', back_populates='Edits', lazy='select')
+
+class ViewHistory(db.Model):
+    __tablename__= 'ViewHistory'
+    ArticleID = db.Column(db.Integer, db.ForeignKey('Articles.ID'), nullable=False)
+    UserID = db.Column(db.Integer, db.ForeignKey('Users.ID'), nullable=False)
+    View_Time = db.Column(db.DateTime, default=db.func.now(), primary_key=True)
+    
+    User = db.relationship('User', back_populates='Views', lazy='select')
+    Article = db.relationship('Article', back_populates='Views', lazy='select')
+
 class Article(db.Model):
     __tablename__ = 'Articles'
     ID = db.Column(db.Integer, primary_key=True)
@@ -37,11 +55,12 @@ class Article(db.Model):
     thumbsUp = db.Column(db.Integer, nullable=True)
     thumbsDown = db.Column(db.Integer, nullable=True)
 
-    viewedBy = db.relationship('Users', secondary=ViewHistory, backref='Users')
-    editedBy = db.relationship('Users', secondary=EditHistory, backref='Users')
-    taggedAs = db.relationship('Tags', secondary=ArticleTags, backref='Tags')
+    Views = db.relationship('ViewHistory', back_populates='Article', lazy='select')
+    Edits = db.relationship('EditHistory', back_populates='Article', lazy='select')
+    
+    Tags = db.relationship('Tag', secondary=ArticleTags, back_populates='Articles')
 
-    have = db.relationship('Feedback', back_populates='isFor')
+    Feedback = db.relationship('Feedback', back_populates='Article', lazy='select')
 
     def __str__(self):
         return f"Article name: {self.title}"
@@ -51,7 +70,7 @@ class AdminPrivilege(db.Model):
     ID = db.Column(db.Integer, primary_key=True)
     privilegeName = db.Column(db.Unicode, nullable=False)
 
-    userHas = db.relationship('Users', secondary=Admins, backref='Users')
+    Users = db.relationship('User', secondary=Admins, back_populates='AdminPrivileges', lazy='select')
 
 class Feedback(db.Model):
     __tablename__ = 'Feedback'
@@ -61,8 +80,8 @@ class Feedback(db.Model):
     userID = db.Column(db.Integer, db.ForeignKey('Users.ID'), nullable=False)
     articleID = db.Column(db.Integer, db.ForeignKey('Articles.ID'), nullable=False)
 
-    givenBy = db.relationship('Users', back_populates='give')
-    isFor = db.relationship('Articles', back_populates='have')
+    User = db.relationship('User', back_populates='Feedback', lazy='select')
+    Article = db.relationship('Article', back_populates='Feedback', lazy='select')
 
 class NoSolution(db.Model):
     __tablename__ = 'NoSolutions'
@@ -71,7 +90,7 @@ class NoSolution(db.Model):
     submission_time = db.Column(db.DateTime, default=db.func.now(), nullable=True)
     userID = db.Column(db.Integer, db.ForeignKey('Users.ID'), nullable=False)
 
-    submit = db.relationship('Users', back_populates='submit')
+    User = db.relationship('User', back_populates='NoSolutions', lazy='select')
 
 class Search(db.Model):
     __tablename__ = 'Searches'
@@ -91,7 +110,7 @@ class Tag(db.Model):
     ID = db.Column(db.Integer, primary_key=True)
     tagName = db.Column(db.Unicode, nullable=False)
 
-    usedOn = db.relationship('Articles', secondary=ArticleTags, backref='Articles')
+    Articles = db.relationship('Article', secondary=ArticleTags, back_populates='Tags')
 
 class User(db.Model):
     __tablename__ = 'Users'
@@ -100,12 +119,13 @@ class User(db.Model):
     device = db.Column(db.Unicode, nullable=True)
     major = db.Column(db.Unicode, nullable=True)
     gradYear = db.Column(db.Integer, nullable=True)
-    lastName = db.Column(db.Unicode, nullable=True)
-    firstName = db.Column(db.Unicode, nullable=True)
+    LName = db.Column(db.Unicode, nullable=True)
+    FName = db.Column(db.Unicode, nullable=True)
 
-    view = db.relationship('Articles', secondary=ViewHistory, backref='Articles')
-    edit = db.relationship('Articles', secondary=EditHistory, backref='Articles')
-    has = db.relationship('AdminPrivileges', secondary=Admins, backref='AdminPrivileges')
+    Views = db.relationship('ViewHistory', back_populates='User', lazy='select')
+    Edits = db.relationship('EditHistory', back_populates='User', lazy='select')
+   
+    AdminPrivileges = db.relationship('AdminPrivilege', secondary=Admins, back_populates='Users', lazy='select')
 
-    submit = db.relationship('NoSolutions', back_populates='submittedBy')
-    give = db.relationship('Feedback', back_populates='givenBy')
+    NoSolutions = db.relationship('NoSolution', back_populates='User', lazy='select')
+    Feedback = db.relationship('Feedback', back_populates='User', lazy='select')
