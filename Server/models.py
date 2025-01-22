@@ -14,7 +14,7 @@ ArticleTags = db.Table(
 )
 
 ArticleMetaTags = db.Table(
-    'ArticleTags',
+    'ArticleMetaTags',
     db.Column('articleID', db.Integer, db.ForeignKey('Articles.ID'), primary_key=True),
     db.Column('metaTagID', db.Integer, db.ForeignKey('MetaTags.ID'), nullable=False)
 )
@@ -40,22 +40,35 @@ class ViewHistory(db.Model):
 class Article(db.Model):
     __tablename__ = 'Articles'
     ID = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.Unicode, nullable=False)
-    content = db.Column(db.Unicode, nullable=True)
-    article_description = db.Column(db.Unicode, nullable=True)
-    image = db.Column(db.Unicode, nullable=True)
-    thumbsUp = db.Column(db.Integer, nullable=True)
-    thumbsDown = db.Column(db.Integer, nullable=True)
+    Title = db.Column(db.Unicode, nullable=False)
+    Content = db.Column(db.Unicode, nullable=True)
+    Article_Description = db.Column(db.Unicode, nullable=True)
+    Image = db.Column(db.Unicode, nullable=True)
+    ThumbsUp = db.Column(db.Integer, nullable=True)
+    ThumbsDown = db.Column(db.Integer, nullable=True)
 
     Views = db.relationship('ViewHistory', back_populates='Article', lazy='select')
     Edits = db.relationship('EditHistory', back_populates='Article', lazy='select')
-    
+
     Tags = db.relationship('Tag', secondary=ArticleTags, back_populates='Articles')
 
     Feedback = db.relationship('Feedback', back_populates='Article', lazy='select')
+    
+    MetaTags = db.relationship('MetaTag', secondary=ArticleMetaTags, back_populates='Articles', lazy='select')
 
     def __str__(self):
         return f"Article name: {self.title}"
+    
+    def toJSONPartial(self):
+        return{
+            'ID': self.ID,
+            'Title': self.Title,
+            'Content': self.Content,
+            'Article_Description': self.Article_Description,
+            'Image': self.Image,
+            'ThumbsUp': self.ThumbsUp,
+            'ThumbsDown': self.ThumbsDown
+        }
 
 class AdminPrivilege(db.Model):
     __tablename__ = 'AdminPrivileges'
@@ -109,7 +122,7 @@ class MetaTag(db.Model):
     ID = db.Column(db.Integer, primary_key=True)
     tagName = db.Column(db.Unicode, nullable=False)
 
-    denote = db.relationship('Articles', secondary=ArticleMetaTags, backref='Articles')
+    Articles = db.relationship('Article', secondary=ArticleMetaTags, back_populates='MetaTags')
 
 class User(db.Model):
     __tablename__ = 'Users'
