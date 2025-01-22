@@ -27,6 +27,12 @@ ArticleTags = db.Table(
     db.Column('tagID', db.Integer, db.ForeignKey('Tags.ID'), primary_key=True)
 )
 
+ArticleMetaTags = db.Table(
+    'ArticleTags',
+    db.Column('articleID', db.Integer, db.ForeignKey('Articles.ID'), primary_key=True),
+    db.Column('metaTagID', db.Integer, db.ForeignKey('MetaTags.ID'), nullable=False)
+)
+
 class Article(db.Model):
     __tablename__ = 'Articles'
     ID = db.Column(db.Integer, primary_key=True)
@@ -40,6 +46,7 @@ class Article(db.Model):
     viewedBy = db.relationship('Users', secondary=ViewHistory, backref='Users')
     editedBy = db.relationship('Users', secondary=EditHistory, backref='Users')
     taggedAs = db.relationship('Tags', secondary=ArticleTags, backref='Tags')
+    topicTaggedAs = db.relationship('MetaTags', secondary=ArticleMetaTags, backref='MetaTags')
 
     have = db.relationship('Feedback', back_populates='isFor')
 
@@ -92,6 +99,13 @@ class Tag(db.Model):
     tagName = db.Column(db.Unicode, nullable=False)
 
     usedOn = db.relationship('Articles', secondary=ArticleTags, backref='Articles')
+
+class MetaTag(db.Model):
+    __tablename__ = 'MetaTags'
+    ID = db.Column(db.Integer, primary_key=True)
+    tagName = db.Column(db.Unicode, nullable=False)
+
+    denote = db.relationship('Articles', secondary=ArticleMetaTags, backref='Articles')
 
 class User(db.Model):
     __tablename__ = 'Users'
