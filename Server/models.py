@@ -1,20 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from app import db
 
-# ViewHistory = db.Table(
-#     'ViewHistory',
-#     db.Column('articleID', db.Integer, db.ForeignKey('Articles.ID'), primary_key=True),
-#     db.Column('userID', db.Integer, db.ForeignKey('Users.ID'), primary_key=True),
-#     db.Column('view_time', db.DateTime, default=db.func.now(), primary_key=True)
-# )
-
-# EditHistory = db.Table(
-#     'EditHistory',
-#     db.Column('articleID', db.Integer, db.ForeignKey('Articles.ID'), primary_key=True),
-#     db.Column('userID', db.Integer, db.ForeignKey('Users.ID'), primary_key=True),
-#     db.Column('edit_time', db.DateTime, default=db.func.now(), primary_key=True)
-# )
-
 Admins = db.Table(
     'Admins',
     db.Column('userID', db.Integer, db.ForeignKey('Users.ID'), primary_key=True),
@@ -25,6 +11,12 @@ ArticleTags = db.Table(
     'ArticleTags',
     db.Column('articleID', db.Integer, db.ForeignKey('Articles.ID'), primary_key=True),
     db.Column('tagID', db.Integer, db.ForeignKey('Tags.ID'), primary_key=True)
+)
+
+ArticleMetaTags = db.Table(
+    'ArticleTags',
+    db.Column('articleID', db.Integer, db.ForeignKey('Articles.ID'), primary_key=True),
+    db.Column('metaTagID', db.Integer, db.ForeignKey('MetaTags.ID'), nullable=False)
 )
 
 class EditHistory(db.Model):
@@ -111,6 +103,13 @@ class Tag(db.Model):
     tagName = db.Column(db.Unicode, nullable=False)
 
     Articles = db.relationship('Article', secondary=ArticleTags, back_populates='Tags')
+
+class MetaTag(db.Model):
+    __tablename__ = 'MetaTags'
+    ID = db.Column(db.Integer, primary_key=True)
+    tagName = db.Column(db.Unicode, nullable=False)
+
+    denote = db.relationship('Articles', secondary=ArticleMetaTags, backref='Articles')
 
 class User(db.Model):
     __tablename__ = 'Users'
