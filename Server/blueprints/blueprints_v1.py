@@ -34,13 +34,26 @@ class Articles(MethodView):
     # handle errors as thoroughly as possible within the try block. The
     # Try Except block is just there to catch any anomolies we have not 
     # accounted for.
+    # 
+    # checking if current_user_id is in session is essentially doing our authentication
+    # Once single sign on is figured out we will dynamically set this but for now it is hard
+    # coded in. The is also a variable callee current_user_role stored in the session
+    # it can either be 'admin' or 'user' this will eventually helo us determine what
+    # page to display to the user but is not important for now
+    # 
+    # All models have two helper function .toJSONPartial and .toJSON these return different
+    # json objects if the respective models. As a general rule when returning a list of 
+    # model objects you should return using .toJSONPartial if you are returning a single
+    # model object, you should use .toJSON
     def get(self):
         try:
-            articles: list[models.Article] = models.Article.query.all()
-            
-            returnableArticles = [article.toJSONPartial() for article in articles]
-            
-            return {'articles': returnableArticles}, 200
+            if 'current_user_id' in session:
+                articles: list[models.Article] = models.Article.query.all()
+                
+                returnableArticles = [article.toJSONPartial() for article in articles]
+                return {'articles': returnableArticles}, 200
+            else:
+                return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
             print(f"Error: {e}")
             traceback.print_exc()

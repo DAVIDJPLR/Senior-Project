@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask
+from flask import Flask, session
 from flask_cors import CORS, cross_origin
 from flask_sqlalchemy import SQLAlchemy
 
@@ -22,6 +22,10 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config['SECRET_KEY'] = 'correcthorsebatterystaple'
 
 db = SQLAlchemy(app)
+@app.before_request
+def set_session_constants():
+    session['current_user_id'] = -1
+    session['current_user_role'] = 'admin'
 
 from blueprints.blueprints_v1 import apiv1
 app.register_blueprint(apiv1)
