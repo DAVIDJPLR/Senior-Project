@@ -117,7 +117,7 @@ class Article(db.Model):
 class AdminPrivilege(db.Model):
     __tablename__ = 'AdminPrivileges'
     ID = db.Column(db.Integer, primary_key=True)
-    privilegeName = db.Column(db.Unicode, nullable=False)
+    PrivilegeName = db.Column(db.Unicode, nullable=False)
 
     Users = db.relationship('User', secondary=Admins, back_populates='AdminPrivileges', lazy='select')
 
@@ -136,10 +136,10 @@ class AdminPrivilege(db.Model):
 class Feedback(db.Model):
     __tablename__ = 'Feedback'
     ID = db.Column(db.Integer, primary_key=True)
-    submission_time = db.Column(db.DateTime, default=db.func.now(), nullable=True)
-    positive = db.Column(db.Integer, nullable=False)
-    userID = db.Column(db.Integer, db.ForeignKey('Users.ID'), nullable=False)
-    articleID = db.Column(db.Integer, db.ForeignKey('Articles.ID'), nullable=False)
+    Submission_Time = db.Column(db.DateTime, default=db.func.now(), nullable=True)
+    Positive = db.Column(db.Boolean, nullable=False)
+    UserID = db.Column(db.Integer, db.ForeignKey('Users.ID'), nullable=False)
+    ArticleID = db.Column(db.Integer, db.ForeignKey('Articles.ID'), nullable=False)
 
     User = db.relationship('User', back_populates='Feedback', lazy='select')
     Article = db.relationship('Article', back_populates='Feedback', lazy='select')
@@ -166,9 +166,9 @@ class Feedback(db.Model):
 class NoSolution(db.Model):
     __tablename__ = 'NoSolutions'
     ID = db.Column(db.Integer, primary_key=True)
-    content = db.Column(db.Unicode, nullable=True)
-    submission_time = db.Column(db.DateTime, default=db.func.now(), nullable=True)
-    userID = db.Column(db.Integer, db.ForeignKey('Users.ID'), nullable=False)
+    Content = db.Column(db.Unicode, nullable=True)
+    Submission_Time = db.Column(db.DateTime, default=db.func.now(), nullable=True)
+    UserID = db.Column(db.Integer, db.ForeignKey('Users.ID'), nullable=False)
 
     User = db.relationship('User', back_populates='NoSolutions', lazy='select')
 
@@ -188,18 +188,20 @@ class NoSolution(db.Model):
             'User': self.User.toJSONPartial()
         }
 
+
+# We could get move member of other model object if we need it
 class Search(db.Model):
     __tablename__ = 'Searches'
-    searchID = db.Column(db.Integer, primary_key=True)
-    searchQuery = db.Column(db.Unicode, nullable=False)
-    noSolutionID = db.Column(db.Integer, db.ForeignKey('NoSolutions.ID'), nullable=True)
-    userID = db.Column(db.Integer, db.ForeignKey('Users.ID'), nullable=True)
-    topResult = db.Column(db.Integer, db.ForeignKey('Articles.ID'), nullable=True)
-    secondResult = db.Column(db.Integer, db.ForeignKey('Articles.ID'), nullable=True)
-    thirdResult = db.Column(db.Integer, db.ForeignKey('Articles.ID'), nullable=True)
-    fourthResult = db.Column(db.Integer, db.ForeignKey('Articles.ID'), nullable=True)
-    fifthResult = db.Column(db.Integer, db.ForeignKey('Articles.ID'), nullable=True)
-    searchTime = db.Column(db.DateTime, default=db.func.now(), nullable=True)
+    SearchID = db.Column(db.Integer, primary_key=True)
+    SearchQuery = db.Column(db.Unicode, nullable=False)
+    NoSolutionID = db.Column(db.Integer, db.ForeignKey('NoSolutions.ID'), nullable=True)
+    UserID = db.Column(db.Integer, db.ForeignKey('Users.ID'), nullable=True)
+    TopResult = db.Column(db.Integer, db.ForeignKey('Articles.ID'), nullable=True)
+    SecondResult = db.Column(db.Integer, db.ForeignKey('Articles.ID'), nullable=True)
+    ThirdResult = db.Column(db.Integer, db.ForeignKey('Articles.ID'), nullable=True)
+    FourthResult = db.Column(db.Integer, db.ForeignKey('Articles.ID'), nullable=True)
+    FifthResult = db.Column(db.Integer, db.ForeignKey('Articles.ID'), nullable=True)
+    SearchTime = db.Column(db.DateTime, default=db.func.now(), nullable=True)
 
     def toJSONPartial(self):
         return {
@@ -231,7 +233,7 @@ class Search(db.Model):
 class Tag(db.Model):
     __tablename__ = 'Tags'
     ID = db.Column(db.Integer, primary_key=True)
-    tagName = db.Column(db.Unicode, nullable=False)
+    TagName = db.Column(db.Unicode, nullable=False)
 
     Articles = db.relationship('Article', secondary=ArticleTags, back_populates='Tags')
 
@@ -269,10 +271,10 @@ class MetaTag(db.Model):
 class User(db.Model):
     __tablename__ = 'Users'
     ID = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.Unicode, nullable=True)
-    device = db.Column(db.Unicode, nullable=True)
-    major = db.Column(db.Unicode, nullable=True)
-    gradYear = db.Column(db.Integer, nullable=True)
+    Email = db.Column(db.Unicode, nullable=True)
+    Device = db.Column(db.Unicode, nullable=True)
+    Major = db.Column(db.Unicode, nullable=True)
+    GradYear = db.Column(db.Integer, nullable=True)
     LName = db.Column(db.Unicode, nullable=True)
     FName = db.Column(db.Unicode, nullable=True)
 
