@@ -121,7 +121,45 @@ def post_article_form():
             cursor.close()
             connection.close()
             print("MySQL Connection is closed")
+
+
+# import models
+@app.get("/articles/")
+def get_all_articles():
+
+    articles = models.Article.query.all()
+
+
+    articles = []
+    returnableArticles = []
     
+    try:
+                art_list = Article.query.all()
+
+                for art in art_list:
+                    articles.append({
+                        "id": art.ID,
+                        "title": art.title,
+                        "content": art.content,
+                        "description": art.article_description,
+                        "image_name": art.image
+                    })
+
+                for art in articles:
+                    returnableArticle = {
+                        'id': art.ID,
+                        'title': art.title,
+                        'content': art.content,
+                        'description': art.article_description,
+                        'image_name': art.image
+                    }
+                    returnableArticles.append(returnableArticle)
+
+                return jsonify({'articles', returnableArticles}), 200
+            
+    except Exception as e:
+            return jsonify({'error': 'Internal Server Error'}), 500
+
 @app.get("/articles/search/")
 def view_articles_search():
     articles = []
