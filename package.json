@@ -1,5 +1,12 @@
 {
   "dependencies": {
-    "react-quill": "^2.0.0"
+    "react-quill-new": "^3.3.3",
+    "slate": "^0.112.0",
+    "slate-history": "^0.110.3",
+    "slate-react": "^0.112.1"
+  },
+  "devDependencies": {
+    "@types/quill": "^2.0.14",
+    "typescript": "^5.8.0-dev.20250119"
   }
 }
