@@ -2,12 +2,12 @@ import { Modal, Typography }  from '@mui/material';
 import ThumbDownAltOutlinedIcon from '@mui/icons-material/ThumbDownAltOutlined';
 import ThumbUpAltOutlinedIcon from '@mui/icons-material/ThumbUpAltOutlined';
 import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
-import { Article } from '../custom_objects/Article';
+import { PartialArticle } from '../custom_objects/models';
 
 interface Props {
     handleClose: () => void;
     open: boolean;
-    article: Article | null;
+    article: PartialArticle | null;
 }
 
 function ArticleModal({ handleClose, open, article}: Props) {
