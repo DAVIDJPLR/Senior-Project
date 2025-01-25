@@ -58,3 +58,25 @@ class Articles(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
+
+@apiv1.route("/article", methods=["OPTIONS", "GET"])
+class Article(MethodView):
+    def options(self):
+        return '', 200
+        
+    def get(self):
+        try:
+            if 'current_user_id' in session:
+                id = request.args.get("ID")
+                if id:
+                    article = models.Article.query.filter(models.Article.ID == id).all()
+                    returnableArticle = article[0].toJSONPartial()
+                    return {'article': returnableArticle}, 200
+                else:
+                    return {'msg': 'No article specified'}, 400
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
