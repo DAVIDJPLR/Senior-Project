@@ -2,7 +2,7 @@ import { Screen, StudentScreen, AdminScreen } from "./custom_objects/Screens";
 import { useState, useEffect } from "react";
 import StudentBrowse from "./screens/student/Browse";
 import StudentHome from "./screens/student/Home";
-import StudentRecent from "./screens/student/Recently_Viewd";
+import StudentRecent from "./screens/student/Recently_Viewed";
 import AdminAnalysis from "./screens/admin/AnalysisScreen";
 import AdminArticles from "./screens/admin/ArticlesScreen";
 import AdminBacklog from "./screens/admin/BacklogScreen";
