@@ -1,8 +1,8 @@
 import { Typography } from "@mui/material";
-import { Article } from "../custom_objects/Article";
+import { PartialArticle } from "../custom_objects/models";
 
 interface Props{
-    article: Article,
+    article: PartialArticle,
     lineNumber: number,
     onClick: () => void
 }
