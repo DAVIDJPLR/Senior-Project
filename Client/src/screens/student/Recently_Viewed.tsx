@@ -2,7 +2,6 @@ import StudentAppBar from "../../components/StudentAppBar";
 import SearchBar from "../../components/SearchBar";
 import { Screen } from "../../custom_objects/Screens";
 import { useState, useEffect } from "react";
-import { Article } from "../../custom_objects/Article";
 import ArticleCard from "../../components/ArticleCard";
 import ArticleModal from "../../components/ArticleModal";
 import { Typography, Modal, Button, TextField } from "@mui/material";
