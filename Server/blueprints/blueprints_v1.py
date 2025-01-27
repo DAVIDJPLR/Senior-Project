@@ -1,7 +1,7 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint
 from flask import session, request, jsonify
-from sqlalchemy import or_
+from sqlalchemy import or_, desc
 from app import app, db
 
 import time
@@ -70,7 +70,7 @@ class Search(MethodView):
             if 'current_user_id' in session:
                 searchQuery = request.args.get("searchQuery")
 
-                articles = db.session.query(models.Article).filter(
+                articles = models.Article.query.filter(
                     or_(
                         models.Article.Title.ilike(f"%{searchQuery}%"),
                         models.Article.Content.ilike(f"%{searchQuery}%"),
@@ -92,6 +92,31 @@ class Search(MethodView):
                 db.session.add(search)
                 
                 return {'results': returnedArticles}, 200
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+        
+@apiv1.route("/user/viewedarticles", methods=["OPTIONS", "GET"])
+class UserViewHistory(MethodView):
+    def options(self):
+        return '', 200
+    
+    def get(self):
+        try:
+            if 'current_user_id' in session:
+                recentlyViewedArticles: list[models.Article] = models.Article.query.join(
+                    models.ViewHistory, models.Article.ID==models.ViewHistory.ArticleID
+                ).filter(
+                    models.ViewHistory.UserID == session.get('current_user_id')
+                ).order_by(
+                    models.ViewHistory.View_Time
+                ).all()
+                
+                returnableArticles = [article.toJSONPartial() for article in recentlyViewedArticles]
+                return {'articles': returnableArticles}, 200
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
