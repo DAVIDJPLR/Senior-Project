@@ -24,7 +24,7 @@ app.config['SECRET_KEY'] = 'correcthorsebatterystaple'
 db = SQLAlchemy(app)
 @app.before_request
 def set_session_constants():
-    session['current_user_id'] = -1
+    session['current_user_id'] = 1
     session['current_user_role'] = 'admin'
 
 from blueprints.blueprints_v1 import apiv1
