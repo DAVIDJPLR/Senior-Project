@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react'
 import { createEditor, Editor, Transforms, Element } from 'slate'
-import { Slate, Editable, withReact, ReactEditor } from 'slate-react'
+import { Slate, Editable, withReact } from 'slate-react'
 import { withHistory } from 'slate-history'
 import {IconButton, Toolbar as MuiToolbar, Paper} from '@mui/material'
 import { FormatBold, FormatItalic, FormatUnderlined, FormatQuote,
