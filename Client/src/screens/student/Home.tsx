@@ -24,14 +24,14 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
     const [openArticleModal, setOpenArticleModal] = useState(false);
 
     useEffect(() => {
+        defaultArticles()
+    }, []);
+
+    useEffect(() => {
         if (openNoResultFoundModal){
             setHasSearched(false);
         }
     }, [openNoResultFoundModal]);
-
-    useEffect(() => {
-        setArticles(getTestArticles());
-    }, []);
 
     const [hasSearched, setHasSearched] = useState(false);
 
@@ -39,8 +39,54 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
         if (event.key === "Enter") {
             console.log(searchVal); 
             setHasSearched(true);
+            handleSearch()
         }
     };
+
+    const handleSearch = () => {
+        if (searchVal === ""){
+            defaultArticles()
+            console.log("default")
+        } else {
+            searchArticles()
+        }
+    };
+
+    const defaultArticles = async () => {
+        const response = await fetch('http://localhost:5000/api/v1/articles', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+        console.log(data)
+
+        setArticles(data.articles as PartialArticle[])
+    }
+
+    const searchArticles = async () => {
+        const params = new URLSearchParams({
+            searchQuery: searchVal
+        });
+
+        console.log(`searching with val ${searchVal}`)
+
+        const response = await fetch(`http://localhost:5000/api/v1/articles/search?${params.toString()}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+        console.log(data)
+
+        setArticles(data.results as PartialArticle[])
+    }
 
     return(
         <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center"}}>
