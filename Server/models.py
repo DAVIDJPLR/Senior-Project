@@ -287,20 +287,20 @@ class User(db.Model):
     def toJSONPartial(self):
         return {
             'ID': self.ID,
-            'email': self.email,
-            'device': self.device,
-            'major': self.major,
-            'gradYear': self.gradYear,
+            'email': self.Email,
+            'device': self.Device,
+            'major': self.Major,
+            'gradYear': self.GradYear,
             'LName': self.LName,
             'FName': self.FName
         }
     def toJSON(self):
         return {
             'ID': self.ID,
-            'email': self.email,
-            'device': self.device,
-            'major': self.major,
-            'gradYear': self.gradYear,
+            'email': self.Email,
+            'device': self.Device,
+            'major': self.Major,
+            'gradYear': self.GradYear,
             'LName': self.LName,
             'FName': self.FName,
             'Views': [view.toJSONPartial() for view in self.Views],

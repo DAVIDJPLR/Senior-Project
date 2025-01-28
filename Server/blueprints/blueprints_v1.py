@@ -1,12 +1,14 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint
 from flask import session, request, jsonify
-from sqlalchemy import or_, desc
-from app import app, db
+from sqlalchemy import or_, desc, func
+from app import db
 
 import time
 import traceback
 import models
+
+import datetime
 
 apiv1 = Blueprint(
     "apiv1", 
@@ -59,6 +61,128 @@ class Articles(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
+
+@apiv1.route("/article", methods=["OPTIONS", "GET", "POST", "PUT"])
+class Article(MethodView):
+    def options(self):
+        return '', 200
+        
+    def get(self):
+        try:
+            if 'current_user_id' in session:
+                id = request.args.get("userID")
+                if id:
+                    article = models.Article.query.filter(models.Article.ID == id).all()
+                    returnableArticle = article[0].toJSONPartial()
+                    return {'article': returnableArticle}, 200
+                else:
+                    return {'msg': 'No article specified'}, 400
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+    def post(self):
+        try:
+            if 'current_user_id' in session:
+                article = request.json
+                if article:
+                    title: str = article.get('Title')
+                    content: str = article.get('Content')
+                    desc: str = article.get('Article_Description')
+                    image: str = article.get('Image')
+        
+                    article = Article(Title=title, Content=content,
+                                      Article_Description=desc,
+                                      Image=image)
+                    
+                    db.session.add(article)
+                    db.session.commit()
+                else:
+                    return {'msg': 'No article submitted'}, 400
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+    def put(self):
+        try:
+            if 'current_user_id' in session:
+                article_updated = request.json
+                userID = request.args.get("userID")
+                if article_updated:
+                    id: int = article_updated.get("ID")
+                    title: str = article_updated.get('Title')
+                    content: str = article_updated.get('Content')
+                    desc: str = article_updated.get('Article_Description')
+                    image: str = article_updated.get('Image')
+
+                    article = models.Article.query.filter(models.Article.ID == id).all()
+                    article.Title = title
+                    article.Content = content
+                    article.Article_Description = desc
+                    article.Image = image
+
+                    time = datetime.now()
+                    eh = models.EditHistory(ArticleID=id, UserID=userID,
+                                            Edit_Time=time)
+                    db.session.add(eh)
+                    
+                    db.session.commit()
+                else:
+                    return {'msg': 'No update data submitted'}, 400
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+        
+@apiv1.route("/admins", methods=["OPTIONS", "GET"])
+class Admins(MethodView):
+    def options(self):
+        return '', 200
+
+    def get(self):
+        try:
+            if 'current_user_id' in session:
+                admins = []
+                users = models.User.query.all()
+                for user in users:
+                    data = user.toJSON()
+                    if data["AdminPrivileges"]:
+                        admins.append[user]
+                returnableAdmins = [admin.toJSONPartial() for admin in admins]
+                if returnableAdmins:
+                    return {'admins': returnableAdmins}, 200
+                else:
+                    return {'msg': 'No admins'}, 200
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+                print(f"Error: {e}")
+                traceback.print_exc()
+                return {'msg': f"Error: {e}"}, 500
+
+@apiv1.route("/categories", methods=["OPTIONS", "GET"])
+class Categories(MethodView):
+    def options(self):
+        return '', 200
+
+    def get(self):
+        try:
+            if 'current_user_id' in session:
+                categories: list[models.MetaTag] = models.MetaTag.query.all()
+                returnableCategories = [category.toJSONPartial() for category in categories]
+                return {'categories': returnableCategories}, 200
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
         
 @apiv1.route("/articles/search", methods=["OPTIONS", "GET"])
 class Search(MethodView):
@@ -98,6 +222,25 @@ class Search(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
+@apiv1.route("categories/articles", methods=["OPTIONS", "GET"])
+class ArticleCategories(MethodView):
+    def options(self):
+        return '', 200
+    
+    def get(self):
+        try:
+            if 'current_user_id' in session:
+                category = request.args.get("category")
+                metaTag: models.MetaTag = models.MetaTag.query.filter_by(tagName=category).first()
+                articles: list[models.Article] = metaTag.Articles
+                returnableArticles = [article.toJSONPartial() for article in articles]
+                return {'articles', returnableArticles}, 200
+            else:
+                return {'msg', 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500      
         
 @apiv1.route("/user/viewedarticles", methods=["OPTIONS", "GET"])
 class UserViewHistory(MethodView):
