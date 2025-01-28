@@ -24,6 +24,10 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
     const [openArticleModal, setOpenArticleModal] = useState(false);
 
     useEffect(() => {
+        defaultArticles()
+    }, []);
+
+    useEffect(() => {
         if (openNoResultFoundModal){
             setHasSearched(false);
         }
