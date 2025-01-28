@@ -164,3 +164,79 @@ class Admins(MethodView):
                 print(f"Error: {e}")
                 traceback.print_exc()
                 return {'msg': f"Error: {e}"}, 500
+
+@apiv1.route("/categories", methods=["OPTIONS", "GET"])
+class Categories(MethodView):
+    def options(self):
+        return '', 200
+
+    def get(self):
+        try:
+            if 'current_user_id' in session:
+                categories: list[models.MetaTag] = models.MetaTag.query.all()
+                returnableCategories = [category.toJSONPartial() for category in categories]
+                return {'categories': returnableCategories}, 200
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+
+@apiv1.route("categories/articles", methods=["OPTIONS", "GET"])
+class ArticleCategories(MethodView):
+    def options(self):
+        return '', 200
+    
+    def get(self):
+        try:
+            if 'current_user_id' in session:
+                category = request.args.get("category")
+                articles = models.Article.query.filter(models.Article.MetaTags.has(category))
+                returnableArticles = [article.toJSONPartial() for article in articles]
+                return {'articles', returnableArticles}, 200
+            else:
+                return {'msg', 'Unauthorized access'}, 401
+
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+
+@apiv1.route("articles/trending", methods=["OPTIONS", "GET"])
+class Trending(MethodView):
+    def options(self):
+        return '', 200
+    
+    def get(self):
+        try:
+            if 'current_user_id' in session:
+                articles = models.Article.query.order_by(len(models.Article.Views).desc()).limit(20).all()
+                returnableArticles = [article.toJSONPartial() for article in articles]
+                return {'articles', returnableArticles}, 200
+            else:
+                return {'msg', 'Unauthorized access'}, 401
+        
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+        
+@apiv1.route("articles/recent", methods=["OPTIONS", "GET"])
+class Recent(MethodView):
+    def options(self):
+        return '', 200
+    
+    def get(self):
+        try:
+            if 'current_user_id' in session:
+                articles = models.User.query.order_by(models.User.Views.View_Time.desc()).limit(10).all()
+                returnableArticles = [article.toJSONPartial() for article in articles]
+                return {'articles', returnableArticles}, 200
+            else:
+                return {'msg', 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
