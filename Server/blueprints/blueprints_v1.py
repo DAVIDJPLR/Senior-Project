@@ -197,10 +197,43 @@ class ArticleCategories(MethodView):
                 metaTag: models.MetaTag = models.MetaTag.query.filter_by(tagName=category).first()
                 articles: list[models.Article] = metaTag.Articles
                 returnableArticles = [article.toJSONPartial() for article in articles]
-                return {'articles', returnableArticles}, 200
+                return {'articles': returnableArticles}, 200
             else:
-                return {'msg', 'Unauthorized access'}, 401
+                return {'msg': 'Unauthorized access'}, 401
 
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+
+@apiv1.route("articles/trending", methods=["OPTIONS", "GET"])
+class Trending(MethodView):
+    def options(self):
+        return '', 200
+    
+    def get(self):
+        try:
+            if 'current_user_id' in session:
+
+                articles = db.session.query(
+                    models.Article,
+                    func.count(models.ViewHistory.ArticleID).label('view_count')
+                ).join(
+                    models.ViewHistory, models.Article.ID == models.ViewHistory.ArticleID
+                ).group_by(
+                    models.Article.ID
+                ).order_by(
+                    func.count(models.ViewHistory.ArticleID).desc()
+                ).all()
+
+                print(articles[0][0])
+                
+                returnableArticles = [article.toJSONPartial() for article, ranking in articles]
+                # print(returnableArticles)
+                return {'articles': returnableArticles}, 200
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        
         except Exception as e:
             print(f"Error: {e}")
             traceback.print_exc()

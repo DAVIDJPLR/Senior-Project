@@ -85,7 +85,7 @@ class Article(db.Model):
     MetaTags = db.relationship('MetaTag', secondary=ArticleMetaTags, back_populates='Articles', lazy='select')
 
     def __str__(self):
-        return f"Article name: {self.title}"
+        return f"Article name: {self.Title}"
     
     def toJSONPartial(self):
         return{
