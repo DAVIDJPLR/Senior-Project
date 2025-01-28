@@ -2,6 +2,7 @@ from flask.views import MethodView
 from flask_smorest import Blueprint
 from flask import session, request, jsonify
 from app import db
+from sqlalchemy import func
 
 import time
 import traceback
@@ -193,49 +194,13 @@ class ArticleCategories(MethodView):
         try:
             if 'current_user_id' in session:
                 category = request.args.get("category")
-                articles = models.Article.query.filter(models.Article.MetaTags.has(category))
+                metaTag: models.MetaTag = models.MetaTag.query.filter_by(tagName=category).first()
+                articles: list[models.Article] = metaTag.Articles
                 returnableArticles = [article.toJSONPartial() for article in articles]
                 return {'articles', returnableArticles}, 200
             else:
                 return {'msg', 'Unauthorized access'}, 401
 
-        except Exception as e:
-            print(f"Error: {e}")
-            traceback.print_exc()
-            return {'msg': f"Error: {e}"}, 500
-
-@apiv1.route("articles/trending", methods=["OPTIONS", "GET"])
-class Trending(MethodView):
-    def options(self):
-        return '', 200
-    
-    def get(self):
-        try:
-            if 'current_user_id' in session:
-                articles = models.Article.query.order_by(len(models.Article.Views).desc()).limit(20).all()
-                returnableArticles = [article.toJSONPartial() for article in articles]
-                return {'articles', returnableArticles}, 200
-            else:
-                return {'msg', 'Unauthorized access'}, 401
-        
-        except Exception as e:
-            print(f"Error: {e}")
-            traceback.print_exc()
-            return {'msg': f"Error: {e}"}, 500
-        
-@apiv1.route("articles/recent", methods=["OPTIONS", "GET"])
-class Recent(MethodView):
-    def options(self):
-        return '', 200
-    
-    def get(self):
-        try:
-            if 'current_user_id' in session:
-                articles = models.User.query.order_by(models.User.Views.View_Time.desc()).limit(10).all()
-                returnableArticles = [article.toJSONPartial() for article in articles]
-                return {'articles', returnableArticles}, 200
-            else:
-                return {'msg', 'Unauthorized access'}, 401
         except Exception as e:
             print(f"Error: {e}")
             traceback.print_exc()
