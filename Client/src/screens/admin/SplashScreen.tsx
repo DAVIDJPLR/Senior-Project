@@ -10,6 +10,7 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
     return(
         <div style={{width: "100vw", height: "100vh"}}>
             <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
+            <div></div>
         </div>
     )
 }
