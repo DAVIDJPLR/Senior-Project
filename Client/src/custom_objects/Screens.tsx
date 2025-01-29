@@ -3,7 +3,8 @@ export enum AdminScreen{
     Articles = "Articles",
     Splash = "Splash",
     BackLog = "BackLog",
-    Users = "Users"
+    Users = "Users",
+    Edit = "Edit"
 }
 
 export enum StudentScreen{
