@@ -166,6 +166,24 @@ class Admins(MethodView):
                 traceback.print_exc()
                 return {'msg': f"Error: {e}"}, 500
 
+@apiv1.route("/category", methods=["OPTIONS", "GET"])
+class Category(MethodView):
+    def options(self):
+        return '', 200
+    
+    def get(self):
+        try:
+            if 'current_user_id' in session:
+                id = request.args.get("ID")
+                category: models.MetaTag = models.MetaTag.query.filter_by(ID=id).first()
+                return {'category': category.toJSON()}, 200
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+
 @apiv1.route("/categories", methods=["OPTIONS", "GET"])
 class Categories(MethodView):
     def options(self):

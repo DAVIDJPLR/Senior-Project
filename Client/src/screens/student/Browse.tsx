@@ -1,5 +1,5 @@
 import StudentAppBar from "../../components/StudentAppBar";
-import { PartialArticle, PartialMetaTag } from "../../custom_objects/models";
+import { PartialArticle, PartialMetaTag, MetaTag } from "../../custom_objects/models";
 import { Screen } from "../../custom_objects/Screens";
 import { useState, useEffect } from "react";
 import ArticleCard from "../../components/ArticleCard";
@@ -55,12 +55,10 @@ function BrowseArticles({currentCategory, setCurrentCategory, setViewArticles}: 
 
     const getArticles = async (cat: PartialMetaTag) => {
         const params = new URLSearchParams({
-            searchQuery: cat.TagName
+            ID: cat.ID.toString()
         });
 
-        console.log(`searching with val ${cat.TagName}`)
-
-        const response = await fetch(`http://localhost:5000/api/v1/articles/search?${params.toString()}`, {
+        const response = await fetch(`http://localhost:5000/api/v1/category?${params.toString()}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -70,8 +68,8 @@ function BrowseArticles({currentCategory, setCurrentCategory, setViewArticles}: 
 
         const data = await response.json();
         console.log(data)
-
-        setArticles(data.results as PartialArticle[])
+        
+        setArticles((data.category as MetaTag).Articles)
     }
 
     return(
@@ -108,8 +106,23 @@ function BrowseCategories({setViewArticles, setCurrentCategory}: BrowseCategorie
 
     const [categories, setCategories] = useState<PartialMetaTag[]>([]);
 
+    const getCategories = async () => {
+        const response = await fetch('http://localhost:5000/api/v1/categories', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+        console.log(data)
+
+        setCategories(data.categories as PartialMetaTag[])
+    }
+
     useEffect(() => {
-        setCategories(getTestMetaTags());
+        getCategories()
     }, [])
 
     const handleClick = (cat: PartialMetaTag) => {
@@ -134,6 +147,7 @@ interface CategoryCardProps{
 }
 
 function CategoryCard({ category, onClick }: CategoryCardProps) {
+    console.log(category.TagName)
     return (
         <div onClick={onClick}
             style={{ cursor: "pointer", width: '100%', height: "80px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", border: "1px solid grey", borderRadius: "20px"}}>
