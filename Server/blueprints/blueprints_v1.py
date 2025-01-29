@@ -222,7 +222,7 @@ class Search(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-@apiv1.route("categories/articles", methods=["OPTIONS", "GET"])
+@apiv1.route("/categories/articles", methods=["OPTIONS", "GET"])
 class ArticleCategories(MethodView):
     def options(self):
         return '', 200
@@ -269,7 +269,7 @@ class UserViewHistory(MethodView):
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
 
-@apiv1.route("articles/trending", methods=["OPTIONS", "GET"])
+@apiv1.route("/articles/trending", methods=["OPTIONS", "GET"])
 class Trending(MethodView):
     def options(self):
         return '', 200
@@ -294,6 +294,33 @@ class Trending(MethodView):
             else:
                 return {'msg': 'Unauthorized access'}, 401
         
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+        
+@apiv1.route("/nosolution", methods=["OPTIONS", "POST"])
+class NoSolution(MethodView):
+    def options(self):
+        return '', 200
+    
+    def post(self):
+        try:
+            if 'current_user_id' in session:
+                data = request.json
+                if data:
+                    content = data.get("content")
+                    if content:
+                        newNoSolution: models.NoSolution = models.NoSolution(Content=content, UserID=session["current_user_id"])
+                        db.session.add(newNoSolution)
+                        db.session.commit()
+                        return {'NoSolution': newNoSolution.toJSON()}, 201
+                    else:
+                       return {'msg': 'No content submitted '}, 400 
+                else:
+                    return {'msg': 'No content submitted '}, 400
+            else:
+                return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
             print(f"Error: {e}")
             traceback.print_exc()
