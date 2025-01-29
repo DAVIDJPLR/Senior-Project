@@ -1,8 +1,8 @@
-import { User } from "../custom_objects/User";
+import { PartialUser } from "../custom_objects/models";
 import { Typography, Grid2 } from "@mui/material";
 
 interface Props{
-    user: User,
+    user: PartialUser,
     onClick: () => void
 }
 
@@ -14,7 +14,7 @@ function AdminCard({ user, onClick }: Props){
         <div style={{width: "60%", height: "46px", display: "flex", flexDirection: "column", alignItems: "center", border: "2px solid grey", borderRadius: "5px", margin: "10px"}}>
             <Grid2 container direction="row" justifyContent="center" alignItems="center" sx={{width: "98%"}}>
                 <Grid2 key="LeftSpace" sx={{width: "33%"}}>
-                    <Typography style={{ fontSize: "16px", fontWeight: "600", textAlign: "left", width: "95%", overflow: "hidden"}}>{user.FirstName} {user.LastName}</Typography>
+                    <Typography style={{ fontSize: "16px", fontWeight: "600", textAlign: "left", width: "95%", overflow: "hidden"}}>{user.FName} {user.LName}</Typography>
                 </Grid2>
                 <Grid2 key="Email" sx={{width: "34%"}}>
                     <Typography style={{ fontSize: "12px", textAlign: "center", width: "95%", overflow: "hidden"}}>{user.Email}</Typography>

@@ -124,12 +124,12 @@ class AdminPrivilege(db.Model):
     def toJSONPartial(self):
         return {
             'ID': self.ID,
-            'privilegeName': self.privilegeName
+            'PrivilegeName': self.PrivilegeName
         }
     def toJSON(self):
         return {
             'ID': self.ID,
-            'privilegeName': self.privilegeName,
+            'PrivilegeName': self.PrivilegeName,
             'Users': [user.toJSONPartial() for user in self.Users]
         }
 
@@ -292,7 +292,8 @@ class User(db.Model):
             'Major': self.Major,
             'GradYear': self.GradYear,
             'LName': self.LName,
-            'FName': self.FName
+            'FName': self.FName,
+            'AdminPrivileges': [priv.toJSONPartial() for priv in self.AdminPrivileges]
         }
     def toJSON(self):
         return {

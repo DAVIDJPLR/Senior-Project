@@ -1,7 +1,6 @@
 import AdminAppBar from "../../components/AdminAppBar";
 import { Screen } from "../../custom_objects/Screens";
 import { User } from "../../custom_objects/User";
-import { AdminPrivilege } from "../../custom_objects/AdminPrivilege";
 import AdminCard from "../../components/AdminCard";
 import { Typography, Button, Popover, Modal, Table, TableBody, TableRow, TableCell, TableContainer } from "@mui/material";
 import SearchBar from "../../components/SearchBar";
@@ -10,6 +9,7 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import UserCard from "../../components/UserCard";
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
+import { PartialAdminPrivilege, PartialUser } from "../../custom_objects/models";
 
 interface Props{
     currentScreen: Screen
@@ -19,60 +19,30 @@ interface Props{
 function AdminUsers({ currentScreen, setCurrentScreen }: Props){
 
     const [searchVal, setSearchVal] = useState("");
-
     const [openAdminModal, setOpenAdminModal] = useState(false)
-
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [selectedAdmin, setSelectedAdmin] = useState<PartialUser | null>(null)
 
-    const [selectedAdmin, setSelectedAdmin] = useState<User | null>(null)
+    const [admins, setAdmins] = useState<PartialUser[]>([])
 
-    const privileges: AdminPrivilege[] = [
-        {
-            ID: 1,
-            PrivilegeName: "Privilege 1"
-        },
-        {
-            ID: 2,
-            PrivilegeName: "Privilege 2"
-        },
-        {
-            ID: 3,
-            PrivilegeName: "Privilege 3"
-        },
-    ];
+    const loadAdmins = async () => {
+        const response = await fetch('http://localhost:5000/api/v1/admins', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include'
+        });
 
-    const users: User[] = [
-        {
-            ID: 1,
-            FirstName: "David",
-            LastName: "Le Roux",
-            Email: "dlaroux@azavar.com",
-            Device: "device",
-            Major: "Major",
-            GradYear: 2025,
-            AdminPrivileges: privileges
-        },
-        {
-            ID: 2,
-            FirstName: "David",
-            LastName: "Le Roux",
-            Email: "djpleroux@gmail.com",
-            Device: "device",
-            Major: "Major",
-            GradYear: 2025,
-            AdminPrivileges: privileges
-        },
-        {
-            ID: 3,
-            FirstName: "David",
-            LastName: "Le Roux",
-            Email: "lerouxdj21@gcc.edu",
-            Device: "device",
-            Major: "Major",
-            GradYear: 2025,
-            AdminPrivileges: privileges
-        }
-    ];
+        const data = await response.json();
+        console.log(`data: ${data}`)
+
+        setAdmins(data.admins as PartialUser[])
+    }
+
+    useEffect(() => {
+        loadAdmins()
+    }, []);
 
     const handleKeyUp = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === "Enter") {
@@ -105,9 +75,9 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
             </div>
             <SearchBar setSearchVal={setSearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={'small'} />
             <Typography style={{ fontSize: "24px", fontWeight: "600" }}>Current Administrators</Typography>
-            {users.map((user) => <AdminCard user={user} key={user.ID} 
+            {admins?.map((admin) => <AdminCard user={admin} key={admin.ID} 
                 onClick={() => {
-                    setSelectedAdmin(user);
+                    setSelectedAdmin(admin);
                     setOpenAdminModal(true);
                 }} />)}
             <Popover
@@ -136,28 +106,39 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
 interface AdminModalProps{
     open: boolean,
     handleClose: () => void,
-    selectedAdmin: User | null
+    selectedAdmin: PartialUser | null
 }
 
 function AdminModal({ open, handleClose, selectedAdmin }: AdminModalProps) {
 
-    const [adminPrivileges, setAdminPrivileges] = useState<AdminPrivilege[]>(
-        selectedAdmin?.AdminPrivileges || []
-    );
+    const [adminPrivileges, setAdminPrivileges] = useState<PartialAdminPrivilege[]>(selectedAdmin?.AdminPrivileges || []);
+
+    const [privileges, setPrivileges] = useState<PartialAdminPrivilege[]>([])
+
+    const getPrivileges = async() => {
+        const response = await fetch('http://localhost:5000/api/v1/admin/privileges', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+        console.log(data)
+
+        setPrivileges(data.privileges as PartialAdminPrivilege[])
+    }
+
+    useEffect(() => {
+        getPrivileges()
+    }, [])
 
     useEffect(() => {
         setAdminPrivileges(selectedAdmin?.AdminPrivileges || [])
     }, [open]);
-    
-    const privileges: AdminPrivilege[] = [
-        { ID: 1, PrivilegeName: 'Privilege 1' },
-        { ID: 2, PrivilegeName: 'Privilege 2' },
-        { ID: 3, PrivilegeName: 'Privilege 3' },
-        { ID: 4, PrivilegeName: 'Privilege 4' },
-        { ID: 5, PrivilegeName: 'Privilege 5' },
-    ];
 
-    const togglePrivilege = (privilege: AdminPrivilege) => {
+    const togglePrivilege = (privilege: PartialAdminPrivilege) => {
         if (adminPrivileges.some((p) => p.ID === privilege.ID)) {
             // Remove the privilege
             setAdminPrivileges((prev) => prev.filter((p) => p.ID !== privilege.ID));
@@ -178,7 +159,7 @@ function AdminModal({ open, handleClose, selectedAdmin }: AdminModalProps) {
             <div
                 style={{height: '70%', width: '60%', backgroundColor: 'white', padding: '10px', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}
             >
-                <Typography sx={{fontSize: "22px", fontWeight: "600"}}>{selectedAdmin?.FirstName} {selectedAdmin?.LastName}</Typography>
+                <Typography sx={{fontSize: "22px", fontWeight: "600"}}>{selectedAdmin?.FName} {selectedAdmin?.LName}</Typography>
                 <Typography   sx={{fontSize: "12px", fontweight: "500", textDecoration: "underline", color: "secondary.main", cursor: "pointer"}}>{selectedAdmin?.Email}</Typography>
                 <TableContainer sx={{ maxHeight: '70%', width: '90%', margin: "10px", border: "1px solid grey" }}>
                     <Table>
@@ -247,7 +228,7 @@ function UserModal() {
 }
 
 function testUsers(): User[]{
-    const privileges: AdminPrivilege[] = [
+    const privileges: PartialAdminPrivilege[] = [
         {
             ID: 1,
             PrivilegeName: "Privilege 1"

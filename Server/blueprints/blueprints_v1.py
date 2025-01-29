@@ -139,6 +139,33 @@ class Article(MethodView):
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
         
+@apiv1.route("/user/search", methods=["OPTIONS", "GET"])
+class UserSearch(MethodView):
+    def option(self):
+        return '', 200
+    def get(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session:
+                searchQuery = request.args.get("searchQuery")
+
+                users = models.User.query.filter(
+                    or_(
+                        models.User.FName.ilike(f"%{searchQuery}%"),
+                        models.User.LName.ilike(f"%{searchQuery}%"),
+                        models.User.Email.ilike(f"%{searchQuery}%")
+                    )
+                ).all()
+                
+                returnableUsers = [user.toJSONPartial() for user in users]
+                
+                return {'users': returnableUsers}, 200
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+        
 @apiv1.route("/user", methods=["OPTIONS", "GET", "POST", "PUT"])
 class User(MethodView):
     def options(self):
@@ -262,6 +289,23 @@ class User(MethodView):
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
         
+@apiv1.route("/admin/privileges", methods=["OPTIONS", "GET"])
+class AdminPrivileges(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session:
+                privileges: list[models.AdminPrivilege] = models.AdminPrivilege.query.all()
+                returnablePrivileges = [priv.toJSONPartial() for priv in privileges]
+                return {'privileges': returnablePrivileges}, 200
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+        
 @apiv1.route("/admin", methods=["OPTION", "GET", "POST", "PUT"])
 class Admin(MethodView):
     def options(self):
@@ -296,22 +340,20 @@ class Admin(MethodView):
                         
                         userPrivileges: list[models.AdminPrivilege] = user.AdminPrivileges
                         
-                        privNamesAdd = data.get("PrivilegeNamesAdd")
-                        if privNamesAdd:
-                            privNamesAdd = [name.upper() for name in privNamesAdd]
+                        privIDsAdd = data.get("PrivilegeIDsAdd")
+                        if privIDsAdd:
                             
-                            for name in privNamesAdd:
-                                adminPrivilege: models.AdminPrivilege = models.AdminPrivilege.query.filter_by(PrivilegeName=name).first()
+                            for privID in privIDsAdd:
+                                adminPrivilege: models.AdminPrivilege = models.AdminPrivilege.query.filter_by(ID=privID).first()
                                 if adminPrivilege:
                                     userPrivileges.append(adminPrivilege)
                         
-                        privNamesRem = data.get("PrivilegeNamesRem")
-                        if privNamesRem:
-                            privNamesRem = [name.upper() for name in privNamesRem]
+                        privIDsRem = data.get("PrivilegeIDsRem")
+                        if privIDsRem:
                         
                             privsToRem: list[models.AdminPrivilege] = []
                             for priv in userPrivileges:
-                                if priv.PrivilegeName.upper() in privNamesRem:
+                                if priv.ID in privIDsRem:
                                     privsToRem.append(priv)
                                     
                             for priv in privsToRem:
@@ -338,14 +380,14 @@ class Admin(MethodView):
                     id = data.get("ID")
                     if id:
                         user: models.User = models.User.query.filter_by(ID=id).first()
-                        if user:
-                            privNames = data.get("PrivilegeNames")
-                            
+                        if user:                            
                             privileges: list[models.AdminPrivilege] = []
-                            for name in privNames:
-                                priv: models.AdminPrivilege = models.AdminPrivilege.query.filter_by(PrivilegeName=name).first()
-                                if priv:
-                                    privileges.append(priv)
+                            
+                            allPrivileges: list[models.AdminPrivilege] = models.AdminPrivilege.query.all()
+                            
+                            privileges.append(allPrivileges[0])
+                            privileges.append(allPrivileges[2])
+                            privileges.append(allPrivileges[3])
                                 
                             user.AdminPrivileges = privileges
                             db.session.commit()
@@ -393,7 +435,7 @@ class Admins(MethodView):
                 for user in users:
                     data = user.toJSON()
                     if data["AdminPrivileges"]:
-                        admins.append[user]
+                        admins.append(user)
                 returnableAdmins = [admin.toJSONPartial() for admin in admins]
                 if returnableAdmins:
                     return {'admins': returnableAdmins}, 200
