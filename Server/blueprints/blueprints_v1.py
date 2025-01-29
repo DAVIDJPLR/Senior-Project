@@ -111,7 +111,6 @@ class Article(MethodView):
         try:
             if 'current_user_id' in session:
                 article_updated = request.json
-                userID = request.args.get("userID")
                 if article_updated:
                     id: int = article_updated.get("ID")
                     title: str = article_updated.get('Title')
@@ -126,13 +125,254 @@ class Article(MethodView):
                     article.Image = image
 
                     time = datetime.now()
-                    eh = models.EditHistory(ArticleID=id, UserID=userID,
+                    eh = models.EditHistory(ArticleID=id, UserID=session['current_user_id'],
                                             Edit_Time=time)
                     db.session.add(eh)
                     
                     db.session.commit()
                 else:
                     return {'msg': 'No update data submitted'}, 400
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+        
+@apiv1.route("/user", methods=["OPTIONS", "GET", "POST", "PUT"])
+class User(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session:
+                id = request.args.get("ID")
+                user: models.User = models.User.query.filter_by(ID=id).first()
+                
+                if user:
+                    return {
+                        'user': user.toJSONPartial(),
+                        'adminPrivileges': [ap.toJSONPartial for ap in user.AdminPrivileges]
+                        }, 200
+                else:
+                    return {'msg': 'No such user'}, 404
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+    def post(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session:
+                data = request.json
+                if data:
+                    email = data.get("Email")
+                    if email:
+                        user: models.User = models.User(Email=email)
+                        
+                        db.session.add(user)
+                        
+                        # Device = db.Column(db.Unicode, nullable=True)
+                        if data.get("Device"):
+                            user.Device = data.get("Device")
+                        # Major = db.Column(db.Unicode, nullable=True)
+                        if data.get("Major"):
+                            user.Major = data.get("Major")
+                        # GradYear = db.Column(db.Integer, nullable=True)
+                        if data.get("GradYear"):
+                            user.GradYear = data.get("GradYear")
+                        # LName = db.Column(db.Unicode, nullable=True)
+                        if data.get("LName"):
+                            user.LName = data.get("LName")
+                        # FName = db.Column(db.Unicode, nullable=True)
+                        if data.get("FName"):
+                            user.FName = data.get("FName")
+                            
+                        db.session.commit()
+                        return {'user', user.toJSONPartial()}, 201
+                        
+                    else:
+                        return {'msg': 'No email included to create user with'}, 400
+                else:
+                    return {'msg': 'No body in the request'}, 400
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+    def put(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session:
+                data = request.json
+                if data:
+                    id = data.get("ID")
+                    if id:
+                        user: models.User = models.User.query.filter_by(ID=id).first()
+                        if user:
+                            # Email = db.Column(db.Unicode, nullable=True)
+                            if data.get("Email"):
+                                user.Email = data.get("Email")
+                            # Device = db.Column(db.Unicode, nullable=True)
+                            if data.get("Device"):
+                                user.Device = data.get("Device")
+                            # Major = db.Column(db.Unicode, nullable=True)
+                            if data.get("Major"):
+                                user.Major = data.get("Major")
+                            # GradYear = db.Column(db.Integer, nullable=True)
+                            if data.get("GradYear"):
+                                user.GradYear = data.get("GradYear")
+                            # LName = db.Column(db.Unicode, nullable=True)
+                            if data.get("LName"):
+                                user.LName = data.get("LName")
+                            # FName = db.Column(db.Unicode, nullable=True)
+                            if data.get("FName"):
+                                user.FName = data.get("FName")
+                                
+                            db.session.commit()
+                            return {'user', user.toJSONPartial()}, 201
+                        else:
+                            return {'msg', 'No user found with given ID'}, 404
+                    else:
+                        return {'msg': 'No user id included in request'}, 400
+                else:
+                    return {'msg': 'No body in the request'}, 400
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+    def delete(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session:
+                id = request.args.get("ID")
+                user: models.User = models.User.query.filter_by(ID=id).first()
+                db.session.delete(user)
+                db.session.commit()
+                if user:
+                    return '', 200
+                else:
+                    return {'msg': 'No such user'}, 404
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+        
+@apiv1.route("/admin", methods=["OPTION", "GET", "POST", "PUT"])
+class Admin(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session:
+                id = request.args.get("ID")
+                user: models.User = models.User.query.filter_by(ID=id).first()
+                
+                if user:
+                    return {
+                        'user': user.toJSONPartial(),
+                        'adminPrivileges': [ap.toJSONPartial for ap in user.AdminPrivileges]
+                        }, 200
+                else:
+                    return {'msg': 'No such user'}, 404
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+    def put(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session:
+                data = request.json
+                if data:
+                    id = data.get("ID")
+                    if id:
+                        user: models.User = models.User.query.filter_by(ID=id)
+                        
+                        userPrivileges: list[models.AdminPrivilege] = user.AdminPrivileges
+                        
+                        privNamesAdd = data.get("PrivilegeNamesAdd")
+                        if privNamesAdd:
+                            privNamesAdd = [name.upper() for name in privNamesAdd]
+                            
+                            for name in privNamesAdd:
+                                adminPrivilege: models.AdminPrivilege = models.AdminPrivilege.query.filter_by(PrivilegeName=name).first()
+                                if adminPrivilege:
+                                    userPrivileges.append(adminPrivilege)
+                        
+                        privNamesRem = data.get("PrivilegeNamesRem")
+                        if privNamesRem:
+                            privNamesRem = [name.upper() for name in privNamesRem]
+                        
+                            privsToRem: list[models.AdminPrivilege] = []
+                            for priv in userPrivileges:
+                                if priv.PrivilegeName.upper() in privNamesRem:
+                                    privsToRem.append(priv)
+                                    
+                            for priv in privsToRem:
+                                userPrivileges.remove(priv)
+                        
+                        user.AdminPrivileges = userPrivileges
+                        db.session.commit()
+                        return {'user', user.toJSONPartial()}, 201   
+                    else:
+                        return {'msg': 'No user id included in request'}, 400
+                else:
+                    return {'msg': 'No body in the request'}, 400
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+    def post(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session:
+                data = request.json
+                if data:
+                    id = data.get("ID")
+                    if id:
+                        user: models.User = models.User.query.filter_by(ID=id).first()
+                        if user:
+                            privNames = data.get("PrivilegeNames")
+                            
+                            privileges: list[models.AdminPrivilege] = []
+                            for name in privNames:
+                                priv: models.AdminPrivilege = models.AdminPrivilege.query.filter_by(PrivilegeName=name).first()
+                                if priv:
+                                    privileges.append(priv)
+                                
+                            user.AdminPrivileges = privileges
+                            db.session.commit()
+                            return {'user', user.toJSONPartial()}, 201
+                        else:
+                            return {'msg', 'No user found with given ID'}, 404
+                    else:
+                        return {'msg': 'No user id included in request'}, 400
+                else:
+                    return {'msg': 'No body in the request'}, 400
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+    def delete(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session:
+                id = request.args.get("ID")
+                user: models.User = models.User.query.filter_by(ID=id).first()
+                user.AdminPrivileges = []
+                db.session.commit()
+                if user:
+                    return '', 200
+                else:
+                    return {'msg': 'No such user'}, 404
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:

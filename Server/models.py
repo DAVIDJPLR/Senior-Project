@@ -271,7 +271,7 @@ class MetaTag(db.Model):
 class User(db.Model):
     __tablename__ = 'Users'
     ID = db.Column(db.Integer, primary_key=True)
-    Email = db.Column(db.Unicode, nullable=True)
+    Email = db.Column(db.Unicode, nullable=False)
     Device = db.Column(db.Unicode, nullable=True)
     Major = db.Column(db.Unicode, nullable=True)
     GradYear = db.Column(db.Integer, nullable=True)
