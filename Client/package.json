@@ -10,12 +10,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@azure/msal-browser": "^4.0.2",
+    "@azure/msal-react": "^3.0.2",
     "@emotion/react": "^11.13.5",
     "@emotion/styled": "^11.13.5",
     "@mui/icons-material": "^6.4.0",
     "@mui/material": "^6.1.10",
     "bootstrap": "^5.3.3",
+    "msal": "^1.4.18",
     "react": "^18.3.1",
+    "react-bootstrap": "^2.10.8",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
