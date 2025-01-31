@@ -53,31 +53,23 @@ const ProfileContent = () => {
     );
 };
 
-/**
-* If a user is authenticated the ProfileContent component above is rendered. Otherwise a message indicating a user is not authenticated is rendered.
-*/
-// const MainContent = () => {
-//     return (
-//         <div className="App">
-//             <AuthenticatedTemplate>
-//                 <ProfileContent />
-//             </AuthenticatedTemplate>
-
-//             <UnauthenticatedTemplate>
-//                 <h5>
-//                     <center>
-//                         Please sign-in to see your profile information.
-//                     </center>
-//                 </h5>
-//             </UnauthenticatedTemplate>
-//         </div>
-//     );
-// };
-
 function App() {
 
+    const [authenticated, setAuthenticated] = useState(false);
     const [admin, setAdmin] = useState(false);
     const [currentScreen, setCurrentScreen] = useState<Screen>(StudentScreen.Home)
+
+    useEffect(() => {
+        if (authenticated){
+            if (admin){
+                setCurrentScreen(AdminScreen.Splash);
+            } else {
+                setCurrentScreen(StudentScreen.Home);
+            }
+        } else {
+
+        }
+    }, [authenticated, admin])
 
     useEffect(() => {
         if (admin){
@@ -87,40 +79,70 @@ function App() {
         }
     }, [admin]);
 
-    switch (currentScreen) {
-        case AdminScreen.Analysis:
-            return(
-                <AdminAnalysis currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></AdminAnalysis>
-            );
-        case AdminScreen.Articles:
-            return(
-                <AdminArticles currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></AdminArticles>
-            );
-        case AdminScreen.BackLog:
-            return(
-                <AdminBacklog currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></AdminBacklog>
-            );
-        case AdminScreen.Splash:
-            return(
-                <AdminHome currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></AdminHome>
-            );
-        case AdminScreen.Users:
-            return(
-                <AdminUsers currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></AdminUsers>
-            );
-        case StudentScreen.Browse:
-            return(
-                <StudentBrowse currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></StudentBrowse>
-            );
-        case StudentScreen.Home:
-            return(
-                <StudentHome currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></StudentHome>
-            );
-        case StudentScreen.Recently_Viewed:
-            return(
-                <StudentRecent currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></StudentRecent>
-            );
-    }
+    /**
+    * If a user is authenticated the ProfileContent component above is rendered. Otherwise a message indicating a user is not authenticated is rendered.
+    */
+    const MainContent = () => {
+        switch (currentScreen) {
+            case AdminScreen.Analysis:
+                return(
+                    <AdminAnalysis currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></AdminAnalysis>
+                );
+            case AdminScreen.Articles:
+                return(
+                    <AdminArticles currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></AdminArticles>
+                );
+            case AdminScreen.BackLog:
+                return(
+                    <AdminBacklog currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></AdminBacklog>
+                );
+            case AdminScreen.Splash:
+                return(
+                    <AdminHome currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></AdminHome>
+                );
+            case AdminScreen.Users:
+                return(
+                    <AdminUsers currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></AdminUsers>
+                );
+            case StudentScreen.Browse:
+                return(
+                    <StudentBrowse currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></StudentBrowse>
+                );
+            case StudentScreen.Home:
+                return(
+                    <StudentHome currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></StudentHome>
+                );
+            case StudentScreen.Recently_Viewed:
+                return(
+                    <StudentRecent currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></StudentRecent>
+                );
+        }
+            // <div className="App">
+            //     <AuthenticatedTemplate>
+            //         <ProfileContent />
+            //     </AuthenticatedTemplate>
+
+            //     <UnauthenticatedTemplate>
+            //         <h5>
+            //             <center>
+            //                 Please sign-in to see your profile information.
+            //             </center>
+            //         </h5>
+            //     </UnauthenticatedTemplate>
+            // </div>
+    };
+
+    return (
+        <div className="App">
+            <AuthenticatedTemplate>
+                <MainContent />
+            </AuthenticatedTemplate>
+
+            <UnauthenticatedTemplate>
+                
+            </UnauthenticatedTemplate>
+        </div>
+    );
 }
 
 export default App
