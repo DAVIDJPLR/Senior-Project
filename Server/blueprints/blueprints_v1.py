@@ -1,7 +1,7 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint
 from flask import session, request, jsonify
-from sqlalchemy import or_, desc, func
+from sqlalchemy import or_, desc, func, select
 from app import db
 
 import time
@@ -298,3 +298,31 @@ class Trending(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
+
+@apiv1.route("/articles/backlog", methods=["OPTIONS", "GET"])
+class Backlog(MethodView):
+    def options(self):
+        return '', 200
+    
+    def get(self):
+        try:
+            if 'current_user_id' in session:
+                articles = models.Article.query.all()
+                published = []
+
+                for article in articles:  
+                    for tag in article.Tags:
+                        if tag.ID == 1:
+                            published.append(article)
+
+                backlog = [article for article in articles if article not in published]
+                returnableBacklog = [article.toJSONPartial() for article in backlog]
+                return {'backlog': returnableBacklog}, 200
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+
+# Return all articles that do not have the tag "Published"
