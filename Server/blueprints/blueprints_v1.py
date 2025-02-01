@@ -1,14 +1,12 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint
-from flask import session, request, jsonify
-from sqlalchemy import or_, desc, func, select
+from flask import session, request
+from sqlalchemy import or_, func
+from datetime import datetime, timedelta
 from app import db
 
-import time
 import traceback
 import models
-
-import datetime
 
 apiv1 = Blueprint(
     "apiv1", 
@@ -286,12 +284,204 @@ class UserViewHistory(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
+        
+@apiv1.route("/articles/indepth", methods=["OPTIONS", "GET"])
+class ArticlesInDepth(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        try:
+            if 'current_user_id' in session and session['current_user_role'] == "admin":
+                time = request.args.get("time")
+                if time:
+                    try:
+                        time_int = float(time)
+                        time_datetime = datetime.fromtimestamp(time_int)
+                        size = request.args.get("size")
+                        size_int = 10
+                        if size:
+                            try:
+                                size_int = int(size)
+                            except ValueError:
+                                return {'msg': 'Incorrect size argument. size should be an int'}, 400
+                        
+                        articles_with_thumbs_up = db.session.query(
+                            models.Article,
+                            func.count(models.Feedback.ID).label('thumbs_up_count')
+                        ).outerjoin(
+                            models.Feedback, models.Article.ID == models.Feedback.ArticleID
+                        ).filter(
+                            (models.Feedback.Submission_Time >= time_datetime) | (models.Feedback.ID == None),
+                            (models.Feedback.Positive == True) | (models.Feedback.ID == None)
+                        ).group_by(
+                            models.Article.ID
+                        ).order_by(
+                            func.count(models.Feedback.ID).desc()
+                        ).limit(size_int).all()
+
+                        articles: list[models.Article] = [article for article, thumbs_up_count in articles_with_thumbs_up]
+                        thumbs_up_counts = [thumbs_up_count for article, thumbs_up_count in articles_with_thumbs_up]
+                        
+                        returnable_articles = [article.toJSONPartial() for article in articles]
+                        
+                        articleSearches = {}
+                        searches: list[models.Search] = models.Search.query.filter(
+                            models.Search.SearchTime >= time_datetime
+                        ).all()
+                        for search in searches:
+                            if search.TopResult in articleSearches:
+                                articleSearches[search.TopResult] += 1
+                            else:
+                                articleSearches[search.TopResult] = 1
+                                
+                            if search.SecondResult in articleSearches:
+                                articleSearches[search.SecondResult] += 1
+                            else:
+                                articleSearches[search.SecondResult] = 1
+                                
+                            if search.ThirdResult in articleSearches:
+                                articleSearches[search.ThirdResult] += 1
+                            else:
+                                articleSearches[search.ThirdResult] = 1
+                                
+                            if search.FourthResult in articleSearches:
+                                articleSearches[search.FourthResult] += 1
+                            else:
+                                articleSearches[search.FourthResult] = 1
+                                
+                            if search.FifthResult in articleSearches:
+                                articleSearches[search.FifthResult] += 1
+                            else:
+                                articleSearches[search.FifthResult] = 1
+                                
+                        returnableSearchCount = []
+                        
+                        for addr in articles:
+                            if addr.ID in articleSearches:
+                                returnableSearchCount.append(articleSearches[addr.ID])
+                            else:
+                                returnableSearchCount.append(0)
+                        
+                        return {
+                            'articles': returnable_articles, 
+                            'thumbs_up': thumbs_up_counts,
+                            'searches': returnableSearchCount
+                        }, 200 
+                        
+                    except ValueError:
+                        return {'msg': 'Incorrect time format. time should be in unix format'}, 400
+                else:
+                    return {'msg': 'no time argument included in request'}, 400
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+        
+@apiv1.route("/articles/popular", methods=["OPTIONS", "GET"])
+class ArticlesPopular(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        try:
+            if 'current_user_id' in session and session['current_user_role'] == "admin":
+                time = request.args.get("time")
+                if time:
+                    try:
+                        time_int = float(time)
+                        time_datetime = datetime.fromtimestamp(time_int)
+                        size = request.args.get("size")
+                        size_int = 10
+                        if size:
+                            try:
+                                size_int = int(size)
+                            except ValueError:
+                                return {'msg': 'Incorrect size argument. size should be an int'}, 400
+                        
+                        articles_with_thumbs_up = db.session.query(
+                            models.Article,
+                            func.count(models.Feedback.ID).label('thumbs_up_count')
+                        ).join(
+                            models.Feedback, models.Article.ID == models.Feedback.ArticleID
+                        ).filter(
+                            models.Feedback.Submission_Time >= time_datetime,
+                            models.Feedback.Positive == True
+                        ).group_by(
+                            models.Article.ID
+                        ).order_by(
+                            func.count(models.Feedback.ID).desc()
+                        ).limit(size_int).all()
+
+                        articles = [article for article, thumbs_up_count in articles_with_thumbs_up]
+                        thumbs_up_counts = [thumbs_up_count for article, thumbs_up_count in articles_with_thumbs_up]
+                        
+                        returnable_articles = [article.toJSONPartial() for article in articles]
+                        return {'articles': returnable_articles, 'thumbs_up': thumbs_up_counts}, 200 
+                        
+                    except ValueError:
+                        return {'msg': 'Incorrect time format. time should be in unix format'}, 400
+                else:
+                    return {'msg': 'no time argument included in request'}, 400
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+
+@apiv1.route("/articles/problems", methods=["OPTIONS", "GET"])
+class ArticlesProblems(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        try:
+            if 'current_user_id' in session and session['current_user_role'] == "admin":
+                time = request.args.get("time")
+                if time:
+                    try:
+                        time_int = float(time)
+                        time_datetime = datetime.fromtimestamp(time_int)
+                        size = request.args.get("size")
+                        size_int = 10
+                        if size:
+                            try:
+                                size_int = int(size)
+                            except ValueError:
+                                return {'msg': 'Incorrect size argument. size should be an int'}, 400
+                        
+                        articles_with_thumbs_up = db.session.query(
+                            models.Article,
+                            func.count(models.Feedback.ID).label('thumbs_up_count')
+                        ).join(
+                            models.Feedback, models.Article.ID == models.Feedback.ArticleID
+                        ).filter(
+                            models.Feedback.Submission_Time >= time_datetime,
+                            models.Feedback.Positive == True
+                        ).group_by(
+                            models.Article.ID
+                        ).order_by(
+                            func.count(models.Feedback.ID).asc()
+                        ).limit(size_int).all()
+
+                        articles = [article for article, thumbs_up_count in articles_with_thumbs_up]
+                        returnable_articles = [article.toJSONPartial() for article in articles]
+                        return {'articles': returnable_articles}, 200   
+                    except ValueError:
+                        return {'msg': 'Incorrect time format. time should be in unix format'}, 400
+                else:
+                    return {'msg': 'no time argument included in request'}, 400
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
 
 @apiv1.route("/articles/trending", methods=["OPTIONS", "GET"])
 class Trending(MethodView):
     def options(self):
         return '', 200
-    
     def get(self):
         try:
             if 'current_user_id' in session:
@@ -364,6 +554,85 @@ class NoSolution(MethodView):
                        return {'msg': 'No content submitted '}, 400 
                 else:
                     return {'msg': 'No content submitted '}, 400
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+        
+@apiv1.route("/searches/problems", methods=["OPTIONS", "GET"])
+class SearchesProblems(MethodView):
+    def options(self):
+        return '', 200
+    
+    def get(self):
+        try:
+            if 'current_user_id' in session and session['current_user_role'] == "admin":
+                time = request.args.get("time")
+                if time:
+                    try:
+                        time_int = float(time)
+                        time_datetime = datetime.fromtimestamp(time_int)
+                        
+                        no_solutions: list[models.NoSolution] = models.NoSolution.query.filter(
+                            models.NoSolution.Submission_Time >= time_datetime
+                        ).order_by(
+                            models.NoSolution.Submission_Time.desc()
+                        ).all()
+                        
+                        problemSearches: list[models.Search] = []
+                        seen_search_ids = set()
+                        
+                        for noSol in no_solutions:
+                            submitTime = noSol.Submission_Time
+                            uid = noSol.UserID
+                            
+                            closest_search: models.Search = models.Search.query.filter(
+                                models.Search.UserID == uid,
+                                models.Search.SearchTime <= submitTime
+                            ).order_by(
+                                models.Search.SearchTime.desc()
+                            ).first()
+                            
+                            if closest_search and closest_search.SearchID not in seen_search_ids:
+                                problemSearches.append(closest_search)
+                                seen_search_ids.add(closest_search.SearchID)
+                        
+                        
+                        returnableSearches = [s.toJSONPartial() for s in problemSearches]
+                        
+                        return {'searches': returnableSearches}                            
+                        
+                    except ValueError:
+                        return {'msg': 'Incorrect time format. time should be in unix format'}, 400
+                else:
+                    return {'msg': 'no time argument included in request'}, 400
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+        
+@apiv1.route("/system/stats", methods=["OPTIONS", "GET"])
+class SystemStats(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        try:
+            if 'current_user_id' in session and session['current_user_role'] == "admin":
+                one_week_ago = datetime.now() - timedelta(weeks=1)
+    
+                user_count = db.session.query(func.count(models.User.ID)).scalar()
+                article_count = db.session.query(func.count(models.Article.ID)).scalar()
+                search_count = db.session.query(func.count(models.Search.SearchID)).filter(models.Search.SearchTime >= one_week_ago).scalar()
+                
+                return {
+                    'user_count': user_count,
+                    'article_count': article_count,
+                    'search_count': search_count
+                }
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
