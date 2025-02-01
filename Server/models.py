@@ -85,7 +85,7 @@ class Article(db.Model):
     MetaTags = db.relationship('MetaTag', secondary=ArticleMetaTags, back_populates='Articles', lazy='select')
 
     def __str__(self):
-        return f"Article name: {self.title}"
+        return f"Article name: {self.Title}"
     
     def toJSONPartial(self):
         return{
@@ -147,18 +147,18 @@ class Feedback(db.Model):
     def toJSONPartial(self):
         return {
             'ID': self.ID,
-            'submission_time': int(self.submission_time.timestamp()),
-            'positive': self.positive,
-            'userID': self.userID,
-            'articleID': self.articleID
+            'Submission_Time': int(self.Submission_Time.timestamp()),
+            'Positive': self.Positive,
+            'UserID': self.UserID,
+            'ArticleID': self.ArticleID
         }
     def toJSON(self):
         return {
             'ID': self.ID,
-            'submission_time': int(self.submission_time.timestamp()),
-            'positive': self.positive,
-            'userID': self.userID,
-            'articleID': self.articleID,
+            'Submission_Time': int(self.Submission_Time.timestamp()),
+            'Positive': self.Positive,
+            'UserID': self.UserID,
+            'ArticleID': self.ArticleID,
             'User': self.User.toJSONPartial(),
             'Article': self.Article.toJSONPartial()
         }
@@ -175,16 +175,16 @@ class NoSolution(db.Model):
     def toJSONPartial(self):
         return {
             'ID': self.ID,
-            'content': self.content,
-            'submission_time': int(self.submission_time.timestamp()),
-            'userID': self.userID
+            'Content': self.Content,
+            'Submission_Time': int(self.Submission_Time.timestamp()),
+            'UserID': self.UserID
         }
     def toJSON(self):
         return {
             'ID': self.ID,
-            'content': self.content,
-            'submission_time': int(self.submission_time.timestamp()),
-            'userID': self.userID,
+            'Content': self.Content,
+            'Submission_Time': int(self.Submission_Time.timestamp()),
+            'UserID': self.UserID,
             'User': self.User.toJSONPartial()
         }
 
@@ -205,29 +205,29 @@ class Search(db.Model):
 
     def toJSONPartial(self):
         return {
-            'searchID': self.searchID,
-            'searchQuery': self.searchQuery,
-            'noSolutionID': self.noSolutionID,
-            'userID': self.userID,
-            'topResult': self.topResult,
-            'secondResult': self.secondResult,
-            'thirdResult': self.thirdResult,
-            'fourthResult': self.fourthResult,
-            'fifthResult': self.fifthResult,
-            'searchTime': int(self.searchTime.timestamp())
+            'SearchID': self.SearchID,
+            'SearchQuery': self.SearchQuery,
+            'NoSolutionID': self.NoSolutionID,
+            'userID': self.UserID,
+            'TopResult': self.TopResult,
+            'SecondResult': self.SecondResult,
+            'ThirdResult': self.ThirdResult,
+            'FourthResult': self.FourthResult,
+            'FifthResult': self.FifthResult,
+            'SearchTime': int(self.SearchTime.timestamp())
         }
-    def toJSONPartial(self):
+    def toJSON(self):
         return {
-            'searchID': self.searchID,
-            'searchQuery': self.searchQuery,
-            'noSolutionID': self.noSolutionID,
-            'userID': self.userID,
-            'topResult': self.topResult,
-            'secondResult': self.secondResult,
-            'thirdResult': self.thirdResult,
-            'fourthResult': self.fourthResult,
-            'fifthResult': self.fifthResult,
-            'searchTime': int(self.searchTime.timestamp())
+            'SearchID': self.SearchID,
+            'SearchQuery': self.SearchQuery,
+            'NoSolutionID': self.NoSolutionID,
+            'userID': self.UserID,
+            'TopResult': self.TopResult,
+            'SecondResult': self.SecondResult,
+            'ThirdResult': self.ThirdResult,
+            'FourthResult': self.FourthResult,
+            'FifthResult': self.FifthResult,
+            'SearchTime': int(self.SearchTime.timestamp())
         }
 
 class Tag(db.Model):
@@ -240,31 +240,31 @@ class Tag(db.Model):
     def toJSONPartial(self):
         return {
             'ID': self.ID,
-            'tagName': self.tagName
+            'TagName': self.TagName
         }
     def toJSON(self):
         return {
             'ID': self.ID,
-            'tagName': self.tagName,
+            'TagName': self.TagName,
             'Articles': [article.toJSONPartial() for article in self.Articles]
         }
 
 class MetaTag(db.Model):
     __tablename__ = 'MetaTags'
     ID = db.Column(db.Integer, primary_key=True)
-    tagName = db.Column(db.Unicode, nullable=False)
+    TagName = db.Column(db.Unicode, nullable=False)
 
     Articles = db.relationship('Article', secondary=ArticleMetaTags, back_populates='MetaTags')
 
     def toJSONPartial(self):
         return {
             'ID': self.ID,
-            'tagName': self.tagName
+            'TagName': self.TagName
         }
     def toJSON(self):
         return {
             'ID': self.ID,
-            'tagName': self.tagName,
+            'TagName': self.TagName,
             'Articles': [article.toJSONPartial() for article in self.Articles]
         }
 
@@ -287,20 +287,20 @@ class User(db.Model):
     def toJSONPartial(self):
         return {
             'ID': self.ID,
-            'email': self.email,
-            'device': self.device,
-            'major': self.major,
-            'gradYear': self.gradYear,
+            'Email': self.Email,
+            'Device': self.Device,
+            'Major': self.Major,
+            'GradYear': self.GradYear,
             'LName': self.LName,
             'FName': self.FName
         }
     def toJSON(self):
         return {
             'ID': self.ID,
-            'email': self.email,
-            'device': self.device,
-            'major': self.major,
-            'gradYear': self.gradYear,
+            'Email': self.Email,
+            'Device': self.Device,
+            'Major': self.Major,
+            'GradYear': self.GradYear,
             'LName': self.LName,
             'FName': self.FName,
             'Views': [view.toJSONPartial() for view in self.Views],
