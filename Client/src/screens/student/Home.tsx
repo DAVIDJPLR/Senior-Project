@@ -4,7 +4,7 @@ import { Screen } from "../../custom_objects/Screens";
 import { useState, useEffect } from "react";
 import ArticleCard from "../../components/ArticleCard";
 import ArticleModal from "../../components/ArticleModal";
-import { Typography, Modal, Button, TextField } from "@mui/material";
+import { Typography, Modal, Button, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Alert } from "@mui/material";
 import { PartialArticle } from "../../custom_objects/models";
 
 interface Props{
@@ -15,6 +15,8 @@ interface Props{
 function StudentHome({ currentScreen, setCurrentScreen }: Props){
 
     const [searchVal, setsearchVal] = useState("");
+
+    const [alertVis, setAlertVis] = useState(false);
 
     const [articles, setArticles] = useState<PartialArticle[]>([]);
 
@@ -90,6 +92,9 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
 
     return(
         <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center"}}>
+            {alertVis && (
+                <Alert severity="success" onClose={() => {setAlertVis(false)}} style={{position: 'fixed', top: "20px", zIndex: 1300, fontSize: '1.5rem', padding: '20px'}}>Issue Submitted</Alert>
+            )}
             <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></StudentAppBar>
             <div style={{ flexShrink: 0, height: "10%", width: "100%"}}></div>
             <SearchBar setSearchVal={setsearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={"medium"}></SearchBar>
@@ -104,7 +109,7 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
                 setOpenNoResultFoundModal(true);
             }} sx={{color: 'text.secondary', cursor: 'pointer', textDecoration: 'underline', fontSize: '18px', fontWeight: '600', position: 'fixed', bottom: 20, ackdropFilter: 'blur(5px)', backgroundColor: 'rgba(255, 255, 255, 0.7)', padding: '10px', borderRadius: '8px'}}>I didn't find a solution</Typography>}
        
-            <NoResultFoundModal open={openNoResultFoundModal} setOpen={setOpenNoResultFoundModal}/>
+            <NoResultFoundModal open={openNoResultFoundModal} setOpen={setOpenNoResultFoundModal} setAlertVis={setAlertVis}/>
             <ArticleModal handleClose={() => {
                 setOpenArticleModal(false);
                 setCurrentArticle(null);
@@ -116,12 +121,28 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
 interface NoResultFoundModalProps{
     open: boolean,
     setOpen: (open: boolean) => void,
+    setAlertVis: (alertVis: boolean) => void
 }
 
-function NoResultFoundModal({ open, setOpen }: NoResultFoundModalProps){
+function NoResultFoundModal({ open, setOpen, setAlertVis }: NoResultFoundModalProps){
     
     const [problemDescription, setProblemDescription] = useState("");
+    const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
     
+    const submitContent = async () => {
+        const response = await fetch('http://localhost:5000/api/v1/nosolution', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({ 'content': problemDescription })
+        });
+
+        const data = await response.json();
+        console.log(data)
+    }
+
     return(
         <Modal
             open={open}
@@ -148,12 +169,47 @@ function NoResultFoundModal({ open, setOpen }: NoResultFoundModalProps){
                 </div>
                 <div style={{height: "10%", width: "100%", display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
                     <Button variant="contained" sx={{height: "64px", width: "152px", backGroundColor: "primary"}} onClick={() => {
-                        setOpen(false);
-                        console.log(problemDescription);
+                        setOpenConfirmDialog(true)
                     }}>Submit</Button>
                 </div>
+                <ConfirmSubmissionDialog open={openConfirmDialog} onClose={() => {setOpenConfirmDialog(false)}} onConfirm={() => {
+                    setOpen(false);
+                    setOpenConfirmDialog(false);
+                    submitContent();
+                    setAlertVis(true);
+                }} content={problemDescription}></ConfirmSubmissionDialog>
             </div>
         </Modal>
+    );
+}
+
+interface confirmSubmissionProps{
+    open: boolean,
+    onClose: () => void,
+    onConfirm: () => void,
+    content: string
+}
+
+function ConfirmSubmissionDialog({ open, onClose, onConfirm, content }: confirmSubmissionProps){
+    return(
+        <Dialog open={open} onClose={onClose} sx={{width: "100%", height: "100%"}}>
+            <DialogTitle sx={{fontSize: "30px"}}>Confirm Submission</DialogTitle>
+            <DialogContent>
+                <Typography sx={{fontSize: "25px", color: "grey"}}>Submission:</Typography>
+                <div style={{height: "10px"}}></div>
+                <DialogContentText sx={{fontSize: "20px", color: "black"}}>
+                    {content}
+                </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+                <Button size='large' onClick={onClose} variant="contained" sx={{height: "80px", width: "200px"}}>
+                    Cancel
+                </Button>
+                <Button size='large' onClick={onConfirm} variant="contained" sx={{backgroundColor: "green", height: "80px", width: "200px"}} >
+                    Submit
+                </Button>
+            </DialogActions>
+        </Dialog>
     );
 }
 
