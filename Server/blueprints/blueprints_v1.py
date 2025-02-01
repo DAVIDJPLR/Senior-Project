@@ -139,9 +139,28 @@ class Article(MethodView):
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
         
-@apiv1.route("/user/search", methods=["OPTIONS", "GET"])
+@apiv1.route("/users", methods=["OPTIONS", "GET"])
+class Users(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session:
+                users: models.User = models.User.query.all()
+                
+                returnableUsers = [user.toJSONPartial() for user in users]
+                
+                return {'users': returnableUsers}, 200
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+        
+@apiv1.route("/users/search", methods=["OPTIONS", "GET"])
 class UserSearch(MethodView):
-    def option(self):
+    def options(self):
         return '', 200
     def get(self):
         try:
@@ -217,7 +236,7 @@ class User(MethodView):
                             user.FName = data.get("FName")
                             
                         db.session.commit()
-                        return {'user', user.toJSONPartial()}, 201
+                        return {'user': user.toJSONPartial()}, 201
                         
                     else:
                         return {'msg': 'No email included to create user with'}, 400
@@ -258,7 +277,7 @@ class User(MethodView):
                                 user.FName = data.get("FName")
                                 
                             db.session.commit()
-                            return {'user', user.toJSONPartial()}, 201
+                            return {'user': user.toJSONPartial()}, 201
                         else:
                             return {'msg', 'No user found with given ID'}, 404
                     else:
@@ -306,7 +325,7 @@ class AdminPrivileges(MethodView):
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
         
-@apiv1.route("/admin", methods=["OPTION", "GET", "POST", "PUT"])
+@apiv1.route("/admin", methods=["OPTION", "GET", "POST", "PUT", "DELETE"])
 class Admin(MethodView):
     def options(self):
         return '', 200
@@ -336,32 +355,19 @@ class Admin(MethodView):
                 if data:
                     id = data.get("ID")
                     if id:
-                        user: models.User = models.User.query.filter_by(ID=id)
+                        user: models.User = models.User.query.filter_by(ID=id).first()
+                        privilegeIDs = data.get("privilegeIDs")
                         
-                        userPrivileges: list[models.AdminPrivilege] = user.AdminPrivileges
+                        userPrivileges: list[models.AdminPrivilege] = []
                         
-                        privIDsAdd = data.get("PrivilegeIDsAdd")
-                        if privIDsAdd:
-                            
-                            for privID in privIDsAdd:
-                                adminPrivilege: models.AdminPrivilege = models.AdminPrivilege.query.filter_by(ID=privID).first()
-                                if adminPrivilege:
-                                    userPrivileges.append(adminPrivilege)
-                        
-                        privIDsRem = data.get("PrivilegeIDsRem")
-                        if privIDsRem:
-                        
-                            privsToRem: list[models.AdminPrivilege] = []
-                            for priv in userPrivileges:
-                                if priv.ID in privIDsRem:
-                                    privsToRem.append(priv)
-                                    
-                            for priv in privsToRem:
-                                userPrivileges.remove(priv)
+                        for id in privilegeIDs:
+                            priv: models.AdminPrivilege = models.AdminPrivilege.query.filter_by(ID=id).first()
+                            if priv:
+                                userPrivileges.append(priv)
                         
                         user.AdminPrivileges = userPrivileges
                         db.session.commit()
-                        return {'user', user.toJSONPartial()}, 201   
+                        return {'user': user.toJSONPartial()}, 201   
                     else:
                         return {'msg': 'No user id included in request'}, 400
                 else:
@@ -377,6 +383,7 @@ class Admin(MethodView):
             if 'current_user_id' in session and 'current_user_role' in session:
                 data = request.json
                 if data:
+                    print(data)
                     id = data.get("ID")
                     if id:
                         user: models.User = models.User.query.filter_by(ID=id).first()
@@ -391,7 +398,7 @@ class Admin(MethodView):
                                 
                             user.AdminPrivileges = privileges
                             db.session.commit()
-                            return {'user', user.toJSONPartial()}, 201
+                            return {'user': user.toJSONPartial()}, 201
                         else:
                             return {'msg', 'No user found with given ID'}, 404
                     else:
@@ -409,10 +416,10 @@ class Admin(MethodView):
             if 'current_user_id' in session and 'current_user_role' in session:
                 id = request.args.get("ID")
                 user: models.User = models.User.query.filter_by(ID=id).first()
-                user.AdminPrivileges = []
-                db.session.commit()
                 if user:
-                    return '', 200
+                    user.AdminPrivileges = []
+                    db.session.commit()
+                    return {'msg': 'Admin Deleted'}, 200
                 else:
                     return {'msg': 'No such user'}, 404
             else:

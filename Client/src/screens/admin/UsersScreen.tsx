@@ -1,8 +1,7 @@
 import AdminAppBar from "../../components/AdminAppBar";
 import { Screen } from "../../custom_objects/Screens";
-import { User } from "../../custom_objects/User";
 import AdminCard from "../../components/AdminCard";
-import { Typography, Button, Popover, Modal, Table, TableBody, TableRow, TableCell, TableContainer } from "@mui/material";
+import { Typography, Button, Popover, Modal, Table, TableBody, TableRow, TableCell, TableContainer, DialogContent, DialogTitle, Dialog, DialogContentText, DialogActions } from "@mui/material";
 import SearchBar from "../../components/SearchBar";
 import { useState, useEffect } from "react";
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
@@ -23,6 +22,8 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedAdmin, setSelectedAdmin] = useState<PartialUser | null>(null)
 
+    const [refresh, setRefresh] = useState(false);
+
     const [admins, setAdmins] = useState<PartialUser[]>([])
 
     const loadAdmins = async () => {
@@ -39,6 +40,13 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
 
         setAdmins(data.admins as PartialUser[])
     }
+
+    useEffect(() => {
+        if (refresh === true){
+            loadAdmins()
+        }
+        setRefresh(false)
+    }, [refresh])
 
     useEffect(() => {
         loadAdmins()
@@ -95,10 +103,10 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
                 }}
                 sx={{zIndex: 9999}}
             >
-                <UserModal />
+                <UserModal handleClose={handleClose} setRefresh={setRefresh} />
             </Popover>
 
-            <AdminModal open={openAdminModal} handleClose={ () => {setOpenAdminModal(false)} } selectedAdmin={selectedAdmin}></AdminModal>
+            <AdminModal open={openAdminModal} handleClose={ () => {setOpenAdminModal(false)} } selectedAdmin={selectedAdmin} setRefresh={setRefresh} ></AdminModal>
         </div>
     );
 }
@@ -106,14 +114,16 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
 interface AdminModalProps{
     open: boolean,
     handleClose: () => void,
-    selectedAdmin: PartialUser | null
+    selectedAdmin: PartialUser | null,
+    setRefresh: (refresh: boolean) => void
 }
 
-function AdminModal({ open, handleClose, selectedAdmin }: AdminModalProps) {
+function AdminModal({ open, handleClose, selectedAdmin, setRefresh }: AdminModalProps) {
 
     const [adminPrivileges, setAdminPrivileges] = useState<PartialAdminPrivilege[]>(selectedAdmin?.AdminPrivileges || []);
 
     const [privileges, setPrivileges] = useState<PartialAdminPrivilege[]>([])
+    const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 
     const getPrivileges = async() => {
         const response = await fetch('http://localhost:5000/api/v1/admin/privileges', {
@@ -137,6 +147,47 @@ function AdminModal({ open, handleClose, selectedAdmin }: AdminModalProps) {
     useEffect(() => {
         setAdminPrivileges(selectedAdmin?.AdminPrivileges || [])
     }, [open]);
+
+    const saveAdmin = async () => {
+        const privilegeIDs = adminPrivileges.map(priv => priv.ID);
+
+        const response = await fetch('http://localhost:5000/api/v1/admin', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                "ID": selectedAdmin?.ID,
+                "privilegeIDs": privilegeIDs
+            })
+        });
+
+        const data = await response.json();
+        console.log(data)
+
+        setRefresh(true);
+        handleClose()
+    }
+
+    const deleteAdmin = async () => {
+        const params = new URLSearchParams({
+            ID: selectedAdmin?.ID.toString() || ''
+        });
+
+        const response = await fetch(`http://localhost:5000/api/v1/admin?${params.toString()}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+        console.log(data)
+        handleClose()
+        setRefresh(true)
+    }
 
     const togglePrivilege = (privilege: PartialAdminPrivilege) => {
         if (adminPrivileges.some((p) => p.ID === privilege.ID)) {
@@ -199,20 +250,97 @@ function AdminModal({ open, handleClose, selectedAdmin }: AdminModalProps) {
                     </Table>
                 </TableContainer>
                 <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: "20px"}}>
-                    <Button variant="contained">Delete Admin</Button>
-                    <Button variant="contained" sx={{backgroundColor: "green"}}>Save Changes</Button>
+                    <Button variant="contained" onClick={() => {
+                        // deleteAdmin()
+                        setOpenConfirmDialog(true)
+                    }}>Delete Admin</Button>
+                    <Button variant="contained" sx={{backgroundColor: "green"}} onClick={() => {
+                        saveAdmin()
+                    }}>Save Changes</Button>
                 </div>
+                <ConfirmSubmissionDialog open={openConfirmDialog} onClose={() => {setOpenConfirmDialog(false)}} onConfirm={() => {
+                    deleteAdmin()
+                    setOpenConfirmDialog(false)
+                }} userName={`${selectedAdmin?.FName} ${selectedAdmin?.LName}`}/>
             </div>
         </Modal>
     );
 }
 
-function UserModal() {
-    const [users, setUsers] = useState(testUsers());
+interface userModalProps{
+    handleClose: () => void,
+    setRefresh: (refresh: boolean) => void
+}
+
+function UserModal({ handleClose, setRefresh }: userModalProps) {
+    const [users, setUsers] = useState<PartialUser[]>();
     const [searchVal, setSearchVal] = useState("");
+    const [selectedUser, setSelectedUser] = useState<PartialUser>();
+
+    const getAllUsers = async () => {
+        const response = await fetch('http://localhost:5000/api/v1/users', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+        console.log(`data: ${data}`)
+
+        setUsers(data.users as PartialUser[])
+    }
+
+    const searchUsers = async () => {
+        const params = new URLSearchParams({
+            searchQuery: searchVal
+        });
+
+        const response = await fetch(`http://localhost:5000/api/v1/users/search?${params.toString()}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+        console.log(`data: ${data}`)
+
+        setUsers(data.users as PartialUser[])
+    }
+
+    const addUser = async() => {
+        console.log(selectedUser)
+        const response = await fetch('http://localhost:5000/api/v1/admin', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({ 'ID': selectedUser?.ID })
+        });
+
+        const data = await response.json();
+        console.log(data)
+
+        setRefresh(true);
+    }
+
+    useEffect(() => {
+        if (selectedUser !== undefined) {
+            addUser();
+        }
+    }, [selectedUser])
+
+    useEffect(() => {
+        getAllUsers();
+    }, [])
 
     const handleKeyUp = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === "Enter") {
+            searchUsers();
             console.log(searchVal);
         }
     };
@@ -221,42 +349,41 @@ function UserModal() {
         <div style={{width: "40vw", height: "50vh", paddingTop: '16px', backgroundColor: 'white', borderRadius: '8px', display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
             <SearchBar setSearchVal={setSearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={'small'}/>
             <div style={{width: "100%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto"}}>
-                {users.map((user) => <UserCard user={user} key={user.ID} onClick={() => {}} />)}
+                {users?.map((user) => <UserCard user={user} key={user.ID} onClick={() => {
+                    setSelectedUser(user);
+                    handleClose();
+                }} />)}
             </div>
         </div>
     );
 }
 
-function testUsers(): User[]{
-    const privileges: PartialAdminPrivilege[] = [
-        {
-            ID: 1,
-            PrivilegeName: "Privilege 1"
-        },
-        {
-            ID: 2,
-            PrivilegeName: "Privilege 2"
-        },
-        {
-            ID: 3,
-            PrivilegeName: "Privilege 3"
-        },
-    ];
+interface confirmSubmissionProps{
+    open: boolean,
+    onClose: () => void,
+    onConfirm: () => void,
+    userName: string
+}
 
-    const users: User[] = [];
-    for (let i = 1; i <= 20; i++) {
-        users.push({
-            ID: i,
-            FirstName: `FirstName${i}`,
-            LastName: `LastName${i}`,
-            Email: `user${i}@example.com`,
-            Device: `Device${i}`,
-            Major: `Major${i}`,
-            GradYear: 2025,
-            AdminPrivileges: privileges
-        });
-    }
-    return users;
+function ConfirmSubmissionDialog({ open, onClose, onConfirm, userName }: confirmSubmissionProps){
+    return(
+        <Dialog open={open} onClose={onClose} sx={{width: "100%", height: "100%", zIndex: 9999}}>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogContent>
+                <DialogContentText>
+                    Are you sure you want to delete <strong>{userName}</strong> as an admin? 
+                </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+                <Button size='large' onClick={onClose} variant="outlined">
+                    Cancel
+                </Button>
+                <Button size='large' onClick={onConfirm} variant="contained" sx={{backgroundColor: "red"}} >
+                    Delete
+                </Button>
+            </DialogActions>
+        </Dialog>
+    );
 }
 
 export default AdminUsers;
