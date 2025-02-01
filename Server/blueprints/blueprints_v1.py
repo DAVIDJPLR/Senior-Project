@@ -70,7 +70,7 @@ class Article(MethodView):
     def get(self):
         try:
             if 'current_user_id' in session:
-                id = request.args.get("userID")
+                id = request.args.get("articleID")
                 if id:
                     article = models.Article.query.filter(models.Article.ID == id).all()
                     returnableArticle = article[0].toJSONPartial()
