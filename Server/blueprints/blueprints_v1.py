@@ -1,12 +1,13 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint
-from flask import session, request, jsonify
+from flask import session, request, jsonify, redirect, render_template, url_for
 from sqlalchemy import or_, desc
-from app import app, db
+from app import app, db, auth
 
+import os, traceback, models, requests, jwt, redis
+from jwt.algorithms import RSAAlgorithm
 import time
-import traceback
-import models
+import app_config
 
 apiv1 = Blueprint(
     "apiv1", 
@@ -14,6 +15,58 @@ apiv1 = Blueprint(
     url_prefix="/api/v1/", 
     description="Version 1 of the backend rest api for help.gcc.edu"
 )
+
+revoked_tokens = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
+
+TENANT_ID = os.getenv("TENANT_ID")
+CLIENT_ID = os.getenv("CLIENT_ID")
+JWKS_URL = f"https://login.microsoftonline.com/{TENANT_ID}/discovery/v2.0/keys"
+
+def get_signing_keys():
+    response = requests.get(JWKS_URL)
+    keys = response.json()['keys']
+    # Debugging - Print out all keys for inspection
+    # print("Available Keys:", keys)
+    return {key['kid']: RSAAlgorithm.from_jwk(key) for key in keys}
+
+SIGNING_KEYS = get_signing_keys()
+
+def validate_jwt(token):
+    global SIGNING_KEYS
+    try:
+        SIGNING_KEYS = get_signing_keys()  # Refresh keys
+        headers = jwt.get_unverified_header(token)
+        kid = headers.get('kid')
+        print(f"JWT Kid: {kid}")
+
+        if kid not in SIGNING_KEYS:
+            print("KID not found in signing keys. Refreshing keys...")
+            SIGNING_KEYS = get_signing_keys()
+
+        decoded_token = jwt.decode(
+            token,
+            key=SIGNING_KEYS.get(kid, None),
+            algorithms=['RS256'],
+            audience=CLIENT_ID,
+            issuer=f"https://login.microsoftonline.com/{TENANT_ID}/v2.0"
+        )
+        return decoded_token
+    except jwt.ExpiredSignatureError:
+        print("JWT expired")
+        return None
+    except jwt.InvalidTokenError as e:
+        print(f"Error validating JWT: {e}")
+        return None
+
+def decode_jwt_header(token):
+    try:
+        # Get the unverified header to check which key was used to sign the JWT
+        header = jwt.get_unverified_header(token)
+        print("JWT Header:", header)
+        return header
+    except Exception as e:
+        print(f"Error decoding JWT header: {e}")
+        return None
 
 @apiv1.route("/articles", methods=["OPTIONS", "GET"])
 class Articles(MethodView):
@@ -123,3 +176,45 @@ class UserViewHistory(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
+
+@app.route("/login")
+def login():
+    return render_template("login.html", version=__version__, **auth.log_in(
+        scopes=app_config.SCOPE, # Have user consent to scopes during log-in
+        redirect_uri=url_for("auth_response", _external=True), # Optional. If present, this absolute URL must match your app's redirect_uri registered in Microsoft Entra admin center
+        prompt="select_account",  # Optional.
+        ))
+
+@app.route(app_config.REDIRECT_PATH)
+def auth_response():
+    result = auth.complete_log_in(request.args)
+    if "error" in result:
+        return render_template("auth_error.html", result=result)
+    return redirect(url_for("index"))
+
+@apiv1.route("/logout", methods=["OPTIONS", "GET"])
+def logout():
+    return redirect(auth.log_out(url_for("index", _external=True)))
+
+@apiv1.route("/", methods=["OPTIONS", "GET"])
+def index():
+    if not (app.config["CLIENT_ID"] and app.config["CLIENT_SECRET"]):
+        # This check is not strictly necessary.
+        # You can remove this check from your production code.
+        return render_template('config_error.html')
+    if not auth.get_user():
+        return redirect(url_for("login"))
+    return render_template('index.html', user=auth.get_user(), version=__version__)
+
+@app.route("/call_downstream_api")
+def call_downstream_api():
+    token = auth.get_token_for_user(app_config.SCOPE)
+    if "error" in token:
+        return redirect(url_for("login"))
+    # Use access token to call downstream api
+    api_result = requests.get(
+        app_config.ENDPOINT,
+        headers={'Authorization': 'Bearer ' + token['access_token']},
+        timeout=30,
+    ).json()
+    return render_template('display.html', result=api_result)
