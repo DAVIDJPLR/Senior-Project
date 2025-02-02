@@ -104,12 +104,12 @@ export interface PartialUser{
     Major: string,
     GradYear: string,
     LName: string,
-    FName: string
+    FName: string,
+    AdminPrivileges: AdminPrivilege[]
 }
 export interface User extends PartialUser{
     Views: ViewHistory[],
     Edits: EditHistory[],
-    AdminPrivileges: AdminPrivilege[],
     NoSolutions: NoSolution[],
     Feedback: Feedback[]
 }

@@ -56,7 +56,7 @@ const ProfileContent = () => {
 function App() {
 
     const [authenticated, setAuthenticated] = useState(false);
-    const [admin, setAdmin] = useState(false);
+    const [admin, setAdmin] = useState(true);
     const [currentScreen, setCurrentScreen] = useState<Screen>(StudentScreen.Home)
 
     useEffect(() => {
