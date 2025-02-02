@@ -97,7 +97,7 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
             )}
             <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></StudentAppBar>
             <div style={{ flexShrink: 0, height: "10%", width: "100%"}}></div>
-            <SearchBar setSearchVal={setsearchVal} handleKeyUp={handleKeyUp} size={"medium"}></SearchBar>
+            <SearchBar setSearchVal={setsearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={"medium"}></SearchBar>
             <div style={{ flexShrink: 0, height: "10px"}}></div>            
             {articles?.map((article) => {
                 return <ArticleCard onClick={() => {

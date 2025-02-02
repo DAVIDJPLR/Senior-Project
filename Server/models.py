@@ -124,12 +124,12 @@ class AdminPrivilege(db.Model):
     def toJSONPartial(self):
         return {
             'ID': self.ID,
-            'privilegeName': self.privilegeName
+            'PrivilegeName': self.PrivilegeName
         }
     def toJSON(self):
         return {
             'ID': self.ID,
-            'privilegeName': self.privilegeName,
+            'PrivilegeName': self.PrivilegeName,
             'Users': [user.toJSONPartial() for user in self.Users]
         }
 
@@ -271,7 +271,7 @@ class MetaTag(db.Model):
 class User(db.Model):
     __tablename__ = 'Users'
     ID = db.Column(db.Integer, primary_key=True)
-    Email = db.Column(db.Unicode, nullable=True)
+    Email = db.Column(db.Unicode, nullable=False)
     Device = db.Column(db.Unicode, nullable=True)
     Major = db.Column(db.Unicode, nullable=True)
     GradYear = db.Column(db.Integer, nullable=True)
@@ -292,7 +292,8 @@ class User(db.Model):
             'Major': self.Major,
             'GradYear': self.GradYear,
             'LName': self.LName,
-            'FName': self.FName
+            'FName': self.FName,
+            'AdminPrivileges': [priv.toJSONPartial() for priv in self.AdminPrivileges]
         }
     def toJSON(self):
         return {
