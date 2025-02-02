@@ -348,3 +348,29 @@ class NoSolution(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
+        
+@apiv1.route("/feedback", methods=["OPTIONS", "POST"])
+class Feedback(MethodView):
+    def options(self):
+        return '', 200
+
+    def post(self):
+        try:
+            if 'current_user_id' in session:
+                data = request.json
+                if data:
+                    submission_time = datetime.datetime.now()
+                    positive = data.get("Positive")
+                    userID = session['current_user_id']
+                    articleID = data.get("ArticleID")
+                    newFeedback: models.Feedback = models.Feedback(Submission_Time=submission_time, Positive=positive, UserID=userID, ArticleID=articleID)
+                    db.session.add(newFeedback)
+                    return {'Feedback': newFeedback.toJSON()}, 201
+                else:
+                    return {'msg': 'No content submitted '}, 400
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
