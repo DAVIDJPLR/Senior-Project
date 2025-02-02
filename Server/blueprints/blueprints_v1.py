@@ -67,8 +67,9 @@ class Article(MethodView):
         
     def get(self):
         try:
+            print("Request args: ", request.args)
             if 'current_user_id' in session:
-                id = request.args.get("userID")
+                id = request.args.get("articleID")
                 if id:
                     article = models.Article.query.filter(models.Article.ID == id).all()
                     returnableArticle = article[0].toJSONPartial()
@@ -109,6 +110,9 @@ class Article(MethodView):
         try:
             if 'current_user_id' in session:
                 article_updated = request.json
+                ## userID = request.args.get("userID")
+                userID = session['current_user_id']
+                
                 if article_updated:
                     id: int = article_updated.get("ID")
                     title: str = article_updated.get('Title')
@@ -116,18 +120,20 @@ class Article(MethodView):
                     desc: str = article_updated.get('Article_Description')
                     image: str = article_updated.get('Image')
 
-                    article = models.Article.query.filter(models.Article.ID == id).all()
+                    article = models.Article.query.filter(models.Article.ID == id).first()
+                    if not article:
+                        return {'msg': 'Article not found'}, 404
                     article.Title = title
                     article.Content = content
                     article.Article_Description = desc
                     article.Image = image
 
-                    time = datetime.now()
-                    eh = models.EditHistory(ArticleID=id, UserID=session['current_user_id'],
-                                            Edit_Time=time)
+                    time = datetime.datetime.now()
+                    eh = models.EditHistory(ArticleID=id, UserID=userID, Edit_Time=time)
                     db.session.add(eh)
                     
                     db.session.commit()
+                    return {'msg': 'Article updated successfully'}, 200
                 else:
                     return {'msg': 'No update data submitted'}, 400
             else:
@@ -866,6 +872,26 @@ class NoSolution(MethodView):
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
         
+@apiv1.route("/feedback", methods=["OPTIONS", "POST"])
+class Feedback(MethodView):
+    def options(self):
+        return '', 200
+
+    def post(self):
+        try:
+            if 'current_user_id' in session:
+                data = request.json
+                if data:
+                    submission_time = datetime.datetime.now()
+                    positive = data.get("Positive")
+                    userID = session['current_user_id']
+                    articleID = data.get("ArticleID")
+                    newFeedback: models.Feedback = models.Feedback(Submission_Time=submission_time, Positive=positive, UserID=userID, ArticleID=articleID)
+                    db.session.add(newFeedback)
+                    db.session.commit()
+                    return {'Feedback': newFeedback.toJSON()}, 201
+                else:
+                    return {'msg': 'No content submitted '}, 400
 @apiv1.route("/searches/problems", methods=["OPTIONS", "GET"])
 class SearchesProblems(MethodView):
     def options(self):

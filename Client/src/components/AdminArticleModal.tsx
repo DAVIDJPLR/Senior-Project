@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import { Modal, Typography }  from '@mui/material';
 import ThumbDownAltOutlinedIcon from '@mui/icons-material/ThumbDownAltOutlined';
 import ThumbUpAltOutlinedIcon from '@mui/icons-material/ThumbUpAltOutlined';
@@ -23,41 +22,6 @@ function ArticleModal({ handleClose, open, article }: Props) {
         });
     };
 
-    // const [userFeedback, setUserFeedback] = useState<'up' | 'down' | null>(null);
-    
-    const handleFeedback = (feedback: 'up' | 'down') => {
-        
-        if (!article) return;
-        
-            const payload = {
-                Positive: feedback === 'up',
-                ArticleID: article.ID
-            };
-    
-            fetch('http://localhost:5000/api/v1/feedback', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include',
-                body: JSON.stringify(payload),
-            })
-                .then(response => {
-                    if(!response.ok) {
-                        throw new Error('Feedback submission failed')
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log("Feedback submitted successfully: ", data)
-                    // could display confirmation message here
-                })
-                .catch(error => {
-                     console.error("Error submitting feedback: ", error)
-            })
-        
-    };
-    
     return(
         <Modal 
             open={open}
@@ -80,16 +44,8 @@ function ArticleModal({ handleClose, open, article }: Props) {
                         <div style={{width: "90%", height: "20%", display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: "10px"}}>
                             <Typography sx={{ width: "100%", textAlign: "left", fontSize: "16px", fontWeight: "400"}}>Was this article helpful?</Typography>
                             <div style= {{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: "20px"}}>
-                                <ThumbUpAltOutlinedIcon sx={{cursor: 'pointer',
-                                                             width: "64px",
-                                                             height: "64px",
-                                                             color: 'black'}}
-                                                        onClick={() => handleFeedback('up')}/>
-                                <ThumbDownAltOutlinedIcon sx={{cursor: 'pointer',
-                                                               width: "64px",
-                                                               height: "64px",
-                                                               color: 'black'}}
-                                                        onClick={() => handleFeedback('down')}/>
+                                <ThumbUpAltOutlinedIcon sx={{cursor: 'pointer', width: "64px", height: "64px"}}/>
+                                <ThumbDownAltOutlinedIcon sx={{cursor: 'pointer', width: "64px", height: "64px"}}/>
                             </div>
                         </div>
                         <div onClick={copyToClipboard} style={{cursor: 'pointer', height: "5%", display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
