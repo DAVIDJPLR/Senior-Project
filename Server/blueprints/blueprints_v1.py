@@ -67,6 +67,23 @@ def decode_jwt_header(token):
     except Exception as e:
         print(f"Error decoding JWT header: {e}")
         return None
+    
+@apiv1.route("/user/login", methods=["OPTIONS", "POST"])
+class UserLogin(MethodView):
+    def options(self):
+        return '', 200
+    def post(self):
+        return {'msg': "Not implemented yet"}, 501
+    
+@apiv1.route("/user/info", methods=["OPTIONS", "GET"])
+class UserInfo(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        if "current_user_id" in session and "current_user_role" in session and "current_user_privileges" in session:
+            return {'msg': "Not implemented yet"}, 501
+        else:
+            return {'msg': "Not logged in"}, 401
 
 @apiv1.route("/articles", methods=["OPTIONS", "GET"])
 class Articles(MethodView):
