@@ -588,17 +588,33 @@ class Search(MethodView):
                 ).all()
 
                 returnedArticles = [article.toJSONPartial() for article in articles]
-
-                topResult = returnedArticles[0] if len(returnedArticles) > 0 else None
-                secondResult = returnedArticles[1] if len(returnedArticles) > 1 else None
-                thirdResult = returnedArticles[2] if len(returnedArticles) > 2 else None
-                fourthResult = returnedArticles[3] if len(returnedArticles) > 3 else None
-                fifthResult = returnedArticles[4] if len(returnedArticles) > 4 else None
-
-                search = models.Search(SearchQuery=searchQuery, UserID=session.get('current_user_id'), TopResult=topResult,
-                                       SecondResult=secondResult, ThirdResult=thirdResult,
-                                       FourthResult=fourthResult, FifthResult=fifthResult)
+                
+                search = models.Search(SearchQuery=searchQuery, UserID=session.get('current_user_id'))
                 db.session.add(search)
+                
+                topResult = articles[0] if len(articles) > 0 else None
+                if topResult:
+                    search.TopResult = topResult.ID
+                    
+                secondResult = articles[1] if len(articles) > 1 else None
+                if secondResult:
+                    search.SecondResult = secondResult.ID
+                
+                thirdResult = articles[2] if len(articles) > 2 else None
+                if thirdResult:
+                    search.ThirdResult = thirdResult.ID
+                
+                fourthResult = articles[3] if len(articles) > 3 else None
+                if fourthResult:
+                    search.FourthResult = fourthResult.ID
+                
+                fifthResult = articles[4] if len(articles) > 4 else None
+                if fifthResult:
+                    search.FifthResult = fifthResult.ID
+
+                db.session.commit()
+                
+                print("======================")
                 
                 return {'results': returnedArticles}, 200
             else:
