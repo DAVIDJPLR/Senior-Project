@@ -29,19 +29,21 @@ function HandleToken({setAuthenticated}: handleTokenProps){
     const { instance, accounts } = useMsal();
 
     const backendLogin = async (token: string) => {
-        const response = await fetch('http://localhost:5000/api/v1/admin', {
+        const response = await fetch('http://localhost:5000/api/v1/user/login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             credentials: 'include',
-            body: JSON.stringify({ 'token': token})
+            body: JSON.stringify({ 'token': token })
         });
 
         const data = await response.json();
         console.log(data)
 
-        setAuthenticated(true);
+        if (response.status == 200){
+            setAuthenticated(true);
+        }
     }
 
     useEffect(() => {
@@ -68,13 +70,16 @@ function App() {
 
     useEffect(() => {
         if (authenticated){
+
+            // fetch request to user/info
+            // if data.role is admin then splash else home
             if (admin){
                 setCurrentScreen(AdminScreen.Splash);
             } else {
                 setCurrentScreen(StudentScreen.Home);
             }
         } 
-    }, [authenticated, admin])
+    }, [authenticated])
 
     /**
     * If a user is authenticated the ProfileContent component above is rendered. Otherwise a message indicating a user is not authenticated is rendered.

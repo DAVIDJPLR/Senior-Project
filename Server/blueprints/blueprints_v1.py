@@ -73,7 +73,17 @@ class UserLogin(MethodView):
     def options(self):
         return '', 200
     def post(self):
-        return {'msg': "Not implemented yet"}, 501
+        try:
+            data = request.json
+            token = data.get("token")
+            print(token)
+            # callmsGraph (Token) get email
+            # You need to set session["current_user_id"], session["current_user_role"], session["current_   vileges"]
+            return {'msg': "Logged in"}, 200
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
     
 @apiv1.route("/user/info", methods=["OPTIONS", "GET"])
 class UserInfo(MethodView):
