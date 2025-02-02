@@ -365,6 +365,7 @@ class Feedback(MethodView):
                     articleID = data.get("ArticleID")
                     newFeedback: models.Feedback = models.Feedback(Submission_Time=submission_time, Positive=positive, UserID=userID, ArticleID=articleID)
                     db.session.add(newFeedback)
+                    db.session.commit()
                     return {'Feedback': newFeedback.toJSON()}, 201
                 else:
                     return {'msg': 'No content submitted '}, 400
