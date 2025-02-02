@@ -3,14 +3,12 @@ from flask_smorest import Blueprint
 from flask import session, request, jsonify, redirect, render_template, url_for
 from sqlalchemy import or_, desc, func
 from datetime import datetime, timedelta
-from app import app, db, auth
+from app import app, db
 
 from auth import TENANT_ID, CLIENT_ID
 
 import os, traceback, models, requests, jwt, redis
 from jwt.algorithms import RSAAlgorithm
-import time
-import app_config
 
 apiv1 = Blueprint(
     "apiv1", 
@@ -25,6 +23,7 @@ JWKS_URL = f"https://login.microsoftonline.com/{TENANT_ID}/discovery/v2.0/keys"
 def get_signing_keys():
     response = requests.get(JWKS_URL)
     keys = response.json()['keys']
+    
     # Debugging - Print out all keys for inspection
     # print("Available Keys:", keys)
     return {key['kid']: RSAAlgorithm.from_jwk(key) for key in keys}
@@ -67,7 +66,7 @@ def decode_jwt_header(token):
     except Exception as e:
         print(f"Error decoding JWT header: {e}")
         return None
-    
+
 @apiv1.route("/user/login", methods=["OPTIONS", "POST"])
 class UserLogin(MethodView):
     def options(self):
@@ -77,9 +76,53 @@ class UserLogin(MethodView):
             data = request.json
             token = data.get("token")
             print(token)
+
+            if not token:
+                return jsonify({"msg": "No token provided"}), 400
+            
+            validated_token = validate_jwt(token)
+            if not validated_token:
+                return jsonify({"msg": "Invalid token - please log in again"}), 401
+            
             # callmsGraph (Token) get email
-            # You need to set session["current_user_id"], session["current_user_role"], session["current_   vileges"]
-            return {'msg': "Logged in"}, 200
+            # You need to set session["current_user_id"], session["current_user_role"], session["current_privileges"]
+
+            email = validated_token.get("email")
+            print(email)
+            if not email:
+                return jsonify({"msg": "Invalid token: No email found"}), 401
+            
+            user = models.User.query.filter_by(email=email).first()
+
+            if user:
+                session["current_user_id"] = user.ID
+                adminCheck: list[models.User] = models.User.query.join(
+                    models.Admins, models.User.ID==models.Admins.UserID
+                ).filter_by(
+                    models.User.ID == session.get('current_user_id')
+                )
+
+                if len(adminCheck) > 0:
+                    session["current_user_role"] = "admin"
+
+                    privs: list[int] = [user.PrivilegeID for user in adminCheck]
+                    session["current_privileges"] = privs
+                else:
+                    session["current_user_role"] = "student"
+                    session["current_privileges"] = []
+
+                login_user(user, remember=True)
+                return jsonify({"msg": "Login successful", "UserID": user.id}), 200
+            else:
+                newUser = models.User(email=email)
+                db.session.add(newUser)
+
+                session["current_user_id"] = newUser.ID
+                session["current_user_role"] = "student"
+                session["current_privileges"] = []
+
+                return jsonify({"msg": "User successfully registered"}), 200
+            # return {'msg': "Logged in"}, 200
         except Exception as e:
             print(f"Error: {e}")
             traceback.print_exc()
@@ -1024,45 +1067,3 @@ class SystemStats(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-
-@app.route("/login")
-def login():
-    return render_template("login.html", version=__version__, **auth.log_in(
-        scopes=app_config.SCOPE, # Have user consent to scopes during log-in
-        redirect_uri=url_for("auth_response", _external=True), # Optional. If present, this absolute URL must match your app's redirect_uri registered in Microsoft Entra admin center
-        prompt="select_account",  # Optional.
-        ))
-
-@app.route(app_config.REDIRECT_PATH)
-def auth_response():
-    result = auth.complete_log_in(request.args)
-    if "error" in result:
-        return render_template("auth_error.html", result=result)
-    return redirect(url_for("index"))
-
-@apiv1.route("/logout", methods=["OPTIONS", "GET"])
-def logout():
-    return redirect(auth.log_out(url_for("index", _external=True)))
-
-@apiv1.route("/", methods=["OPTIONS", "GET"])
-def index():
-    if not (app.config["CLIENT_ID"] and app.config["CLIENT_SECRET"]):
-        # This check is not strictly necessary.
-        # You can remove this check from your production code.
-        return render_template('config_error.html')
-    if not auth.get_user():
-        return redirect(url_for("login"))
-    return render_template('index.html', user=auth.get_user(), version=__version__)
-
-@app.route("/call_downstream_api")
-def call_downstream_api():
-    token = auth.get_token_for_user(app_config.SCOPE)
-    if "error" in token:
-        return redirect(url_for("login"))
-    # Use access token to call downstream api
-    api_result = requests.get(
-        app_config.ENDPOINT,
-        headers={'Authorization': 'Bearer ' + token['access_token']},
-        timeout=30,
-    ).json()
-    return render_template('display.html', result=api_result)

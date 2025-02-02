@@ -4,20 +4,20 @@ from app import db
 
 Admins = db.Table(
     'Admins',
-    db.Column('userID', db.Integer, db.ForeignKey('Users.ID'), primary_key=True),
-    db.Column('privilegeID', db.Integer, db.ForeignKey('AdminPrivileges.ID'), primary_key=True)
+    db.Column('UserID', db.Integer, db.ForeignKey('Users.ID'), primary_key=True),
+    db.Column('PrivilegeID', db.Integer, db.ForeignKey('AdminPrivileges.ID'), primary_key=True)
 )
 
 ArticleTags = db.Table(
     'ArticleTags',
-    db.Column('articleID', db.Integer, db.ForeignKey('Articles.ID'), primary_key=True),
-    db.Column('tagID', db.Integer, db.ForeignKey('Tags.ID'), primary_key=True)
+    db.Column('ArticleID', db.Integer, db.ForeignKey('Articles.ID'), primary_key=True),
+    db.Column('TagID', db.Integer, db.ForeignKey('Tags.ID'), primary_key=True)
 )
 
 ArticleMetaTags = db.Table(
     'ArticleMetaTags',
-    db.Column('articleID', db.Integer, db.ForeignKey('Articles.ID'), primary_key=True),
-    db.Column('metaTagID', db.Integer, db.ForeignKey('MetaTags.ID'), nullable=False)
+    db.Column('ArticleID', db.Integer, db.ForeignKey('Articles.ID'), primary_key=True),
+    db.Column('MetaTagID', db.Integer, db.ForeignKey('MetaTags.ID'), nullable=False)
 )
 
 class EditHistory(db.Model):
