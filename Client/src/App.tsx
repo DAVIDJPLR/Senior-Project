@@ -17,49 +17,53 @@ import AdminArticles from "./screens/admin/ArticlesScreen";
 import AdminBacklog from "./screens/admin/BacklogScreen";
 import AdminHome from "./screens/admin/SplashScreen";
 import AdminUsers from "./screens/admin/UsersScreen";
-import { SignInButton } from "./components/SignInButton";
+import { SignInRedirect } from "./components/SignInRedirect";
 import './global.css';
 
-/**
-* Renders information about the signed-in user or a button to retrieve data about the user
-*/
+interface handleTokenProps{
+    setAuthenticated: (auth: boolean) => void
+}
 
-const ProfileContent = () => {
+function HandleToken({setAuthenticated}: handleTokenProps){
+    
     const { instance, accounts } = useMsal();
-    const [graphData, setGraphData] = useState(null);
 
-    function RequestProfileData() {
-        // Silently acquires an access token which is then attached to a request for MS Graph data
-        instance
-            .acquireTokenSilent({
-                ...loginRequest,
-                account: accounts[0],
-            })
-            .then((response) => {
-                console.log(`response: ${response}`)
-                callMsGraph(response.accessToken).then((response) => setGraphData(response));
-            });
+    const backendLogin = async (token: string) => {
+        const response = await fetch('http://localhost:5000/api/v1/admin', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({ 'token': token})
+        });
+
+        const data = await response.json();
+        console.log(data)
+
+        setAuthenticated(true);
     }
 
-    return (
-        <>
-            <h5 className="card-title">Welcome {accounts[0].name}</h5>
-            <br/>
-            {graphData ? (
-                <ProfileData graphData={graphData} />
-            ) : (
-                <Button variant="secondary" onClick={RequestProfileData}>
-                    Request Profile Information
-                </Button>
-            )}
-        </>
+    useEffect(() => {
+        instance
+        .acquireTokenSilent({
+            ...loginRequest,
+            account: accounts[0],
+        })  
+        .then((response) => {
+            backendLogin(response.accessToken);
+        });
+    }, [])
+
+    return(
+        <></>
     );
-};
+}
 
 function App() {
 
-    const [authenticated, setAuthenticated] = useState(true);
-    const [admin, setAdmin] = useState(true);
+    const [authenticated, setAuthenticated] = useState(false);
+    const [admin, setAdmin] = useState(false);
     const [currentScreen, setCurrentScreen] = useState<Screen>(StudentScreen.Home)
 
     useEffect(() => {
@@ -69,18 +73,8 @@ function App() {
             } else {
                 setCurrentScreen(StudentScreen.Home);
             }
-        } else {
-
-        }
+        } 
     }, [authenticated, admin])
-
-    useEffect(() => {
-        if (admin){
-            setCurrentScreen(AdminScreen.Splash);
-        } else {
-            setCurrentScreen(StudentScreen.Home);
-        }
-    }, [admin]);
 
     /**
     * If a user is authenticated the ProfileContent component above is rendered. Otherwise a message indicating a user is not authenticated is rendered.
@@ -136,15 +130,16 @@ function App() {
     };
 
     return (
-        <>
+        <div style={{width: "100vw", height: "100vh"}}>
             <AuthenticatedTemplate>
-                <MainContent />
+                <HandleToken setAuthenticated={setAuthenticated}/>
+                <MainContent/>
             </AuthenticatedTemplate>
 
             <UnauthenticatedTemplate>
-                <SignInButton></SignInButton>
+                <SignInRedirect/>
             </UnauthenticatedTemplate>
-        </>
+        </div>
     );
 }
 
