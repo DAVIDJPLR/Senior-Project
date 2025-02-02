@@ -5,6 +5,8 @@ from sqlalchemy import or_, desc, func
 from datetime import datetime, timedelta
 from app import app, db, auth
 
+from auth import TENANT_ID, CLIENT_ID
+
 import os, traceback, models, requests, jwt, redis
 from jwt.algorithms import RSAAlgorithm
 import time
@@ -18,9 +20,6 @@ apiv1 = Blueprint(
 )
 
 revoked_tokens = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
-
-TENANT_ID = os.getenv("TENANT_ID")
-CLIENT_ID = os.getenv("CLIENT_ID")
 JWKS_URL = f"https://login.microsoftonline.com/{TENANT_ID}/discovery/v2.0/keys"
 
 def get_signing_keys():

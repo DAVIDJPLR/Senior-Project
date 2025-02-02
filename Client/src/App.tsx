@@ -1,7 +1,7 @@
 import { Screen, StudentScreen, AdminScreen } from "./custom_objects/Screens";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
-import { PageLayout } from './components/PageLayout';
+// import { PageLayout } from './components/PageLayout';
 import { loginRequest } from './authConfig';
 import { callMsGraph } from './graph';
 import { ProfileData } from './components/ProfileData';
@@ -17,11 +17,13 @@ import AdminArticles from "./screens/admin/ArticlesScreen";
 import AdminBacklog from "./screens/admin/BacklogScreen";
 import AdminHome from "./screens/admin/SplashScreen";
 import AdminUsers from "./screens/admin/UsersScreen";
+import { SignInButton } from "./components/SignInButton";
 import './global.css';
 
 /**
 * Renders information about the signed-in user or a button to retrieve data about the user
 */
+
 const ProfileContent = () => {
     const { instance, accounts } = useMsal();
     const [graphData, setGraphData] = useState(null);
@@ -34,6 +36,7 @@ const ProfileContent = () => {
                 account: accounts[0],
             })
             .then((response) => {
+                console.log(`response: ${response}`)
                 callMsGraph(response.accessToken).then((response) => setGraphData(response));
             });
     }
@@ -55,7 +58,7 @@ const ProfileContent = () => {
 
 function App() {
 
-    const [authenticated, setAuthenticated] = useState(false);
+    const [authenticated, setAuthenticated] = useState(true);
     const [admin, setAdmin] = useState(true);
     const [currentScreen, setCurrentScreen] = useState<Screen>(StudentScreen.Home)
 
@@ -133,15 +136,15 @@ function App() {
     };
 
     return (
-        <div className="App">
+        <>
             <AuthenticatedTemplate>
                 <MainContent />
             </AuthenticatedTemplate>
 
             <UnauthenticatedTemplate>
-                
+                <SignInButton></SignInButton>
             </UnauthenticatedTemplate>
-        </div>
+        </>
     );
 }
 

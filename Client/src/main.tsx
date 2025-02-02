@@ -1,4 +1,4 @@
-import React, { StrictMode } from 'react'
+import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { theme } from "./Theme";
 import { ThemeProvider } from '@mui/material/styles';
@@ -12,8 +12,6 @@ import { msalConfig } from './authConfig';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const msalInstance = new PublicClientApplication(msalConfig);
-
-// const root = ReactDOM.createRoot(document.getElementById('root'));
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

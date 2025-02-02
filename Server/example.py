@@ -1,7 +1,7 @@
 from future import annotations
-from app.login import bp
-from app.models import *
-from app.login.loginforms import RegisterForm, LoginForm
+# from app.login import bp
+# from app.models import *
+# from app.login.loginforms import RegisterForm, LoginForm
 from datetime import datetime
 from flask import request, jsonify, render_template, redirect, url_for, flash, current_app
 from flask_login import login_required
