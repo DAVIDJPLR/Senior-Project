@@ -69,8 +69,9 @@ class Article(MethodView):
         
     def get(self):
         try:
+            print("Request args: ", request.args)
             if 'current_user_id' in session:
-                id = request.args.get("userID")
+                id = request.args.get("articleID")
                 if id:
                     article = models.Article.query.filter(models.Article.ID == id).all()
                     returnableArticle = article[0].toJSONPartial()
@@ -111,7 +112,8 @@ class Article(MethodView):
         try:
             if 'current_user_id' in session:
                 article_updated = request.json
-                userID = request.args.get("userID")
+                ## userID = request.args.get("userID")
+                userID = session['current_user_id']
                 if article_updated:
                     id: int = article_updated.get("ID")
                     title: str = article_updated.get('Title')
@@ -119,18 +121,21 @@ class Article(MethodView):
                     desc: str = article_updated.get('Article_Description')
                     image: str = article_updated.get('Image')
 
-                    article = models.Article.query.filter(models.Article.ID == id).all()
+                    article = models.Article.query.filter(models.Article.ID == id).first()
+                    if not article:
+                        return {'msg': 'Article not found'}, 404
                     article.Title = title
                     article.Content = content
                     article.Article_Description = desc
                     article.Image = image
 
-                    time = datetime.now()
+                    time = datetime.datetime.now()
                     eh = models.EditHistory(ArticleID=id, UserID=userID,
                                             Edit_Time=time)
                     db.session.add(eh)
                     
                     db.session.commit()
+                    return {'msg': 'Article updated successfully'}, 200
                 else:
                     return {'msg': 'No update data submitted'}, 400
             else:

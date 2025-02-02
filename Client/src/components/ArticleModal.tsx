@@ -10,7 +10,7 @@ interface Props {
     article: PartialArticle | null;
 }
 
-function ArticleModal({ handleClose, open, article}: Props) {
+function ArticleModal({ handleClose, open, article }: Props) {
 
     const articleURL: string = "URL_" + article?.Title;
 

@@ -5,9 +5,10 @@ interface Props{
     article: PartialArticle,
     lineNumber: number,
     onClick: () => void
+    onEditClick: (article: PartialArticle) => void
 }
 
-function AdminArticleCard({ article, lineNumber, onClick }: Props){
+function AdminArticleCard({ article, lineNumber, onClick, onEditClick }: Props){
     const lineNumberString: string = lineNumber.toString();
     const height: number = (18*1.5) + ((lineNumber)*(16*1.5)) + 15;
     const heightString: string = height.toString() + "px";
@@ -21,13 +22,15 @@ function AdminArticleCard({ article, lineNumber, onClick }: Props){
                 alignItems: "center",
                 border: "1px solid grey",
                 borderRadius: "20px",
-                margin: "10px"
+                margin: "10px",
+                position: "relative",
             }}
         >
             <button
                 onClick={(e) => {
-                    e.stopPropagation(); // Prevents triggering the onClick of the card
-                    console.log('Edit Article clicked');
+                    e.stopPropagation()
+                    console.log('Edit Article clicked')
+                    onEditClick(article)
                 }}
                 style={{
                     position: "absolute",
@@ -43,7 +46,7 @@ function AdminArticleCard({ article, lineNumber, onClick }: Props){
             >
                 Edit Article
             </button>
-            
+
             <Typography style={{
                 fontSize: "18px",
                 textAlign: "center",
@@ -60,6 +63,7 @@ function AdminArticleCard({ article, lineNumber, onClick }: Props){
                 fontSize: "16px",
                 textAlign: "left",
                 width: "95%",
+                paddingTop: "8px",
                 overflow: "hidden",
                 display: "-webkit-box",
                 WebkitLineClamp: lineNumberString,
