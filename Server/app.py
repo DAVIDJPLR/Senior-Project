@@ -1,14 +1,13 @@
 import os
 
-from flask import Flask, session
+from flask import Flask, session, redirect, render_template, request, url_for
 from flask_cors import CORS, cross_origin
 from flask_sqlalchemy import SQLAlchemy
-
-import json
 
 scriptdir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
+
 # The supports_credentials argument ensures that cookies get passed back 
 # and forth between the front end and the backend to maintain the same session
 # when appropriate

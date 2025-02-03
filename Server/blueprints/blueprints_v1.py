@@ -1,12 +1,14 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint
-from flask import session, request
-from sqlalchemy import or_, func
+from flask import session, request, jsonify, redirect, render_template, url_for
+from sqlalchemy import or_, desc, func
 from datetime import datetime, timedelta
-from app import db
+from app import app, db
 
-import traceback
-import models
+from auth import TENANT_ID, CLIENT_ID
+
+import os, traceback, models, requests, jwt, redis
+from jwt.algorithms import RSAAlgorithm
 
 apiv1 = Blueprint(
     "apiv1", 
@@ -14,6 +16,119 @@ apiv1 = Blueprint(
     url_prefix="/api/v1/", 
     description="Version 1 of the backend rest api for help.gcc.edu"
 )
+
+revoked_tokens = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
+JWKS_URL = f"https://login.microsoftonline.com/{TENANT_ID}/discovery/v2.0/keys"
+
+def get_signing_keys():
+    response = requests.get(JWKS_URL)
+    keys = response.json()['keys']
+    
+    # Debugging - Print out all keys for inspection
+    # print("Available Keys:", keys)
+    return {key['kid']: RSAAlgorithm.from_jwk(key) for key in keys}
+
+SIGNING_KEYS = get_signing_keys()
+
+def validate_jwt(token):
+    global SIGNING_KEYS
+    try:
+        SIGNING_KEYS = get_signing_keys()  # Refresh keys
+        headers = jwt.get_unverified_header(token)
+        kid = headers.get('kid')
+        print(f"JWT Kid: {kid}")
+
+        if kid not in SIGNING_KEYS:
+            print("KID not found in signing keys. Refreshing keys...")
+            SIGNING_KEYS = get_signing_keys()
+
+        decoded_token = jwt.decode(
+            token,
+            key=SIGNING_KEYS.get(kid, None),
+            algorithms=['RS256'],
+            audience=CLIENT_ID,
+            issuer=f"https://login.microsoftonline.com/{TENANT_ID}/v2.0"
+        )
+        return decoded_token
+    except jwt.ExpiredSignatureError:
+        print("JWT expired")
+        return None
+    except jwt.InvalidTokenError as e:
+        print(f"Error validating JWT: {e}")
+        return None
+
+def decode_jwt_header(token):
+    try:
+        # Get the unverified header to check which key was used to sign the JWT
+        header = jwt.get_unverified_header(token)
+        print("JWT Header:", header)
+        return header
+    except Exception as e:
+        print(f"Error decoding JWT header: {e}")
+        return None
+
+@apiv1.route("/user/login", methods=["OPTIONS", "POST"])
+class UserLogin(MethodView):
+    def options(self):
+        return '', 200
+    def post(self):
+        try:
+            data = request.json
+            token = data.get("token")
+
+            if not token:
+                return jsonify({"msg": "No token provided"}), 400
+
+            decoded_token = jwt.decode(token, options={"verify_signature": False})
+            
+            email = decoded_token.get("unique_name")
+            if not email:
+                return jsonify({"msg": "Invalid token: No email found"}), 401
+            
+            user = models.User.query.filter_by(Email=email).first()
+
+            if user:
+                session["current_user_id"] = user.ID
+                adminCheck: list[models.User] = models.User.query.join(
+                    models.Admins
+                ).filter_by(
+                    UserID=session.get('current_user_id')
+                ).all()
+
+                if len(adminCheck) > 0:
+                    session["current_user_role"] = "admin"
+
+                    privs: list[int] = [user.PrivilegeID for user in adminCheck]
+                    session["current_privileges"] = privs
+                else:
+                    session["current_user_role"] = "student"
+                    session["current_privileges"] = []
+
+                return jsonify({"msg": "Login successful", "UserID": user.ID}), 200
+            else:
+                newUser = models.User(Email=email, LName=decoded_token.get("family_name"), FName=decoded_token.get("given_name"))
+                db.session.add(newUser)
+                db.session.commit()
+
+                session["current_user_id"] = newUser.ID
+                session["current_user_role"] = "student"
+                session["current_privileges"] = []
+
+                return jsonify({"msg": "User successfully registered"}), 200
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+    
+@apiv1.route("/user/info", methods=["OPTIONS", "GET"])
+class UserInfo(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        if "current_user_id" in session and "current_user_role" in session and "current_user_privileges" in session:
+            return {'msg': "Not implemented yet"}, 501
+        else:
+            return {'msg': "Not logged in"}, 401
 
 @apiv1.route("/articles", methods=["OPTIONS", "GET"])
 class Articles(MethodView):
