@@ -75,32 +75,25 @@ class UserLogin(MethodView):
         try:
             data = request.json
             token = data.get("token")
-            print(token)
 
             if not token:
                 return jsonify({"msg": "No token provided"}), 400
-            
-            validated_token = validate_jwt(token)
-            if not validated_token:
-                return jsonify({"msg": "Invalid token - please log in again"}), 401
-            
-            # callmsGraph (Token) get email
-            # You need to set session["current_user_id"], session["current_user_role"], session["current_privileges"]
 
-            email = validated_token.get("email")
-            print(email)
+            decoded_token = jwt.decode(token, options={"verify_signature": False})
+            
+            email = decoded_token.get("unique_name")
             if not email:
                 return jsonify({"msg": "Invalid token: No email found"}), 401
             
-            user = models.User.query.filter_by(email=email).first()
+            user = models.User.query.filter_by(Email=email).first()
 
             if user:
                 session["current_user_id"] = user.ID
                 adminCheck: list[models.User] = models.User.query.join(
-                    models.Admins, models.User.ID==models.Admins.UserID
+                    models.Admins
                 ).filter_by(
-                    models.User.ID == session.get('current_user_id')
-                )
+                    UserID=session.get('current_user_id')
+                ).all()
 
                 if len(adminCheck) > 0:
                     session["current_user_role"] = "admin"
@@ -111,18 +104,17 @@ class UserLogin(MethodView):
                     session["current_user_role"] = "student"
                     session["current_privileges"] = []
 
-                login_user(user, remember=True)
-                return jsonify({"msg": "Login successful", "UserID": user.id}), 200
+                return jsonify({"msg": "Login successful", "UserID": user.ID}), 200
             else:
-                newUser = models.User(email=email)
+                newUser = models.User(Email=email, LName=decoded_token.get("family_name"), FName=decoded_token.get("given_name"))
                 db.session.add(newUser)
+                db.session.commit()
 
                 session["current_user_id"] = newUser.ID
                 session["current_user_role"] = "student"
                 session["current_privileges"] = []
 
                 return jsonify({"msg": "User successfully registered"}), 200
-            # return {'msg': "Logged in"}, 200
         except Exception as e:
             print(f"Error: {e}")
             traceback.print_exc()
