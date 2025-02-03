@@ -1,31 +1,45 @@
 import React, {useState} from "react";
-import AdminAppBar from "../../components/AdminAppBar";
+import {Dialog, AppBar, Toolbar, IconButton, Typography, Slide, Icon} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import {TransitionProps} from "@mui/material/transitions";
+// import AdminAppBar from "../../components/AdminAppBar";
 import { Screen } from "../../custom_objects/Screens";
 import { TextEditor } from "../../components/TextEditor";
+import { PartialArticle } from "../../custom_objects/models";
+
+const Transition = React.forwardRef(function Transition(
+    props: TransitionProps & {children: React.ReactElement<any, any> },
+    ref: React.Ref<unknown>
+) {
+    return <Slide direction="up" ref={ref} {...props} />;
+})
 
 interface Props{
-    currentScreen: Screen
-    setCurrentScreen: (screen: Screen) => void,
+    open: boolean;
+    article: PartialArticle | null;
+    onClose: () => void;
 }
 
-function ArticleEdit({ currentScreen, setCurrentScreen }: Props){
-    const [articleContent, setArticleContent] = useState<string>("");
-
-    const handleContentChange = (content: string) => {
-        setArticleContent(content);
-    };
-    
-    return(
-        <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column"}}>
-            <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
-
-            {/* Text Editor */}
-            <div style={({flex: 1, padding: "16px", overflow: "auto"})}>
-                <h2>Edit Article</h2>
-                <TextEditor/>   
+function EditArticleModal({ open, article, onClose }: Props) {
+    const articleID = article ? article.ID : undefined
+    console.log(articleID)
+    return (
+        <Dialog fullScreen open={open} onClose={onClose} TransitionComponent={Transition}>
+            <AppBar sx={{position: "relative"}}>
+                <Toolbar>
+                    <IconButton edge="start" color="inherit" onClick={onClose} aria-label="close">
+                        <CloseIcon />
+                    </IconButton>
+                    <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
+                        {article ? "Edit Article" : "New Article"}
+                    </Typography>
+                </Toolbar>
+            </AppBar>
+            <div style={{padding: "16px"}}>
+                <TextEditor articleID={articleID}/>
             </div>
-        </div>
+        </Dialog>
     )
 }
 
-export default ArticleEdit;
+export default EditArticleModal;

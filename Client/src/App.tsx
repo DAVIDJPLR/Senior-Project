@@ -119,19 +119,6 @@ function App() {
                     <StudentRecent currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></StudentRecent>
                 );
         }
-            // <div className="App">
-            //     <AuthenticatedTemplate>
-            //         <ProfileContent />
-            //     </AuthenticatedTemplate>
-
-            //     <UnauthenticatedTemplate>
-            //         <h5>
-            //             <center>
-            //                 Please sign-in to see your profile information.
-            //             </center>
-            //         </h5>
-            //     </UnauthenticatedTemplate>
-            // </div>
     };
 
     return (
