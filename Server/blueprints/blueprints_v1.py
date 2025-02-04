@@ -1007,6 +1007,11 @@ class Feedback(MethodView):
                     return {'Feedback': newFeedback.toJSON()}, 201
                 else:
                     return {'msg': 'No content submitted '}, 400
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+
 @apiv1.route("/searches/problems", methods=["OPTIONS", "GET"])
 class SearchesProblems(MethodView):
     def options(self):
