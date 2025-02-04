@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react'
+import {useEffect, useState} from 'react'
 import AdminAppBar from "../../components/AdminAppBar";
 import { Screen } from "../../custom_objects/Screens";
 import {PartialArticle} from "../../custom_objects/models"
@@ -45,11 +45,11 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
     }
     
     return(
-        <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center"}}>
+        <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center", overflowY: "auto", overflowX: "hidden"}}>
             <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
             <div style={{ flexShrink: 0, height: "10%", width: "100%"}}></div>
-            <div style={{ alignItems: "center"}}>
-                {articles.map((article, index) => (
+            <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center",}}>
+                {articles.map((article) => (
                     <AdminArticleCard
                         key={article.ID}
                         article={article}

@@ -80,29 +80,26 @@ class UserLogin(MethodView):
                 return jsonify({"msg": "No token provided"}), 400
 
             decoded_token = jwt.decode(token, options={"verify_signature": False})
-            
             email = decoded_token.get("unique_name")
             if not email:
                 return jsonify({"msg": "Invalid token: No email found"}), 401
             
-            user = models.User.query.filter_by(Email=email).first()
+            user: models.User = models.User.query.filter_by(Email=email).first()
 
             if user:
                 session["current_user_id"] = user.ID
-                adminCheck: list[models.User] = models.User.query.join(
-                    models.Admins
-                ).filter_by(
-                    UserID=session.get('current_user_id')
-                ).all()
+                privs: list[AdminPrivileges] = user.AdminPrivileges
 
-                if len(adminCheck) > 0:
+                if len(privs) > 0:
                     session["current_user_role"] = "admin"
 
-                    privs: list[int] = [user.PrivilegeID for user in adminCheck]
+                    privs: list[int] = [priv.ID for priv in privs]
                     session["current_privileges"] = privs
                 else:
                     session["current_user_role"] = "student"
                     session["current_privileges"] = []
+
+                print(session["current_user_id"])
 
                 return jsonify({"msg": "Login successful", "UserID": user.ID}), 200
             else:
@@ -113,6 +110,8 @@ class UserLogin(MethodView):
                 session["current_user_id"] = newUser.ID
                 session["current_user_role"] = "student"
                 session["current_privileges"] = []
+
+                print(session["current_user_id"])
 
                 return jsonify({"msg": "User successfully registered"}), 200
         except Exception as e:
@@ -125,8 +124,21 @@ class UserInfo(MethodView):
     def options(self):
         return '', 200
     def get(self):
-        if "current_user_id" in session and "current_user_role" in session and "current_user_privileges" in session:
-            return {'msg': "Not implemented yet"}, 501
+        print(session["current_user_role"])
+        if "current_user_id" in session and "current_user_role" in session and "current_privileges" in session:
+            
+            currentPrivileges: list[models.AdminPrivilege] = []
+            for id in session["current_privileges"]:
+                priv: models.AdminPrivilege = models.AdminPrivilege.query.filter_by(ID=id).first()
+                if priv:
+                    currentPrivileges.append(priv)
+            returnablePrivileges = [priv.toJSONPartial() for priv in currentPrivileges]
+            return {
+                "current_user_id": session["current_user_id"],
+                "current_user_role": session["current_user_role"],
+                "current_privileges": returnablePrivileges
+            }, 200
+            
         else:
             return {'msg': "Not logged in"}, 401
 
@@ -1007,6 +1019,13 @@ class Feedback(MethodView):
                     return {'Feedback': newFeedback.toJSON()}, 201
                 else:
                     return {'msg': 'No content submitted '}, 400
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+        
 @apiv1.route("/searches/problems", methods=["OPTIONS", "GET"])
 class SearchesProblems(MethodView):
     def options(self):
