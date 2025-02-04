@@ -200,6 +200,14 @@ class Article(MethodView):
                 if id:
                     article = models.Article.query.filter(models.Article.ID == id).all()
                     returnableArticle = article[0].toJSONPartial()
+
+                    userID = session.get('current_user_id')
+                    time = datetime.now()
+                    vh = models.ViewHistory(ArticleID=id, UserID=userID,
+                                            Edit_Time=time)     
+                    db.session.add(vh)
+                    db.session.commit()
+                    
                     return {'article': returnableArticle}, 200
                 else:
                     return {'msg': 'No article specified'}, 400
@@ -705,11 +713,11 @@ class UserViewHistory(MethodView):
         try:
             if 'current_user_id' in session:
                 recentlyViewedArticles: list[models.Article] = models.Article.query.join(
-                    models.ViewHistory, models.Article.ID==models.ViewHistory.ArticleID
-                ).filter(
-                    models.ViewHistory.UserID == session.get('current_user_id')
+                    models.ViewHistory
+                ).filter_by(
+                    UserID=session.get('current_user_id')
                 ).order_by(
-                    models.ViewHistory.View_Time
+                    models.ViewHistory.View_Time.desc()
                 ).all()
                 
                 returnableArticles = [article.toJSONPartial() for article in recentlyViewedArticles]
@@ -1021,7 +1029,6 @@ class Feedback(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-        
 @apiv1.route("/searches/problems", methods=["OPTIONS", "GET"])
 class SearchesProblems(MethodView):
     def options(self):
