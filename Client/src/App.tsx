@@ -1,13 +1,9 @@
 import { Screen, StudentScreen, AdminScreen } from "./custom_objects/Screens";
-import { useState, useEffect } from "react";
+import { useState, useEffect, StrictMode } from "react";
 
-// import { PageLayout } from './components/PageLayout';
 import { loginRequest } from './authConfig';
-import { callMsGraph } from './graph';
-import { ProfileData } from './components/ProfileData';
 
 import { AuthenticatedTemplate, UnauthenticatedTemplate, useMsal } from '@azure/msal-react';
-import Button from 'react-bootstrap/Button';
 
 import StudentBrowse from "./screens/student/Browse";
 import StudentHome from "./screens/student/Home";
@@ -19,6 +15,7 @@ import AdminHome from "./screens/admin/SplashScreen";
 import AdminUsers from "./screens/admin/UsersScreen";
 import { SignInRedirect } from "./components/SignInRedirect";
 import './global.css';
+import { PartialAdminPrivilege } from "./custom_objects/models";
 
 interface handleTokenProps{
     setAuthenticated: (auth: boolean) => void
@@ -66,13 +63,50 @@ function App() {
 
     const [authenticated, setAuthenticated] = useState(false);
     const [admin, setAdmin] = useState(false);
-    const [currentScreen, setCurrentScreen] = useState<Screen>(StudentScreen.Home)
+    const [privileges, setPrivileges] = useState<PartialAdminPrivilege[]>([]);
+    const [currentScreen, setCurrentScreen] = useState<Screen>(StudentScreen.Home);
+
+    const getInfo = async () => {
+        const response = await fetch(`http://localhost:5000/api/v1/user/info`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+
+        if (response.status == 200){
+            console.log(`current_user_role: ${data.current_user_role}`)
+            if (data.current_user_role === "admin"){
+                setAdmin(true);
+                setPrivileges(data.current_privileges as PartialAdminPrivilege[]);
+            } else {
+                setAdmin(false);
+            }
+        } else {
+            setAuthenticated(false);
+        }
+    }
+
+    useEffect(() => {
+        if (admin === true){
+            setCurrentScreen(AdminScreen.Splash);
+        } else {
+            setCurrentScreen(StudentScreen.Home);
+        }
+    }, [admin])
 
     useEffect(() => {
         if (authenticated){
 
             // fetch request to user/info
             // if data.role is admin then splash else home
+
+            getInfo();
+            
+            console.log(`Here is the admin value: ${admin}`)
             if (admin){
                 setCurrentScreen(AdminScreen.Splash);
             } else {
@@ -125,7 +159,9 @@ function App() {
         <div style={{width: "100vw", height: "100vh"}}>
             <AuthenticatedTemplate>
                 <HandleToken setAuthenticated={setAuthenticated}/>
-                <MainContent/>
+                <StrictMode>
+                    <MainContent/>
+                </StrictMode>
             </AuthenticatedTemplate>
 
             <UnauthenticatedTemplate>

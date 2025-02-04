@@ -1,7 +1,7 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint
 from flask import session, request, jsonify, redirect, render_template, url_for
-from sqlalchemy import or_, desc, func
+from sqlalchemy import or_, desc, func, case
 from datetime import datetime, timedelta
 from app import app, db
 
@@ -80,29 +80,26 @@ class UserLogin(MethodView):
                 return jsonify({"msg": "No token provided"}), 400
 
             decoded_token = jwt.decode(token, options={"verify_signature": False})
-            
             email = decoded_token.get("unique_name")
             if not email:
                 return jsonify({"msg": "Invalid token: No email found"}), 401
             
-            user = models.User.query.filter_by(Email=email).first()
+            user: models.User = models.User.query.filter_by(Email=email).first()
 
             if user:
                 session["current_user_id"] = user.ID
-                adminCheck: list[models.User] = models.User.query.join(
-                    models.Admins
-                ).filter_by(
-                    UserID=session.get('current_user_id')
-                ).all()
+                privs: list[AdminPrivileges] = user.AdminPrivileges
 
-                if len(adminCheck) > 0:
+                if len(privs) > 0:
                     session["current_user_role"] = "admin"
 
-                    privs: list[int] = [user.PrivilegeID for user in adminCheck]
+                    privs: list[int] = [priv.ID for priv in privs]
                     session["current_privileges"] = privs
                 else:
                     session["current_user_role"] = "student"
                     session["current_privileges"] = []
+
+                print(session["current_user_id"])
 
                 return jsonify({"msg": "Login successful", "UserID": user.ID}), 200
             else:
@@ -113,6 +110,8 @@ class UserLogin(MethodView):
                 session["current_user_id"] = newUser.ID
                 session["current_user_role"] = "student"
                 session["current_privileges"] = []
+
+                print(session["current_user_id"])
 
                 return jsonify({"msg": "User successfully registered"}), 200
         except Exception as e:
@@ -125,8 +124,21 @@ class UserInfo(MethodView):
     def options(self):
         return '', 200
     def get(self):
-        if "current_user_id" in session and "current_user_role" in session and "current_user_privileges" in session:
-            return {'msg': "Not implemented yet"}, 501
+        print(session["current_user_role"])
+        if "current_user_id" in session and "current_user_role" in session and "current_privileges" in session:
+            
+            currentPrivileges: list[models.AdminPrivilege] = []
+            for id in session["current_privileges"]:
+                priv: models.AdminPrivilege = models.AdminPrivilege.query.filter_by(ID=id).first()
+                if priv:
+                    currentPrivileges.append(priv)
+            returnablePrivileges = [priv.toJSONPartial() for priv in currentPrivileges]
+            return {
+                "current_user_id": session["current_user_id"],
+                "current_user_role": session["current_user_role"],
+                "current_privileges": returnablePrivileges
+            }, 200
+            
         else:
             return {'msg': "Not logged in"}, 401
 
@@ -663,8 +675,6 @@ class Search(MethodView):
 
                 db.session.commit()
                 
-                print("======================")
-                
                 return {'results': returnedArticles}, 200
             else:
                 return {'msg': 'Unauthorized access'}, 401
@@ -739,23 +749,10 @@ class ArticlesInDepth(MethodView):
                             except ValueError:
                                 return {'msg': 'Incorrect size argument. size should be an int'}, 400
                         
-                        articles_with_thumbs_up = db.session.query(
-                            models.Article,
-                            func.count(models.Feedback.ID).label('thumbs_up_count')
-                        ).outerjoin(
-                            models.Feedback, models.Article.ID == models.Feedback.ArticleID
-                        ).filter(
-                            (models.Feedback.Submission_Time >= time_datetime) | (models.Feedback.ID == None),
-                            (models.Feedback.Positive == True) | (models.Feedback.ID == None)
-                        ).group_by(
-                            models.Article.ID
-                        ).order_by(
-                            func.count(models.Feedback.ID).desc()
-                        ).limit(size_int).all()
+                        articles: list[models.Article] = models.Article.query.all()
+                        thumbs_up_counts = [article.ThumbsUp for article in articles]
+                        thumbs_down_counts = [article.ThumbsDown for article in articles]
 
-                        articles: list[models.Article] = [article for article, thumbs_up_count in articles_with_thumbs_up]
-                        thumbs_up_counts = [thumbs_up_count for article, thumbs_up_count in articles_with_thumbs_up]
-                        
                         returnable_articles = [article.toJSONPartial() for article in articles]
                         
                         articleSearches = {}
@@ -799,10 +796,13 @@ class ArticlesInDepth(MethodView):
                         return {
                             'articles': returnable_articles, 
                             'thumbs_up': thumbs_up_counts,
+                            'thumbs_down': thumbs_down_counts,
                             'searches': returnableSearchCount
                         }, 200 
                         
-                    except ValueError:
+                    except ValueError as e:
+                        print(f"Error: {e}")
+                        traceback.print_exc()
                         return {'msg': 'Incorrect time format. time should be in unix format'}, 400
                 else:
                     return {'msg': 'no time argument included in request'}, 400
@@ -884,21 +884,16 @@ class ArticlesProblems(MethodView):
                             except ValueError:
                                 return {'msg': 'Incorrect size argument. size should be an int'}, 400
                         
-                        articles_with_thumbs_up = db.session.query(
-                            models.Article,
-                            func.count(models.Feedback.ID).label('thumbs_up_count')
-                        ).join(
-                            models.Feedback, models.Article.ID == models.Feedback.ArticleID
-                        ).filter(
-                            models.Feedback.Submission_Time >= time_datetime,
-                            models.Feedback.Positive == True
-                        ).group_by(
-                            models.Article.ID
-                        ).order_by(
-                            func.count(models.Feedback.ID).asc()
-                        ).limit(size_int).all()
+                        articles: list[models.Article] = (
+                                                    db.session.query(models.Article)
+                                                    .filter(models.Article.ThumbsDown > 0)  # Only include articles with more than 0 thumbs down
+                                                    .order_by(desc(models.Article.ThumbsDown))  # Sort by ThumbsDown in descending order
+                                                    .limit(10)  # Limit to the top 10 articles
+                                                    .all()  # Execute the query and return the results
+                                                )
 
-                        articles = [article for article, thumbs_up_count in articles_with_thumbs_up]
+                        
+                        
                         returnable_articles = [article.toJSONPartial() for article in articles]
                         return {'articles': returnable_articles}, 200   
                     except ValueError:
@@ -1009,12 +1004,27 @@ class Feedback(MethodView):
                     positive = data.get("Positive")
                     userID = session['current_user_id']
                     articleID = data.get("ArticleID")
+                    
+                    article: models.Article = models.Article.query.filter_by(ID=articleID).first()
+                    if positive == True:
+                        if article.ThumbsUp:
+                            article.ThumbsUp = article.ThumbsUp + 1
+                        else:
+                            article.ThumbsUp = 1
+                    else:
+                        if article.ThumbsDown:
+                            article.ThumbsDown = article.ThumbsDown + 1
+                        else:
+                            article.ThumbsDown = 1
+                    
                     newFeedback: models.Feedback = models.Feedback(Submission_Time=submission_time, Positive=positive, UserID=userID, ArticleID=articleID)
                     db.session.add(newFeedback)
                     db.session.commit()
                     return {'Feedback': newFeedback.toJSON()}, 201
                 else:
                     return {'msg': 'No content submitted '}, 400
+            else:
+                return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
             print(f"Error: {e}")
             traceback.print_exc()
