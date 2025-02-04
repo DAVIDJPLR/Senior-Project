@@ -699,7 +699,7 @@ class UserViewHistory(MethodView):
                 ).filter_by(
                     UserID=session.get('current_user_id')
                 ).order_by(
-                    models.ViewHistory.View_Time
+                    models.ViewHistory.View_Time.desc()
                 ).all()
                 
                 returnableArticles = [article.toJSONPartial() for article in recentlyViewedArticles]
