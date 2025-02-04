@@ -21,6 +21,7 @@ function AdminAnalysis({ currentScreen, setCurrentScreen }: Props){
     const [articles, setArticles] = useState<PartialArticle[]>([]);
     const [numSearches, setNumSearches] = useState<number[]>([]);
     const [numThumbsUp, setNumThumbsUp] = useState<number[]>([]);
+    const [numThumbsDown, setNumThumbsDown] = useState<number[]>([]);
     const [articlesDate, setArticlesDate] = useState(sixtyDaysAgoInSeconds);
 
     const getData = async() => {
@@ -41,6 +42,7 @@ function AdminAnalysis({ currentScreen, setCurrentScreen }: Props){
 
         setArticles(data.articles as PartialArticle[]);
         setNumThumbsUp(data.thumbs_up as number[]);
+        setNumThumbsDown(data.thumbs_down as number[]);
         setNumSearches(data.searches as number[]);
     }
 
@@ -66,6 +68,9 @@ function AdminAnalysis({ currentScreen, setCurrentScreen }: Props){
                                 <TableCell>   
                                     <Typography sx={{fontSize: "14px"}}>Thumbs Up</Typography>
                                 </TableCell>
+                                <TableCell>
+                                <Typography sx={{fontSize: "14px"}}>Thumbs Down</Typography>
+                                </TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -79,6 +84,9 @@ function AdminAnalysis({ currentScreen, setCurrentScreen }: Props){
                                     </TableCell>
                                     <TableCell>
                                         <Typography sx={{fontSize: "12px"}}>{numThumbsUp[index]}</Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Typography sx={{fontSize: "12px"}}>{numThumbsDown[index]}</Typography>
                                     </TableCell>
                                 </TableRow>
                             ))}

@@ -1,7 +1,7 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint
 from flask import session, request, jsonify, redirect, render_template, url_for
-from sqlalchemy import or_, desc, func
+from sqlalchemy import or_, desc, func, case
 from datetime import datetime, timedelta
 from app import app, db
 
@@ -667,8 +667,6 @@ class Search(MethodView):
 
                 db.session.commit()
                 
-                print("======================")
-                
                 return {'results': returnedArticles}, 200
             else:
                 return {'msg': 'Unauthorized access'}, 401
@@ -743,23 +741,10 @@ class ArticlesInDepth(MethodView):
                             except ValueError:
                                 return {'msg': 'Incorrect size argument. size should be an int'}, 400
                         
-                        articles_with_thumbs_up = db.session.query(
-                            models.Article,
-                            func.count(models.Feedback.ID).label('thumbs_up_count')
-                        ).outerjoin(
-                            models.Feedback, models.Article.ID == models.Feedback.ArticleID
-                        ).filter(
-                            (models.Feedback.Submission_Time >= time_datetime) | (models.Feedback.ID == None),
-                            (models.Feedback.Positive == True) | (models.Feedback.ID == None)
-                        ).group_by(
-                            models.Article.ID
-                        ).order_by(
-                            func.count(models.Feedback.ID).desc()
-                        ).limit(size_int).all()
+                        articles: list[models.Article] = models.Article.query.all()
+                        thumbs_up_counts = [article.ThumbsUp for article in articles]
+                        thumbs_down_counts = [article.ThumbsDown for article in articles]
 
-                        articles: list[models.Article] = [article for article, thumbs_up_count in articles_with_thumbs_up]
-                        thumbs_up_counts = [thumbs_up_count for article, thumbs_up_count in articles_with_thumbs_up]
-                        
                         returnable_articles = [article.toJSONPartial() for article in articles]
                         
                         articleSearches = {}
@@ -803,10 +788,13 @@ class ArticlesInDepth(MethodView):
                         return {
                             'articles': returnable_articles, 
                             'thumbs_up': thumbs_up_counts,
+                            'thumbs_down': thumbs_down_counts,
                             'searches': returnableSearchCount
                         }, 200 
                         
-                    except ValueError:
+                    except ValueError as e:
+                        print(f"Error: {e}")
+                        traceback.print_exc()
                         return {'msg': 'Incorrect time format. time should be in unix format'}, 400
                 else:
                     return {'msg': 'no time argument included in request'}, 400
@@ -888,21 +876,16 @@ class ArticlesProblems(MethodView):
                             except ValueError:
                                 return {'msg': 'Incorrect size argument. size should be an int'}, 400
                         
-                        articles_with_thumbs_up = db.session.query(
-                            models.Article,
-                            func.count(models.Feedback.ID).label('thumbs_up_count')
-                        ).join(
-                            models.Feedback, models.Article.ID == models.Feedback.ArticleID
-                        ).filter(
-                            models.Feedback.Submission_Time >= time_datetime,
-                            models.Feedback.Positive == True
-                        ).group_by(
-                            models.Article.ID
-                        ).order_by(
-                            func.count(models.Feedback.ID).asc()
-                        ).limit(size_int).all()
+                        articles: list[models.Article] = (
+                                                    db.session.query(models.Article)
+                                                    .filter(models.Article.ThumbsDown > 0)  # Only include articles with more than 0 thumbs down
+                                                    .order_by(desc(models.Article.ThumbsDown))  # Sort by ThumbsDown in descending order
+                                                    .limit(10)  # Limit to the top 10 articles
+                                                    .all()  # Execute the query and return the results
+                                                )
 
-                        articles = [article for article, thumbs_up_count in articles_with_thumbs_up]
+                        
+                        
                         returnable_articles = [article.toJSONPartial() for article in articles]
                         return {'articles': returnable_articles}, 200   
                     except ValueError:
@@ -1009,10 +992,23 @@ class Feedback(MethodView):
             if 'current_user_id' in session:
                 data = request.json
                 if data:
-                    submission_time = datetime.datetime.now()
+                    submission_time = datetime.now()
                     positive = data.get("Positive")
                     userID = session['current_user_id']
                     articleID = data.get("ArticleID")
+                    
+                    article: models.Article = models.Article.query.filter_by(ID=articleID).first()
+                    if positive == True:
+                        if article.ThumbsUp:
+                            article.ThumbsUp = article.ThumbsUp + 1
+                        else:
+                            article.ThumbsUp = 1
+                    else:
+                        if article.ThumbsDown:
+                            article.ThumbsDown = article.ThumbsDown + 1
+                        else:
+                            article.ThumbsDown = 1
+                    
                     newFeedback: models.Feedback = models.Feedback(Submission_Time=submission_time, Positive=positive, UserID=userID, ArticleID=articleID)
                     db.session.add(newFeedback)
                     db.session.commit()

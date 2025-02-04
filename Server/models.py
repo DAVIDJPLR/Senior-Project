@@ -75,8 +75,8 @@ class Article(db.Model):
     Content = db.Column(db.Unicode, nullable=True)
     Article_Description = db.Column(db.Unicode, nullable=True)
     Image = db.Column(db.Unicode, nullable=True)
-    ThumbsUp = db.Column(db.Integer, nullable=True)
-    ThumbsDown = db.Column(db.Integer, nullable=True)
+    ThumbsUp = db.Column(db.Integer, default=0)
+    ThumbsDown = db.Column(db.Integer, default=0)
 
     Views = db.relationship('ViewHistory', back_populates='Article', lazy='select')
     Edits = db.relationship('EditHistory', back_populates='Article', lazy='select')
