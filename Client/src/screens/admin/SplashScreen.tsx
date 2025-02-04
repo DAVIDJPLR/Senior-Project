@@ -133,7 +133,7 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
             <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
             <div style={{ flexShrink: 0, height: "10%", width: "100%"}}></div>
             <div style={{ height: "85%", width: "100%", display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gridTemplateRows: 'repeat(2, 1fr)' }}>
-                <fieldset style={{ height: "100%", display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: "10px", marginRight: "5px", borderRadius: '4px', overflow: "auto" }}>
+                <div style={{ height: "100%", display: 'flex', flexDirection: "column",alignItems: 'center', justifyContent: 'center', marginLeft: "10px", marginRight: "5px", borderRadius: '4px', overflowY: "auto", overflowX: "hidden", border: "1px solid grey" }}>
                     <legend style={{marginLeft: "10px"}}>
                         <Typography onClick={() => {setCurrentScreen(AdminScreen.Analysis)}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline'}}>Problem Articles</Typography>
                     </legend>
@@ -144,8 +144,8 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
                             </div>
                         ))}
                     </div>
-                </fieldset>
-                <fieldset style={{ height: "100%", display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: "5px", marginRight: "10px", borderRadius: '4px', overflow: "auto" }}>
+                </div>
+                <fieldset style={{ height: "100%", display: 'flex', flexDirection: "column", alignItems: 'center', justifyContent: 'center', marginLeft: "5px", marginRight: "10px", borderRadius: '4px', overflowY: "auto", overflowX: "hidden", border: "1px solid grey" }}>
                     <legend style={{marginLeft: "10px"}}>
                         <Typography onClick={() => {setCurrentScreen(AdminScreen.Analysis)}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline'}}>Problem Searches</Typography>
                     </legend>
@@ -157,7 +157,7 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
                         ))}
                     </div>
                 </fieldset>
-                <fieldset style={{ height: "100%", display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: "10px", marginRight: "5px", borderRadius: '4px', overflow: "auto" }}>
+                <fieldset style={{ height: "100%", display: 'flex', flexDirection: "column", alignItems: 'center', justifyContent: 'center', marginLeft: "10px", marginRight: "5px", borderRadius: '4px', overflowY: "auto", overflowX: "hidden", border: "1px solid grey" }}>
                     <legend style={{marginLeft: "10px"}}>
                         <Typography onClick={() => {setCurrentScreen(AdminScreen.Analysis)}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline'}}>Article Analytics</Typography>
                     </legend>
@@ -190,7 +190,7 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
                         </TableContainer>
                     </div>
                 </fieldset>
-                <fieldset style={{ height: "100%", display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: "5px", marginRight: "10px", borderRadius: '4px', overflow: "auto" }}>
+                <fieldset style={{ height: "100%", display: 'flex', flexDirection: "column", alignItems: 'center', justifyContent: 'center', marginLeft: "5px", marginRight: "10px", borderRadius: '4px', overflowY: "auto", overflowX: "hidden", border: "1px solid grey" }}>
                     <legend style={{marginLeft: "10px"}}>
                         <Typography onClick={() => {setCurrentScreen(AdminScreen.Analysis)}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline'}}>General Stats</Typography>
                     </legend>
@@ -202,7 +202,7 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
                 </fieldset>
             </div>
         </div>
-    )
+    );
 }
 
 export default AdminHome;
