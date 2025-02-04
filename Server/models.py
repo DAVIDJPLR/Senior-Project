@@ -46,8 +46,8 @@ class EditHistory(db.Model):
 
 class ViewHistory(db.Model):
     __tablename__= 'ViewHistory'
-    ArticleID = db.Column(db.Integer, db.ForeignKey('Articles.ID'), nullable=False)
-    UserID = db.Column(db.Integer, db.ForeignKey('Users.ID'), nullable=False)
+    ArticleID = db.Column(db.Integer, db.ForeignKey('Articles.ID'), primary_key=True)
+    UserID = db.Column(db.Integer, db.ForeignKey('Users.ID'), primary_key=True)
     View_Time = db.Column(db.DateTime, default=db.func.now(), primary_key=True)
     
     User = db.relationship('User', back_populates='Views', lazy='select')
