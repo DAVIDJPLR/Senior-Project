@@ -14,7 +14,7 @@ function AdminArticleCard({ article, lineNumber, onClick, onEditClick }: Props){
     const heightString: string = height.toString() + "px";
     return (
         <div onClick={onClick}
-            style={{width: "85%", height: heightString, display: "flex", flexDirection: "column", alignItems: "center", border: "1px solid grey", borderRadius: "20px", margin: "10px"}}
+            style={{width: "85%", height: heightString, display: "flex", flexDirection: "column", alignItems: "center", border: "1px solid grey", borderRadius: "20px", margin: "10px", position: "relative" }}
         >
             <button
                 onClick={(e) => {
