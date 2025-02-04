@@ -703,11 +703,11 @@ class UserViewHistory(MethodView):
         try:
             if 'current_user_id' in session:
                 recentlyViewedArticles: list[models.Article] = models.Article.query.join(
-                    models.ViewHistory, models.Article.ID==models.ViewHistory.ArticleID
-                ).filter(
-                    models.ViewHistory.UserID == session.get('current_user_id')
+                    models.ViewHistory
+                ).filter_by(
+                    UserID=session.get('current_user_id')
                 ).order_by(
-                    models.ViewHistory.View_Time
+                    models.ViewHistory.View_Time.desc()
                 ).all()
                 
                 returnableArticles = [article.toJSONPartial() for article in recentlyViewedArticles]
@@ -1019,7 +1019,6 @@ class Feedback(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-
 @apiv1.route("/searches/problems", methods=["OPTIONS", "GET"])
 class SearchesProblems(MethodView):
     def options(self):
