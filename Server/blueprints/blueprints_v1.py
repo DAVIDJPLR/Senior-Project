@@ -192,7 +192,7 @@ class Article(MethodView):
                     userID = session.get('current_user_id')
                     time = datetime.now()
                     vh = models.ViewHistory(ArticleID=id, UserID=userID,
-                                            Edit_Time=time)     
+                                            View_Time=time)     
                     db.session.add(vh)
                     db.session.commit()
                     
@@ -251,7 +251,7 @@ class Article(MethodView):
                     article.Article_Description = desc
                     article.Image = image
 
-                    time = datetime.datetime.now()
+                    time = datetime.now()
                     eh = models.EditHistory(ArticleID=id, UserID=userID, Edit_Time=time)
                     db.session.add(eh)
                     
@@ -1005,7 +1005,7 @@ class Feedback(MethodView):
             if 'current_user_id' in session:
                 data = request.json
                 if data:
-                    submission_time = datetime.datetime.now()
+                    submission_time = datetime.now()
                     positive = data.get("Positive")
                     userID = session['current_user_id']
                     articleID = data.get("ArticleID")
