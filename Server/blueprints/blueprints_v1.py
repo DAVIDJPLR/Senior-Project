@@ -188,6 +188,14 @@ class Article(MethodView):
                 if id:
                     article = models.Article.query.filter(models.Article.ID == id).all()
                     returnableArticle = article[0].toJSONPartial()
+
+                    userID = session.get('current_user_id')
+                    time = datetime.now()
+                    vh = models.ViewHistory(ArticleID=id, UserID=userID,
+                                            Edit_Time=time)     
+                    db.session.add(vh)
+                    db.session.commit()
+                    
                     return {'article': returnableArticle}, 200
                 else:
                     return {'msg': 'No article specified'}, 400
