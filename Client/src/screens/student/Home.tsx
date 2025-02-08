@@ -108,7 +108,7 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
                 <Alert severity="success" onClose={() => {setAlertVis(false)}} style={{position: 'fixed', top: "20px", zIndex: 1300, fontSize: '1.5rem', padding: '20px'}}>Issue Submitted</Alert>
             )}
             <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></StudentAppBar>
-            <div style={{ flexShrink: 0, height: "10%", width: "100%"}}></div>
+            {/* <div style={{ flexShrink: 0, height: "10%", width: "100%"}}></div> */}
             <SearchBar setSearchVal={setsearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={"medium"}></SearchBar>
             <div style={{ flexShrink: 0, height: "10px"}}></div>            
             {articles?.map((article) => {
