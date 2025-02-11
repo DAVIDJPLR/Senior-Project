@@ -16,6 +16,7 @@ function UserCard( { user, onClick }: Props){
             </div>
             <div style={{width: "20%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"}}>
                 <Button
+                    aria-label={`Add ${user.Email} as an admin user`}
                     variant="outlined"
                     sx={{ height: "32px", width: "32px", borderWidth: "0px", padding: 0, borderRadius: "50%", display: "flex", justifyContent: "center", minWidth: 0 }}
                     onClick={onClick}
