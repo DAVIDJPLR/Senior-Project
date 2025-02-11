@@ -175,6 +175,7 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
     >
       <Toolbar editor={editor}/>
       <Editable
+        label="Content"
         style={{
           padding: '24px',
           minHeight: '200px',
@@ -389,6 +390,7 @@ const Toolbar = ({ editor }: {editor: Editor}) => {
           style={{
             backgroundColor: CustomEditor.isBoldMarkActive(editor) ? '#ddd' : 'transparent',
           }}
+          aria-label="Bold"
         >
           <FormatBold/>
         </IconButton>
@@ -398,6 +400,7 @@ const Toolbar = ({ editor }: {editor: Editor}) => {
             event.preventDefault()
             CustomEditor.toggleItalicMark(editor)
           }}
+        aria-label="Italic"
         >
           <FormatItalic/>
         </IconButton>
@@ -407,6 +410,7 @@ const Toolbar = ({ editor }: {editor: Editor}) => {
             event.preventDefault()
             CustomEditor.toggleUnderlineMark(editor)
           }}
+        aria-label="Underline"
         >
           <FormatUnderlined/>
         </IconButton>
@@ -416,6 +420,7 @@ const Toolbar = ({ editor }: {editor: Editor}) => {
             event.preventDefault()
             CustomEditor.toggleBlock(editor, 'heading-one')
           }}
+        aria-label="Heading"
         >
           <Title />
         </IconButton>
@@ -425,6 +430,7 @@ const Toolbar = ({ editor }: {editor: Editor}) => {
             event.preventDefault()
             CustomEditor.toggleBlock(editor, 'block-quote')
           }}
+        aria-label="Block Quote"
         >
           <FormatQuote/>
         </IconButton>
@@ -434,6 +440,7 @@ const Toolbar = ({ editor }: {editor: Editor}) => {
             event.preventDefault()
             CustomEditor.toggleBlock(editor, 'code')
           }}
+          aria-label="Code"
         >
           <Code />
         </IconButton>
@@ -443,6 +450,7 @@ const Toolbar = ({ editor }: {editor: Editor}) => {
             event.preventDefault()
             CustomEditor.toggleBlock(editor, 'bulleted-list')
           }}
+        aria-label="Bulleted List"
         >
           <FormatListBulleted/>
         </IconButton>
@@ -452,6 +460,7 @@ const Toolbar = ({ editor }: {editor: Editor}) => {
             event.preventDefault()
             CustomEditor.toggleBlock(editor, 'numbered-list')
           }}
+        aria-label="Numbered List"
         >
           <FormatListNumbered/>
         </IconButton>
