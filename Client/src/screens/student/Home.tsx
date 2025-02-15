@@ -90,6 +90,18 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
         setArticles(data.results as PartialArticle[])
     }
 
+    const logView = async(article: PartialArticle) => {
+        const response = await fetch(`http://localhost:5000/api/v1/article?articleID=${article.ID}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        console.log("Article view logged.")
+    }
+
     return(
         <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center"}}>
             {alertVis && (
@@ -97,12 +109,13 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
             )}
             <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></StudentAppBar>
             <div style={{ flexShrink: 0, height: "10%", width: "100%"}}></div>
-            <SearchBar setSearchVal={setsearchVal} handleKeyUp={handleKeyUp} size={"medium"}></SearchBar>
+            <SearchBar setSearchVal={setsearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={"medium"}></SearchBar>
             <div style={{ flexShrink: 0, height: "10px"}}></div>            
             {articles?.map((article) => {
                 return <ArticleCard onClick={() => {
                     setCurrentArticle(article);
-                    setOpenArticleModal(true)
+                    setOpenArticleModal(true);
+                    logView(article);
                 }} article={article} lineNumber={3} key={article.ID}/>;
             })}
             {hasSearched && <Typography onClick={() => {

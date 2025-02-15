@@ -8,7 +8,7 @@ interface Props{
 
 function AdminAppBar ({ currentScreen, setCurrentScreen }: Props){
     return (
-        <AppBar elevation={0} sx={{width: "100%", height: "10%", backgroundColor: 'transparent'}}>
+        <AppBar elevation={0} sx={{width: "100%", height: "10%", backgroundColor: 'white'}}>
             <Grid2 container direction={"row"} sx={{width: "100%", height: "100%"}}>
                 {/* <Grid2 key={"Left_Space"} sx={{width: "10%"}}>
 
@@ -33,12 +33,12 @@ function AdminAppBar ({ currentScreen, setCurrentScreen }: Props){
                         <Grid2 key={"Divider_4"}>
                             <Divider orientation="vertical" variant="middle" flexItem sx={{ borderColor: 'black', height: "16px"}}></Divider>
                         </Grid2>
-                        <Grid2 key={"Backlog"}>
+                        {/* <Grid2 key={"Backlog"}>
                             {(currentScreen === AdminScreen.BackLog) ? <Typography sx={{color: 'black'}}>Backlog</Typography> : <Typography onClick={() => {setCurrentScreen(AdminScreen.BackLog);}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline'}}>Backlog</Typography>}  
                         </Grid2>
                         <Grid2 key={"Divider_3"}>
                             <Divider orientation="vertical" variant="middle" flexItem sx={{ borderColor: 'black', height: "16px"}}></Divider>
-                        </Grid2>
+                        </Grid2> */}
                         <Grid2 key={"Users"}>
                             {(currentScreen === AdminScreen.Users) ? <Typography sx={{color: 'black'}}>Users</Typography> : <Typography onClick={() => {setCurrentScreen(AdminScreen.Users);}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline'}}>Users</Typography>}  
                         </Grid2>

@@ -4,20 +4,20 @@ from app import db
 
 Admins = db.Table(
     'Admins',
-    db.Column('userID', db.Integer, db.ForeignKey('Users.ID'), primary_key=True),
-    db.Column('privilegeID', db.Integer, db.ForeignKey('AdminPrivileges.ID'), primary_key=True)
+    db.Column('UserID', db.Integer, db.ForeignKey('Users.ID'), primary_key=True),
+    db.Column('PrivilegeID', db.Integer, db.ForeignKey('AdminPrivileges.ID'), primary_key=True)
 )
 
 ArticleTags = db.Table(
     'ArticleTags',
-    db.Column('articleID', db.Integer, db.ForeignKey('Articles.ID'), primary_key=True),
-    db.Column('tagID', db.Integer, db.ForeignKey('Tags.ID'), primary_key=True)
+    db.Column('ArticleID', db.Integer, db.ForeignKey('Articles.ID'), primary_key=True),
+    db.Column('TagID', db.Integer, db.ForeignKey('Tags.ID'), primary_key=True)
 )
 
 ArticleMetaTags = db.Table(
     'ArticleMetaTags',
-    db.Column('articleID', db.Integer, db.ForeignKey('Articles.ID'), primary_key=True),
-    db.Column('metaTagID', db.Integer, db.ForeignKey('MetaTags.ID'), nullable=False)
+    db.Column('ArticleID', db.Integer, db.ForeignKey('Articles.ID'), primary_key=True),
+    db.Column('MetaTagID', db.Integer, db.ForeignKey('MetaTags.ID'), nullable=False)
 )
 
 class EditHistory(db.Model):
@@ -46,8 +46,8 @@ class EditHistory(db.Model):
 
 class ViewHistory(db.Model):
     __tablename__= 'ViewHistory'
-    ArticleID = db.Column(db.Integer, db.ForeignKey('Articles.ID'), nullable=False)
-    UserID = db.Column(db.Integer, db.ForeignKey('Users.ID'), nullable=False)
+    ArticleID = db.Column(db.Integer, db.ForeignKey('Articles.ID'), primary_key=True)
+    UserID = db.Column(db.Integer, db.ForeignKey('Users.ID'), primary_key=True)
     View_Time = db.Column(db.DateTime, default=db.func.now(), primary_key=True)
     
     User = db.relationship('User', back_populates='Views', lazy='select')
@@ -75,8 +75,8 @@ class Article(db.Model):
     Content = db.Column(db.Unicode, nullable=True)
     Article_Description = db.Column(db.Unicode, nullable=True)
     Image = db.Column(db.Unicode, nullable=True)
-    ThumbsUp = db.Column(db.Integer, nullable=True)
-    ThumbsDown = db.Column(db.Integer, nullable=True)
+    ThumbsUp = db.Column(db.Integer, default=0)
+    ThumbsDown = db.Column(db.Integer, default=0)
 
     Views = db.relationship('ViewHistory', back_populates='Article', lazy='select')
     Edits = db.relationship('EditHistory', back_populates='Article', lazy='select')
@@ -124,12 +124,12 @@ class AdminPrivilege(db.Model):
     def toJSONPartial(self):
         return {
             'ID': self.ID,
-            'privilegeName': self.privilegeName
+            'PrivilegeName': self.PrivilegeName
         }
     def toJSON(self):
         return {
             'ID': self.ID,
-            'privilegeName': self.privilegeName,
+            'PrivilegeName': self.PrivilegeName,
             'Users': [user.toJSONPartial() for user in self.Users]
         }
 
@@ -271,7 +271,7 @@ class MetaTag(db.Model):
 class User(db.Model):
     __tablename__ = 'Users'
     ID = db.Column(db.Integer, primary_key=True)
-    Email = db.Column(db.Unicode, nullable=True)
+    Email = db.Column(db.Unicode, nullable=False)
     Device = db.Column(db.Unicode, nullable=True)
     Major = db.Column(db.Unicode, nullable=True)
     GradYear = db.Column(db.Integer, nullable=True)
@@ -292,7 +292,8 @@ class User(db.Model):
             'Major': self.Major,
             'GradYear': self.GradYear,
             'LName': self.LName,
-            'FName': self.FName
+            'FName': self.FName,
+            'AdminPrivileges': [priv.toJSONPartial() for priv in self.AdminPrivileges]
         }
     def toJSON(self):
         return {

@@ -1,44 +1,187 @@
-import React, { useCallback, useMemo, useState } from 'react'
-import { createEditor, Editor, Transforms, Element } from 'slate'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { createEditor, Editor, Transforms, Element, Descendant, Node } from 'slate'
 import { Slate, Editable, withReact } from 'slate-react'
 import { withHistory } from 'slate-history'
-import {IconButton, Toolbar as MuiToolbar, Paper} from '@mui/material'
+import {Button, CircularProgress, IconButton, Toolbar as MuiToolbar, Paper, Snackbar, SnackbarCloseReason, TextField} from '@mui/material'
 import { FormatBold, FormatItalic, FormatUnderlined, FormatQuote,
        FormatListBulleted, FormatListNumbered,
         Code, Title } from '@mui/icons-material'
+import { PartialArticle } from '../custom_objects/models'
 
-export const TextEditor = () => {
+
+
+interface TextEditorProps {
+  articleID?: number
+}
+
+export const TextEditor = ({articleID}: TextEditorProps) => {
   const editor = useMemo(() => withHistory(withReact(createEditor())), [])
+
+  // const [value, setValue] = useState<Descendant[]>([
+  //   {
+  //     type: 'paragraph',
+  //     children: [{text: 'A line of text in a paragraph.'}]
+  //   },
+  // ])
+
+  const [value, setValue] = useState("")
+  const [title, setTitle] = useState("Untitled Article")
+  const [description, setDescription] = useState("")
+  const [loading, setLoading] = useState<boolean>(!!articleID)
+  const [saveSuccess, setSaveSuccess] = useState<boolean>(false)
   
-  const initialValue = useMemo(
-    () =>
-      JSON.parse(localStorage.getItem('content')) || [
-        {
-          type: 'paragraph',
-          children: [{text: 'A line of text in a paragraph.' }],
-        },
-      ],
-    []
-  )
+  // If we were given an articleID then we load that article from the DB
+  useEffect(() => {
+    if (articleID) {
+      console.log("Text editor received articleID: ", articleID)
+      const url = `http://localhost:5000/api/v1/article?articleID=${articleID}`
+      console.log("Fetching article from URL: ", url)
+      fetch(url, {
+        method: 'GET',
+        credentials: 'include'
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to fetch article')
+        }
+        console.log("returning json")
+        return response.json()
+      })
+      .then(data => {
+        console.log("about to parse")
+        console.log("Fetched data: ", data)
+        console.log("Fetched content: ", data.article.Content)
+        if (data.article) {
+          console.log("beginning parse")
+          try {
+            // const parsedContent = JSON.parse(data.article.Content)
+            const parsedContent = data.article.Content
+            setValue(parsedContent)
+            console.log("json parsed")
+          } catch (e) {
+            throw new Error('Error parsing article content')
+          }
+          setTitle(data.article.Title || "Untitled Article")
+          setDescription(data.article.Article_Description || "")
+        }
+      })
+      .catch(error => {
+        console.error("Error fetching article: ", error)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+    }
+  }, [articleID])
+
+  // Save an article
+  const handleSave = () => {
+    const content = value
+    const articlePayload: any = {
+      Title: title,
+      Content: content,
+      Article_Description: description
+    }
+
+    let url = 'http://localhost:5000/api/v1/article'
+    let method = 'POST'
+
+    // If the article already exists we use PUT
+    if (articleID) {
+      method = 'PUT'
+      articlePayload.ID = articleID
+      url = `http://localhost:5000/api/v1/article?articleID=${articleID}`
+    }
+
+    fetch(url, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(articlePayload)
+    })
+    .then(response => {
+      if(!response.ok) {
+        throw new Error ('Failed to save article')
+      }
+      return response.json()
+    })
+    .then(data => {
+      console.log("Article saved successfully ", data)
+      setSaveSuccess(true)
+    })
+    .catch(error => {
+      console.error("Error saving article: ", error)
+    })
+  }
+
+  const handleCloseSnackbar = (event: Event | React.SyntheticEvent<any, Event>, reason: SnackbarCloseReason) => {
+    if (reason === "clickaway") {
+      return
+    }
+    setSaveSuccess(false)
+  }
+  console.log("Article content: ", value)
+  console.log("Deserialized: ", deserialize(value))
+
+  const initialValue = deserialize(value)
+  console.log("Initial value should be: ", initialValue)
+
+  if (loading) {
+    return (
+      <Paper 
+        elevation={3}
+        style={{ padding: '16px',
+                 maxWidth: '800px',
+                 margin: 'auto',
+                 textAlign: 'center'
+        }}
+      >
+        <CircularProgress />
+      </Paper>
+    )
+  }
   return (
     <Paper elevation={3} style={{ padding: '16px', maxWidth: '800px', margin: 'auto' }}>
+    <TextField
+      fullWidth
+      label="Title"
+      variant="outlined"
+      margin="normal"
+      value={title}
+      onChange={(e) => setTitle(e.target.value)}
+    />
+    <TextField
+      fullWidth
+      label="Description"
+      variant="outlined"
+      margin="normal"
+      value={description}
+      onChange={(e) => setDescription(e.target.value)}
+    />
     <Slate
       editor={editor}
       initialValue={initialValue}
-      onChange={value => {
+      onChange={newValue => {
         const isAstChange = editor.operations.some(
           op => 'set_selection' !== op.type
         )
         if (isAstChange) {
-          const content = JSON.stringify(value)
-          localStorage.setItem('content', content)
+          setValue(serialize(newValue))
         }
       }}
     
     >
       <Toolbar editor={editor}/>
       <Editable
-        style={{ padding: '24px', minHeight: '200px', border: '2px solid #ddd', borderRadius: '8px'}}
+        label="Content"
+        style={{
+          padding: '24px',
+          minHeight: '200px',
+          border: '2px solid #ddd',
+          borderRadius: '8px'
+        }}
         renderElement = {renderElement}
         renderLeaf = {renderLeaf}
         onKeyDown={(event: KeyboardEvent) => {
@@ -86,8 +229,31 @@ export const TextEditor = () => {
         }}
       />
     </Slate>
+    <Button variant="contained" color = "primary" onClick={handleSave} style={{ marginTop: "8px"}}>
+      Save Article
+    </Button>
+    <Snackbar
+      open={saveSuccess}
+      autoHideDuration={3000}
+      onClose={handleCloseSnackbar}
+      message="Article saved!"
+      />
     </Paper>
   )
+}
+
+const serialize = (value: Descendant[]): string => {
+  return (
+    value.map(n => Node.string(n)).join('\n')
+  )
+}
+
+const deserialize = (string: string): Descendant[] => {
+  return string.split('\n').map(line => {
+    return {
+      children: [{ text: line }],
+    }
+  })
 }
 
 const CustomEditor = {
@@ -224,6 +390,7 @@ const Toolbar = ({ editor }: {editor: Editor}) => {
           style={{
             backgroundColor: CustomEditor.isBoldMarkActive(editor) ? '#ddd' : 'transparent',
           }}
+          aria-label="Bold"
         >
           <FormatBold/>
         </IconButton>
@@ -233,6 +400,7 @@ const Toolbar = ({ editor }: {editor: Editor}) => {
             event.preventDefault()
             CustomEditor.toggleItalicMark(editor)
           }}
+        aria-label="Italic"
         >
           <FormatItalic/>
         </IconButton>
@@ -242,6 +410,7 @@ const Toolbar = ({ editor }: {editor: Editor}) => {
             event.preventDefault()
             CustomEditor.toggleUnderlineMark(editor)
           }}
+        aria-label="Underline"
         >
           <FormatUnderlined/>
         </IconButton>
@@ -251,6 +420,7 @@ const Toolbar = ({ editor }: {editor: Editor}) => {
             event.preventDefault()
             CustomEditor.toggleBlock(editor, 'heading-one')
           }}
+        aria-label="Heading"
         >
           <Title />
         </IconButton>
@@ -260,6 +430,7 @@ const Toolbar = ({ editor }: {editor: Editor}) => {
             event.preventDefault()
             CustomEditor.toggleBlock(editor, 'block-quote')
           }}
+        aria-label="Block Quote"
         >
           <FormatQuote/>
         </IconButton>
@@ -269,6 +440,7 @@ const Toolbar = ({ editor }: {editor: Editor}) => {
             event.preventDefault()
             CustomEditor.toggleBlock(editor, 'code')
           }}
+          aria-label="Code"
         >
           <Code />
         </IconButton>
@@ -278,6 +450,7 @@ const Toolbar = ({ editor }: {editor: Editor}) => {
             event.preventDefault()
             CustomEditor.toggleBlock(editor, 'bulleted-list')
           }}
+        aria-label="Bulleted List"
         >
           <FormatListBulleted/>
         </IconButton>
@@ -287,6 +460,7 @@ const Toolbar = ({ editor }: {editor: Editor}) => {
             event.preventDefault()
             CustomEditor.toggleBlock(editor, 'numbered-list')
           }}
+        aria-label="Numbered List"
         >
           <FormatListNumbered/>
         </IconButton>
