@@ -594,7 +594,7 @@ class Admins(MethodView):
                 traceback.print_exc()
                 return {'msg': f"Error: {e}"}, 500
 
-@apiv1.route("/category", methods=["OPTIONS", "GET"])
+@apiv1.route("/category", methods=["OPTIONS", "GET", "POST", "PUT"])
 class Category(MethodView):
     def options(self):
         return '', 200
@@ -611,6 +611,113 @@ class Category(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
+        
+    def post(self):
+        try:
+            if 'current_user_id' in session and (session['current_user_role'] == "admin" or session['current_user_role'] == 'superadmin'):
+                data = request.json()
+                if data:
+                    tagName = data.get("TagName")
+                    newCategory = models.MetaTag(TagName=tagName)
+
+                    db.session.add(newCategory)
+                    db.session.commit()
+                    return {'Category': newCategory.toJSON()}, 201
+                else:
+                    return {'msg': 'No content submitted'}, 400
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+    def put(self):
+        try:
+            if 'current_user_id' in session and (session['current_user_role'] == "admin" or session['current_user_role'] == 'superadmin'):
+                category_updated = request.json
+                userID = session['current_user_id']
+                
+                if category_updated:
+                    id: int = category_updated.get("ID")
+                    tagName: str = category_updated.get('TagName')
+
+                    category = models.MetaTag.query.filter(models.MetaTag.ID == id).first()
+                    if not category:
+                        return {'msg': 'Article not found'}, 404
+                    category.TagName = tagName
+                    
+                    db.session.commit()
+                    return {'msg': 'Category updated successfully'}, 200
+                else:
+                    return {'msg': 'No content submitted'}, 400
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+
+@apiv1.route("/articletag", methods=["OPTIONS", "GET", "POST", "PUT"])
+class ArticleTag(MethodView):
+    def options(self):
+        return '', 200
+    
+    def get(self):
+        try:
+            if 'current_user_id' in session:
+                id = request.args.get("ID")
+                category: models.Tag = models.Tag.query.filter_by(ID=id).first()
+                return {'Tag': category.toJSON()}, 200
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+    def post(self):
+        try:
+            if 'current_user_id' in session and (session['current_user_role'] == "admin" or session['current_user_role'] == 'superadmin'):
+                data = request.json()
+                if data:
+                    tagName = data.get("TagName")
+                    newTag = models.Tag(TagName=tagName)
+
+                    db.session.add(newTag)
+                    db.session.commit()
+                    return {'Article tag': newTag.toJSON()}, 201
+                else:
+                    return {'msg': 'No content submitted'}, 400
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+    def put(self):
+        try:
+            if 'current_user_id' in session and (session['current_user_role'] == "admin" or session['current_user_role'] == 'superadmin'):
+                tag_updated = request.json
+                
+                if tag_updated:
+                    id: int = tag_updated.get("ID")
+                    tagName: str = tag_updated.get('TagName')
+
+                    tag = models.Tag.query.filter(models.Tag.ID == id).first()
+                    if not tag:
+                        return {'msg': 'Tag not found'}, 404
+                    tag.TagName = tagName
+                    
+                    db.session.commit()
+                    return {'msg': 'Article tag updated successfully'}, 200
+                else:
+                    return {'msg': 'No content submitted'}, 400
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+
 
 @apiv1.route("/categories", methods=["OPTIONS", "GET"])
 class Categories(MethodView):
