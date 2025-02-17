@@ -74,6 +74,7 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
             <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
             <div style={{ width: "90%", height: "10%", display: "flex", flexDirection: "column", alignItems: "end", justifyContent: "center" }}>
                 <Button
+                    aria-label="Add admin User"
                     variant="outlined"
                     sx={{ height: "40px", width: "40px", borderWidth: "0px", padding: 0, borderRadius: "50%", display: "flex", justifyContent: "center", minWidth: 0, zIndex: 9000 }}
                     onClick={handleClick}
