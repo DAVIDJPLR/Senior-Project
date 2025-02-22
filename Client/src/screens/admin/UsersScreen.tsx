@@ -71,7 +71,9 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
 
     return (
         <div style={{ width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
+            <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
+            </div>
             <div style={{ width: "90%", height: "10%", display: "flex", flexDirection: "column", alignItems: "end", justifyContent: "center" }}>
                 <Button
                     aria-label="Add admin User"
@@ -82,7 +84,6 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
                     <AddCircleOutlineIcon sx={{ height: "40px", width: "40px" }} />
                 </Button>
             </div>
-            <div style={{ width: "100%", height: "5%"}}></div>
             <SearchBar setSearchVal={setSearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={'small'} />
             <Typography style={{ fontSize: "24px", fontWeight: "600" }}>Current Administrators</Typography>
             {admins?.map((admin) => <AdminCard user={admin} key={admin.ID} 

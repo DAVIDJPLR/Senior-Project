@@ -52,8 +52,10 @@ function AdminAnalysis({ currentScreen, setCurrentScreen }: Props){
 
     return(
         <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center"}}>
-            <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
-            <div style={{ flexShrink: 0, height: "10%", width: "100%"}}></div>
+            <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
+            </div>
+            <div style={{height: "5%"}}></div>
             <div style={{ width: "90%", height: "85%", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", overflow: "auto" }}>
                 <TableContainer sx={{border: 1, borderWidth: 1, borderRadius: "4px", borderColor: "gray", height: "100%", width: "100%"}}>
                     <Table stickyHeader size="small">

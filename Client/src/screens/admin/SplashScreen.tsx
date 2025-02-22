@@ -130,8 +130,10 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
 
     return(
         <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center"}}>
-            <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
-            <div style={{ flexShrink: 0, height: "10%", width: "100%"}}></div>
+            <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
+            </div>
+            <div style={{height: "5%", width: "100%"}}></div>
             <div style={{ height: "85%", width: "100%", display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gridTemplateRows: 'repeat(2, 1fr)' }}>
                 <div style={{ height: "100%", display: 'flex', flexDirection: "column",alignItems: 'center', justifyContent: 'center', marginLeft: "10px", marginRight: "5px", borderRadius: '4px', overflowY: "auto", overflowX: "hidden", border: "1px solid grey" }}>
                     <legend style={{marginLeft: "10px"}}>

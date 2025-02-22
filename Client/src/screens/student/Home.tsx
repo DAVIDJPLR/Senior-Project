@@ -131,7 +131,7 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
             </div> 
 
             {isMobile && (
-                <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                <div style={{height: "6%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
                     <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></StudentAppBar>
                 </div>
             )}

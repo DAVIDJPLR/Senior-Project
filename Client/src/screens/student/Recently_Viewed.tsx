@@ -1,10 +1,8 @@
 import StudentAppBar from "../../components/StudentAppBar";
-import SearchBar from "../../components/SearchBar";
 import { Screen } from "../../custom_objects/Screens";
 import { useState, useEffect } from "react";
 import ArticleCard from "../../components/ArticleCard";
 import ArticleModal from "../../components/ArticleModal";
-import { Typography, Modal, Button, TextField } from "@mui/material";
 import { PartialArticle } from "../../custom_objects/models"
 import { useMediaQuery } from "react-responsive";  
 
@@ -51,18 +49,23 @@ function StudentRecent({ currentScreen, setCurrentScreen }: Props){
                 </div>
             )}
 
-            <div style={{height: "95%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto"}}>
-                <div><h1>Recently Viewed</h1></div>
-                {articles?.map((article) => {
-                    return <ArticleCard onClick={() => {
-                        setCurrentArticle(article);
-                        setOpenArticleModal(true)
-                    }} article={article} lineNumber={3} key={article.ID}/>;
-                })}
+            <div style={{height: "95%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                <div style={{width: "100%", height: "2%"}}></div>
+                <div style={{height: "8%", width: "100%",   display: "flex", flexDirection: "column", alignItems: "center"}}>
+                    <h1>Recently Viewed</h1>
+                </div>
+                <div style={{height: "87%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "hidden"}}>
+                    {articles?.map((article) => {
+                        return <ArticleCard onClick={() => {
+                            setCurrentArticle(article);
+                            setOpenArticleModal(true)
+                        }} article={article} lineNumber={3} key={article.ID}/>;
+                    })}
+                </div>
             </div>
 
             {isMobile && (
-                <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                <div style={{height: "6%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
                     <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></StudentAppBar>
                 </div>
             )}

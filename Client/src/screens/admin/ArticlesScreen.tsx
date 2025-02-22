@@ -45,10 +45,11 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
     }
     
     return(
-        <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center", overflowX: "hidden", overflowY: "auto"}}>
-            <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
-            <div style={{ flexShrink: 0, height: "10%", width: "100%"}}></div>
-            <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center",}}>
+        <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center", overflow: "hidden"}}>
+            <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
+            </div>
+            <div style={{ width: "100%", height: "95%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto"}}>
                 {articles.map((article) => (
                     <AdminArticleCard
                         key={article.ID}
