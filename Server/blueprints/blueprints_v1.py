@@ -1327,41 +1327,43 @@ class SystemStats(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
+
 @apiv1.route("/articles/search/tagandquery", methods=["OPTIONS", "GET"])
 class SystemStatsSearch(MethodView):
     def options(self):
         return '', 200
     def get(self):
         try:
-            if 'current_user_id' in session and session['current_user_role'] == "admin":
-            
-                searchQuery = request.args.get("searchQuery")
-                tagName = request.args.get("tagName")
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if len(session['current_user_privileges']) > 0:
+                    searchQuery = request.args.get("searchQuery")
+                    tagName = request.args.get("tagName")
 
-                articlesQuery = models.Article.query.filter(
-                    or_(
-                        models.Article.Title.ilike(f"%{searchQuery}%"),
-                        models.Article.Content.ilike(f"%{searchQuery}%"),
-                        models.Article.Article_Description.ilike(f"%{searchQuery}%")
-                    )
+                    articlesQuery = models.Article.query.filter(
+                        or_(
+                            models.Article.Title.ilike(f"%{searchQuery}%"),
+                            models.Article.Content.ilike(f"%{searchQuery}%"),
+                            models.Article.Article_Description.ilike(f"%{searchQuery}%")
+                        )
                     ).all()
 
-                tag: models.Tag = models.Tag.query.filter_by(tagName=tagName).first()
-                articlesTag: list[models.Article] = tag.Articles
-                totalArticles = []
+                    tag: models.Tag = models.Tag.query.filter_by(tagName=tagName).first()
+                    articlesTag: list[models.Article] = tag.Articles
+                    totalArticles = []
 
-                for x in articlesQuery:
-                    for y in articlesTag:
-                        if x.ID == y.ID:
-                            totalArticles.append(x)
-
-            
-                returnableArticles = [article.toJSONPartial() for article in totalArticles]
-
-                db.session.commit()
+                    for x in articlesQuery:
+                        for y in articlesTag:
+                            if x.ID == y.ID:
+                                totalArticles.append(x)
                 
-                return {'results': returnableArticles}, 200
-        
+                    returnableArticles = [article.toJSONPartial() for article in totalArticles]
+                    db.session.commit()
+                    
+                    return {'results': returnableArticles}, 200
+                else:
+                    return {'msg': 'Unauthorized access'}, 403
+            else:
+                return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
             print(f"Error: {e}")
             traceback.print_exc()
