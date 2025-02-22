@@ -6,6 +6,7 @@ import ArticleCard from "../../components/ArticleCard";
 import ArticleModal from "../../components/ArticleModal";
 import { Typography, Modal, Button, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Alert } from "@mui/material";
 import { PartialArticle } from "../../custom_objects/models";
+import { useMediaQuery } from "react-responsive";   
 
 interface Props{
     currentScreen: Screen
@@ -24,6 +25,8 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
 
     const [currentArticle, setCurrentArticle] = useState<PartialArticle | null>(null);
     const [openArticleModal, setOpenArticleModal] = useState(false);
+
+    const isMobile = useMediaQuery({ maxWidth: 767 });
 
     useEffect(() => {
         defaultArticles()
@@ -103,24 +106,39 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
     }
 
     return(
-        <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center"}}>
+        <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center", overflow: "hidden"}}>
             {alertVis && (
                 <Alert severity="success" onClose={() => {setAlertVis(false)}} style={{position: 'fixed', top: "20px", zIndex: 1300, fontSize: '1.5rem', padding: '20px'}}>Issue Submitted</Alert>
             )}
-            <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></StudentAppBar>
-            {/* <div style={{ flexShrink: 0, height: "10%", width: "100%"}}></div> */}
-            <SearchBar setSearchVal={setsearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={"medium"}></SearchBar>
-            <div style={{ flexShrink: 0, height: "10px"}}></div>            
-            {articles?.map((article) => {
-                return <ArticleCard onClick={() => {
-                    setCurrentArticle(article);
-                    setOpenArticleModal(true);
-                    logView(article);
-                }} article={article} lineNumber={3} key={article.ID}/>;
-            })}
+            {!isMobile && (
+                <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                    <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></StudentAppBar>
+                </div>
+            )}
+
+            <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "5%", marginTop: "5%"}}>
+                <SearchBar setSearchVal={setsearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={"medium"}></SearchBar>
+            </div>
+
+            <div style={{height: "85%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto"}}>
+                {articles?.map((article) => {
+                    return <ArticleCard onClick={() => {
+                        setCurrentArticle(article);
+                        setOpenArticleModal(true);
+                        logView(article);
+                    }} article={article} lineNumber={3} key={article.ID}/>;
+                })}
+            </div> 
+
+            {isMobile && (
+                <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                    <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></StudentAppBar>
+                </div>
+            )}
+
             {hasSearched && <Typography onClick={() => {
                 setOpenNoResultFoundModal(true);
-            }} sx={{color: 'text.secondary', cursor: 'pointer', textDecoration: 'underline', fontSize: '18px', fontWeight: '600', position: 'fixed', bottom: 20, ackdropFilter: 'blur(5px)', backgroundColor: 'rgba(255, 255, 255, 0.7)', padding: '10px', borderRadius: '8px'}}>I didn't find a solution</Typography>}
+            }} sx={{color: 'text.secondary', cursor: 'pointer', textDecoration: 'underline', fontSize: '18px', fontWeight: '600', position: 'fixed', bottom: 60, ackdropFilter: 'blur(5px)', backgroundColor: 'rgba(255, 255, 255, 0.7)', padding: '10px', borderRadius: '8px'}}>I didn't find a solution</Typography>}
        
             <NoResultFoundModal open={openNoResultFoundModal} setOpen={setOpenNoResultFoundModal} setAlertVis={setAlertVis}/>
             <ArticleModal handleClose={() => {
