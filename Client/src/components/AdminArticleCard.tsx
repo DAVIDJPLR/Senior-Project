@@ -4,39 +4,17 @@ import { PartialArticle } from "../custom_objects/models";
 interface Props{
     article: PartialArticle,
     lineNumber: number,
-    onClick: () => void
-    onEditClick: (article: PartialArticle) => void
+    onClick: (article: PartialArticle) => void
 }
 
-function AdminArticleCard({ article, lineNumber, onClick, onEditClick }: Props){
+function AdminArticleCard({ article, lineNumber, onClick }: Props){
     const lineNumberString: string = lineNumber.toString();
     const height: number = (18*1.5) + ((lineNumber)*(16*1.5)) + 15;
     const heightString: string = height.toString() + "px";
     return (
-        <div onClick={onClick}
+        <div onClick={() => {onClick(article)}}
             style={{width: "85%", height: heightString, display: "flex", flexDirection: "column", alignItems: "center", border: "1px solid grey", borderRadius: "20px", margin: "10px", position: "relative" }}
         >
-            <button
-                onClick={(e) => {
-                    e.stopPropagation()
-                    console.log('Edit Article clicked')
-                    onEditClick(article)
-                }}
-                style={{
-                    position: "absolute",
-                    top: "10px",
-                    right: "10px",
-                    padding: "6px 12px",
-                    fontSize: "12px",
-                    borderRadius: "5px",
-                    border: "1px solid grey",
-                    backgroundColor: "#f0f0f0",
-                    cursor: "pointer",
-                }}
-            >
-                Edit Article
-            </button>
-
             <Typography style={{
                 fontSize: "18px",
                 textAlign: "center",

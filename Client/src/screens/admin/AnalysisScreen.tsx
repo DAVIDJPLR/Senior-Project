@@ -3,7 +3,7 @@ import { Screen } from "../../custom_objects/Screens";
 import { TableContainer, Table, TableHead, TableRow, TableCell, Typography, TableBody } from "@mui/material";
 import { PartialArticle } from "../../custom_objects/models";
 import { useState, useEffect } from "react";
-
+import { useMediaQuery } from "react-responsive"; 
 
 interface Props{
     currentScreen: Screen
@@ -15,6 +15,8 @@ function AdminAnalysis({ currentScreen, setCurrentScreen }: Props){
     const tenDaysInMilliseconds = 60 * 24 * 60 * 60 * 1000;
     const currentTime = Date.now();
     const sixtyDaysAgoInSeconds = (currentTime - tenDaysInMilliseconds)/1000;
+
+    const isMobile = useMediaQuery({ maxWidth: 767 });
 
     const lstSize = 10;
     
@@ -52,10 +54,13 @@ function AdminAnalysis({ currentScreen, setCurrentScreen }: Props){
 
     return(
         <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center"}}>
-            <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
-            <div style={{ flexShrink: 0, height: "10%", width: "100%"}}></div>
-            <div style={{ width: "90%", height: "85%", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", overflow: "auto" }}>
-                <TableContainer sx={{border: 1, borderWidth: 1, borderRadius: "4px", borderColor: "gray", height: "100%", width: "100%"}}>
+            {!isMobile && (
+                <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                    <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
+                </div>
+            )}
+            <div style={{ width: "100%", height: "95%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "10px", overflow: "auto" }}>
+                <TableContainer sx={{border: 1, borderWidth: 1, borderRadius: "4px", borderColor: "gray", height: "98%", width: "98%"}}>
                     <Table stickyHeader size="small">
                         <TableHead>
                             <TableRow>
@@ -94,6 +99,11 @@ function AdminAnalysis({ currentScreen, setCurrentScreen }: Props){
                     </Table>
                 </TableContainer>
             </div>
+            {isMobile && (
+                <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                    <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
+                </div>
+            )}
         </div>
     )
 }
