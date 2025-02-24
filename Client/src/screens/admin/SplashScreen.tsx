@@ -1,4 +1,4 @@
-import { TableContainer, Typography, Table, TableHead, TableRow, TableCell, TableBody } from "@mui/material";
+import { TableContainer, Typography, Table, TableHead, TableRow, TableCell, TableBody, useTheme } from "@mui/material";
 import AdminAppBar from "../../components/AdminAppBar";
 import { PartialArticle, PartialSearch } from "../../custom_objects/models";
 import { useState, useEffect } from "react";
@@ -33,6 +33,8 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
     const [articleCount, setArticleCount] = useState<number>();
     const [searchCount, setSearchCount] = useState<number>();
     const [statsDate, setStatsSate] = useState(sixtyDaysAgoInSeconds)
+
+    const theme = useTheme();
 
     const getProblemArticles = async () => {
         const params = new URLSearchParams({
@@ -138,10 +140,10 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
                     <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
                 </div>
             )}
-            <div style={{height: "95%", width: "100%", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center"}}>
+            <div style={{height: "95%", width: "100%", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: theme.palette.secondary.main}}>
                 <div style={{height: "100%", width: "50%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"}}>
                     <div style={{width: "100%", flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-evenly"}}>
-                        <fieldset style={{ height: "98%", width: "98%", display: 'flex', flexDirection: "column", alignItems: 'center', justifyContent: "space-evenly", borderRadius: '4px', overflowY: "auto", overflowX: "hidden", border: "1px solid grey" }}>
+                        <fieldset style={{ height: "98%", width: "98%", display: 'flex', flexDirection: "column", alignItems: 'center', justifyContent: "space-evenly", borderRadius: '4px', overflowY: "auto", overflowX: "hidden", border: "1px solid grey", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white" }}>
                             <legend style={{marginLeft: "10px"}}>
                                 <Typography onClick={() => {setCurrentScreen(AdminScreen.Analysis)}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline'}}>Article Analytics</Typography>
                             </legend>
@@ -176,16 +178,16 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
                         </fieldset>
                     </div>
                     <div style={{width: "100%", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-evenly", marginBottom: "1%"}}>
-                        <div style={{width: "30%", aspectRatio: "1/1", borderRadius: "50%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", border: "1px solid gray", color: "black"}}>
+                        <div style={{width: "30%", aspectRatio: "1/1", borderRadius: "50%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", border: "1px solid gray", color: "black", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white"}}>
                             <Typography sx={{fontSize: "300%", lineHeight: "1", marginBottom: "2px" }}>{articleCount}</Typography>
                             <Typography sx={{fontSize: "80%", lineHeight: "1", marginBottom: "2px" }}>Articles</Typography>
                         </div>
-                        <div style={{width: "30%", aspectRatio: "1/1", borderRadius: "50%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", border: "1px solid gray", color: "black"}}>
+                        <div style={{width: "30%", aspectRatio: "1/1", borderRadius: "50%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", border: "1px solid gray", color: "black", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white"}}>
                             <Typography sx={{fontSize: "300%", lineHeight: "1", marginBottom: "2px" }}>{userCount}</Typography>
                             <Typography sx={{fontSize: "80%", lineHeight: "1", marginBottom: "2px" }}>Active users</Typography>
                         </div>
 
-                        <div style={{width: "30%", aspectRatio: "1/1", borderRadius: "50%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", border: "1px solid gray", color: "black"}}>
+                        <div style={{width: "30%", aspectRatio: "1/1", borderRadius: "50%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", border: "1px solid gray", color: "black", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white"}}>
                             <Typography sx={{fontSize: "300%", lineHeight: "1", marginBottom: "2px" }}>{searchCount}</Typography>
                             <Typography sx={{fontSize: "80%", lineHeight: "1", marginBottom: "2px" }}>Searches</Typography>
                         </div>
@@ -193,7 +195,7 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
                 </div>
                 <div style={{height: "100%", width: "50%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"}}>
                     <div style={{height: "50%", width: "100%", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center"}}>
-                        <fieldset style={{ height: "98%", width: "98%", display: 'flex', flexDirection: "column", alignItems: 'center', justifyContent: 'center', borderRadius: '4px', overflowY: "auto", overflowX: "hidden", border: "1px solid grey" }}>
+                        <fieldset style={{ height: "98%", width: "98%", display: 'flex', flexDirection: "column", alignItems: 'center', justifyContent: 'center', borderRadius: '4px', overflowY: "auto", overflowX: "hidden", border: "1px solid grey", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white" }}>
                             <legend style={{marginLeft: "10px"}}>
                                 <Typography onClick={() => {setCurrentScreen(AdminScreen.Analysis)}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline'}}>Problem Searches</Typography>
                             </legend>
@@ -207,7 +209,7 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
                         </fieldset>
                     </div>
                     <div style={{height: "50%", width: "100%", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center"}}>
-                        <fieldset style={{ height: "98%", width: "98%", display: 'flex', flexDirection: "column",alignItems: 'center', justifyContent: 'center', borderRadius: '4px', overflowY: "auto", overflowX: "hidden", border: "1px solid grey" }}>
+                        <fieldset style={{ height: "98%", width: "98%", display: 'flex', flexDirection: "column",alignItems: 'center', justifyContent: 'center', borderRadius: '4px', overflowY: "auto", overflowX: "hidden", border: "1px solid grey", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white" }}>
                             <legend style={{marginLeft: "10px"}}>
                                 <Typography onClick={() => {setCurrentScreen(AdminScreen.Analysis)}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline'}}>Problem Articles</Typography>
                             </legend>
