@@ -9,6 +9,7 @@ import UserCard from "../../components/UserCard";
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import { PartialAdminPrivilege, PartialUser } from "../../custom_objects/models";
+import { useMediaQuery } from "react-responsive"; 
 
 interface Props{
     currentScreen: Screen
@@ -21,6 +22,8 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
     const [openAdminModal, setOpenAdminModal] = useState(false)
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedAdmin, setSelectedAdmin] = useState<PartialUser | null>(null)
+
+    const isMobile = useMediaQuery({ maxWidth: 767 });
 
     const [refresh, setRefresh] = useState(false);
 
@@ -71,9 +74,11 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
 
     return (
         <div style={{ width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
-                <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
-            </div>
+            {!isMobile && (
+                <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                    <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
+                </div>
+            )}
             <div style={{ width: "90%", height: "10%", display: "flex", flexDirection: "column", alignItems: "end", justifyContent: "center" }}>
                 <Button
                     aria-label="Add admin User"
@@ -84,13 +89,24 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
                     <AddCircleOutlineIcon sx={{ height: "40px", width: "40px" }} />
                 </Button>
             </div>
-            <SearchBar setSearchVal={setSearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={'small'} />
-            <Typography style={{ fontSize: "24px", fontWeight: "600" }}>Current Administrators</Typography>
-            {admins?.map((admin) => <AdminCard user={admin} key={admin.ID} 
-                onClick={() => {
-                    setSelectedAdmin(admin);
-                    setOpenAdminModal(true);
-                }} />)}
+
+            <div style={{ width: "100%", height: "85%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto" }}>
+                <div style={{height: "3%"}}></div>
+                <SearchBar setSearchVal={setSearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={'small'} />
+                <Typography style={{ fontSize: "24px", fontWeight: "600" }}>Current Administrators</Typography>
+                {admins?.map((admin) => <AdminCard user={admin} key={admin.ID} width={isMobile ? "90%" : "60%"}
+                    onClick={() => {
+                        setSelectedAdmin(admin);
+                        setOpenAdminModal(true);
+                    }} />)}
+            </div>
+
+            
+            {isMobile && (
+                <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                    <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
+                </div>
+            )}
             <Popover
                 id={id}
                 open={open}
@@ -280,6 +296,8 @@ function UserModal({ handleClose, setRefresh }: userModalProps) {
     const [searchVal, setSearchVal] = useState("");
     const [selectedUser, setSelectedUser] = useState<PartialUser>();
 
+    const isMobile = useMediaQuery({ maxWidth: 767 });
+
     const getAllUsers = async () => {
         const response = await fetch('http://localhost:5000/api/v1/users', {
             method: 'GET',
@@ -348,17 +366,31 @@ function UserModal({ handleClose, setRefresh }: userModalProps) {
         }
     };
 
-    return (
-        <div style={{width: "40vw", height: "50vh", paddingTop: '16px', backgroundColor: 'white', borderRadius: '8px', display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-            <SearchBar setSearchVal={setSearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={'small'}/>
-            <div style={{width: "100%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto"}}>
-                {users?.map((user) => <UserCard user={user} key={user.ID} onClick={() => {
-                    setSelectedUser(user);
-                    handleClose();
-                }} />)}
+    if (isMobile){
+        return (
+            <div style={{width: "90vw", height: "50vh", paddingTop: '16px', backgroundColor: 'white', borderRadius: '8px', display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                <SearchBar setSearchVal={setSearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={'small'}/>
+                <div style={{width: "100%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto"}}>
+                    {users?.map((user) => <UserCard user={user} key={user.ID} onClick={() => {
+                        setSelectedUser(user);
+                        handleClose();
+                    }} />)}
+                </div>
             </div>
-        </div>
-    );
+        );
+    } else {
+        return (
+            <div style={{width: "40vw", height: "50vh", paddingTop: '16px', backgroundColor: 'white', borderRadius: '8px', display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                <SearchBar setSearchVal={setSearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={'small'}/>
+                <div style={{width: "100%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto"}}>
+                    {users?.map((user) => <UserCard user={user} key={user.ID} onClick={() => {
+                        setSelectedUser(user);
+                        handleClose();
+                    }} />)}
+                </div>
+            </div>
+        );
+    }
 }
 
 interface confirmSubmissionProps{

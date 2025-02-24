@@ -4,6 +4,7 @@ import { Screen } from "../../custom_objects/Screens";
 import {PartialArticle} from "../../custom_objects/models"
 import AdminArticleCard from '../../components/AdminArticleCard';
 import EditArticleModal from './EditScreen';
+import { useMediaQuery } from "react-responsive"; 
 
 interface Props{
     currentScreen: Screen
@@ -14,6 +15,8 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
     const [editModalOpen, setEditModalOpen] = useState(false)
     const [selectedArticle, setSelectedArticle] = useState<PartialArticle | null>(null)
     const [articles, setArticles] = useState<PartialArticle[]>([])
+
+    const isMobile = useMediaQuery({ maxWidth: 767 });
 
     const handleEditArticle = (article: PartialArticle) => {
         setSelectedArticle(article)
@@ -46,17 +49,18 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
     
     return(
         <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center", overflow: "hidden"}}>
-            <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
-                <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
-            </div>
+            {!isMobile && (
+                <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                    <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
+                </div>
+            )}
             <div style={{ width: "100%", height: "95%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto"}}>
                 {articles.map((article) => (
                     <AdminArticleCard
                         key={article.ID}
                         article={article}
                         lineNumber={3}
-                        onClick={() => console.log("Card clicked")}
-                        onEditClick={handleEditArticle}
+                        onClick={handleEditArticle}
                     />
                 ))}
                 <EditArticleModal
@@ -65,6 +69,11 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
                     onClose={handleCloseModal}
                 />
             </div>
+            {isMobile && (
+                <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                    <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
+                </div>
+            )}
         </div>
     )
 }
