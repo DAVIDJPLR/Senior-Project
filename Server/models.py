@@ -88,7 +88,7 @@ class Article(db.Model):
         return f"Article name: {self.Title}"
     
     def toJSONPartial(self):
-        return{
+        return {
             'ID': self.ID,
             'Title': self.Title,
             'Content': self.Content,
@@ -98,7 +98,7 @@ class Article(db.Model):
             'ThumbsDown': self.ThumbsDown
         } 
     def toJSON(self):
-         return{
+        return {
             'ID': self.ID,
             'Title': self.Title,
             'Content': self.Content,
@@ -106,13 +106,12 @@ class Article(db.Model):
             'Image': self.Image,
             'ThumbsUp': self.ThumbsUp,
             'ThumbsDown': self.ThumbsDown,
-            'Views': [view.toJSONPartial for view in self.Views],
-            'Edits': [edit.toJSONPartial for edit in self.Edits],
-            'Tags': [tag.toJSONPartial for tag in self.Tags],
-            'Feedback': [fb.toJSONPartial for fb in self.Feedback],
-            'MetaTags': [metatag.toJSONPartial for metatag in self.MetaTags]
+            'Views': [view.toJSONPartial() for view in self.Views],
+            'Edits': [edit.toJSONPartial() for edit in self.Edits],
+            'Tags': [tag.toJSONPartial() for tag in self.Tags],
+            'Feedback': [fb.toJSONPartial() for fb in self.Feedback],
+            'MetaTags': [metatag.toJSONPartial() for metatag in self.MetaTags]
         }
-        
 
 class AdminPrivilege(db.Model):
     __tablename__ = 'AdminPrivileges'

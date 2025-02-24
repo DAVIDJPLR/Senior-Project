@@ -3,15 +3,16 @@ import { Typography, Grid2 } from "@mui/material";
 
 interface Props{
     user: PartialUser,
-    onClick: () => void
+    onClick: () => void,
+    width: string,
 }
 
-function AdminCard({ user, onClick }: Props){
+function AdminCard({ user, onClick, width }: Props){
 
     const privilegeString: string = `| ${user.AdminPrivileges.map((privilege) => privilege.PrivilegeName).join(" | ")} |`;
 
     return(
-        <div style={{width: "60%", height: "46px", display: "flex", flexDirection: "column", alignItems: "center", border: "2px solid grey", borderRadius: "5px", margin: "10px"}}>
+        <div style={{width: width, height: "46px", display: "flex", flexDirection: "column", alignItems: "center", border: "2px solid grey", borderRadius: "5px", margin: "10px"}}>
             <Grid2 container direction="row" justifyContent="center" alignItems="center" sx={{width: "98%"}}>
                 <Grid2 key="LeftSpace" sx={{width: "33%"}}>
                     <Typography style={{ fontSize: "16px", fontWeight: "600", textAlign: "left", width: "95%", overflow: "hidden"}}>{user.FName} {user.LName}</Typography>
