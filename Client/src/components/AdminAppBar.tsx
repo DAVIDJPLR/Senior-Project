@@ -1,4 +1,4 @@
-import { AppBar, Typography, Grid2, Divider } from "@mui/material/";
+import { Typography, Grid2, Divider, useTheme } from "@mui/material/";
 import { Screen, AdminScreen } from "../custom_objects/Screens";
 
 interface Props{
@@ -7,48 +7,36 @@ interface Props{
 }
 
 function AdminAppBar ({ currentScreen, setCurrentScreen }: Props){
+    const theme = useTheme();
+     
     return (
-        <AppBar elevation={0} sx={{width: "100%", height: "10%", backgroundColor: 'white'}}>
-            <Grid2 container direction={"row"} sx={{width: "100%", height: "100%"}}>
-                {/* <Grid2 key={"Left_Space"} sx={{width: "10%"}}>
-
-                </Grid2> */}
-                <Grid2 key={"App_Bar_Nav"} sx={{width: '100%', height: "100%"}}>
-                    <Grid2 container alignItems={"center"} justifyContent={"center"} direction={"row"} spacing={2} sx={{width: "100%", height: "100%"}}>
-                        <Grid2 key={"Analysis"}>
-                            {(currentScreen === AdminScreen.Analysis) ? <Typography sx={{color: 'black'}}>Analysis</Typography> : <Typography onClick={() => {setCurrentScreen(AdminScreen.Analysis);}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline'}}>Analysis</Typography>}
-                        </Grid2>
-                        <Grid2 key={"Divider_1"}>
-                            <Divider orientation="vertical" variant="middle" flexItem sx={{ borderColor: 'black', height: "16px"}}></Divider>
-                        </Grid2>
-                        <Grid2 key={"Articles"}>
-                            {(currentScreen === AdminScreen.Articles) ? <Typography sx={{color: 'black'}}>Articles</Typography> : <Typography onClick={() => {setCurrentScreen(AdminScreen.Articles);}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline'}}>Articles</Typography>}
-                        </Grid2>
-                        <Grid2 key={"Divider_2"}>
-                            <Divider orientation="vertical" variant="middle" flexItem sx={{ borderColor: 'black', height: "16px"}}></Divider>
-                        </Grid2>
-                        <Grid2 key={"Splash"}>
-                            {(currentScreen === AdminScreen.Splash) ? <Typography sx={{color: 'black'}}>Home</Typography> : <Typography onClick={() => {setCurrentScreen(AdminScreen.Splash);}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline'}}>Home</Typography>}  
-                        </Grid2>
-                        <Grid2 key={"Divider_4"}>
-                            <Divider orientation="vertical" variant="middle" flexItem sx={{ borderColor: 'black', height: "16px"}}></Divider>
-                        </Grid2>
-                        {/* <Grid2 key={"Backlog"}>
-                            {(currentScreen === AdminScreen.BackLog) ? <Typography sx={{color: 'black'}}>Backlog</Typography> : <Typography onClick={() => {setCurrentScreen(AdminScreen.BackLog);}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline'}}>Backlog</Typography>}  
-                        </Grid2>
-                        <Grid2 key={"Divider_3"}>
-                            <Divider orientation="vertical" variant="middle" flexItem sx={{ borderColor: 'black', height: "16px"}}></Divider>
-                        </Grid2> */}
-                        <Grid2 key={"Users"}>
-                            {(currentScreen === AdminScreen.Users) ? <Typography sx={{color: 'black'}}>Users</Typography> : <Typography onClick={() => {setCurrentScreen(AdminScreen.Users);}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline'}}>Users</Typography>}  
-                        </Grid2>
-                    </Grid2>
-                </Grid2>
-                {/* <Grid2 key={"Right_Space"} sx={{width: "10%"}}>
-
-                </Grid2> */}
-            </Grid2>
-        </AppBar>
+        <div style={{ width: "100%", height: "100%", backgroundColor: theme.palette.secondary.main }}>
+            <div style={{width: "100%", height: "100%", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: "10px"}}>
+                <div key={"App_Bar_Nav"} style={{width: "100%", height: "100%", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: "10px"}}>
+                    
+                    {(currentScreen === AdminScreen.Analysis) ? <Typography sx={{color: 'black'}}>Analysis</Typography> : <Typography onClick={() => {setCurrentScreen(AdminScreen.Analysis);}} sx={{color: 'white', cursor: 'pointer', textDecoration: 'underline'}}>Analysis</Typography>}
+                    
+                    <div key={"Divider_1"}>
+                        <Divider orientation="vertical" variant="middle" flexItem sx={{ borderColor: 'black', height: "16px"}}></Divider>
+                    </div>
+                    
+                    {(currentScreen === AdminScreen.Articles) ? <Typography sx={{color: 'black'}}>Articles</Typography> : <Typography onClick={() => {setCurrentScreen(AdminScreen.Articles);}} sx={{color: 'white', cursor: 'pointer', textDecoration: 'underline'}}>Articles</Typography>}
+                    
+                    <div key={"Divider_2"}>
+                        <Divider orientation="vertical" variant="middle" flexItem sx={{ borderColor: 'black', height: "16px"}}></Divider>
+                    </div>
+                    
+                    {(currentScreen === AdminScreen.Splash) ? <Typography sx={{color: 'black'}}>Home</Typography> : <Typography onClick={() => {setCurrentScreen(AdminScreen.Splash);}} sx={{color: 'white', cursor: 'pointer', textDecoration: 'underline'}}>Home</Typography>}  
+                    
+                    <div key={"Divider_4"}>
+                        <Divider orientation="vertical" variant="middle" flexItem sx={{ borderColor: 'black', height: "16px"}}></Divider>
+                    </div>
+                    
+                    {(currentScreen === AdminScreen.Users) ? <Typography sx={{color: 'black'}}>Users</Typography> : <Typography onClick={() => {setCurrentScreen(AdminScreen.Users);}} sx={{color: 'white', cursor: 'pointer', textDecoration: 'underline'}}>Users</Typography>}  
+                        
+                </div>
+            </div>
+        </div>
     );
 }
 

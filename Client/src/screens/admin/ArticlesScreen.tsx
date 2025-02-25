@@ -5,6 +5,7 @@ import {PartialArticle} from "../../custom_objects/models"
 import AdminArticleCard from '../../components/AdminArticleCard';
 import EditArticleModal from './EditScreen';
 import AdminSearchBar from "../../components/AdminSearchBar";
+import { useMediaQuery } from "react-responsive"; 
 
 interface Props{
     currentScreen: Screen
@@ -18,6 +19,8 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
     const [searchVal, setsearchVal] = useState("");
     const [tagVal, settagVal] = useState("");
     const [hasSearched, setHasSearched] = useState(false);
+
+    const isMobile = useMediaQuery({ maxWidth: 767 });
 
     const handleEditArticle = (article: PartialArticle) => {
         setSelectedArticle(article)
@@ -103,18 +106,20 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
     }
     
     return(
-        <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center", overflowX: "hidden", overflowY: "auto"}}>
-            <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
-            <div style={{ flexShrink: 0, height: "10%", width: "100%"}}></div>
-            <AdminSearchBar setSearchVal={setsearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={"medium"}></AdminSearchBar>
-            <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center",}}>
+        <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center", overflow: "hidden"}}>
+            {!isMobile && (
+                <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                    <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
+                    <AdminSearchBar setSearchVal={setsearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={"medium"}></AdminSearchBar>
+                </div>
+            )}
+            <div style={{ width: "100%", height: "95%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto"}}>
                 {articles.map((article) => (
                     <AdminArticleCard
                         key={article.ID}
                         article={article}
                         lineNumber={3}
-                        onClick={() => console.log("Card clicked")}
-                        onEditClick={handleEditArticle}
+                        onClick={handleEditArticle}
                     />
                 ))}
                 <EditArticleModal
@@ -123,6 +128,11 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
                     onClose={handleCloseModal}
                 />
             </div>
+            {isMobile && (
+                <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                    <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
+                </div>
+            )}
         </div>
     )
 }
