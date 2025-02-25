@@ -16,6 +16,7 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
     const [selectedArticle, setSelectedArticle] = useState<PartialArticle | null>(null)
     const [articles, setArticles] = useState<PartialArticle[]>([])
     const [searchVal, setsearchVal] = useState("");
+    const [tagVal, settagVal] = useState("");
     const [hasSearched, setHasSearched] = useState(false);
 
     const handleEditArticle = (article: PartialArticle) => {
@@ -81,12 +82,13 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
 
     const searchArticles = async () => {
         const params = new URLSearchParams({
-            searchQuery: searchVal
+            searchQuery: searchVal,
+            tagName: tagVal
         });
 
-        console.log(`searching with val ${searchVal}`)
+        console.log(`searching with val ${searchVal} and tag ${tagVal}`)
 
-        const response = await fetch(`http://localhost:5000/api/v1/articles/search?${params.toString()}`, {
+        const response = await fetch(`http://localhost:5000/api/v1/articles/search/tagandquery?${params.toString()}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
