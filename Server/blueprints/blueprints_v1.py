@@ -7,7 +7,8 @@ from app import app, db
 
 from auth import TENANT_ID, CLIENT_ID
 
-import os, traceback, models, requests, jwt, redis
+import os, traceback, models, requests, jwt, redis, json
+from typing import Any
 from jwt.algorithms import RSAAlgorithm
 
 apiv1 = Blueprint(
@@ -87,17 +88,20 @@ class UserLogin(MethodView):
             user: models.User = models.User.query.filter_by(Email=email).first()
 
             if user:
-                session["current_user_id"] = user.ID
+                session['current_user_id'] = user.ID
                 privs: list[AdminPrivileges] = user.AdminPrivileges
 
                 if len(privs) > 0:
-                    session["current_user_role"] = "admin"
-
                     privs: list[int] = [priv.ID for priv in privs]
-                    session["current_privileges"] = privs
+                    session['current_user_privileges'] = privs
+
+                    if 5 in privs:
+                        session['current_user_role'] = "superadmin"
+                    else:
+                        session['current_user_role'] = "admin"       
                 else:
-                    session["current_user_role"] = "student"
-                    session["current_privileges"] = []
+                    session['current_user_role'] = "student"
+                    session['current_user_privileges'] = []
 
                 print(session["current_user_id"])
 
@@ -109,7 +113,7 @@ class UserLogin(MethodView):
 
                 session["current_user_id"] = newUser.ID
                 session["current_user_role"] = "student"
-                session["current_privileges"] = []
+                session["current_user_privileges"] = []
 
                 print(session["current_user_id"])
 
@@ -123,12 +127,11 @@ class UserLogin(MethodView):
 class UserInfo(MethodView):
     def options(self):
         return '', 200
+    
     def get(self):
-        print(session["current_user_role"])
-        if "current_user_id" in session and "current_user_role" in session and "current_privileges" in session:
-            
+        if "current_user_id" in session and "current_user_role" in session and "current_user_privileges" in session:
             currentPrivileges: list[models.AdminPrivilege] = []
-            for id in session["current_privileges"]:
+            for id in session["current_user_privileges"]:
                 priv: models.AdminPrivilege = models.AdminPrivilege.query.filter_by(ID=id).first()
                 if priv:
                     currentPrivileges.append(priv)
@@ -138,7 +141,6 @@ class UserInfo(MethodView):
                 "current_user_role": session["current_user_role"],
                 "current_privileges": returnablePrivileges
             }, 200
-            
         else:
             return {'msg': "Not logged in"}, 401
 
@@ -175,7 +177,7 @@ class Articles(MethodView):
     # model object, you should use .toJSON
     def get(self):
         try:
-            if 'current_user_id' in session:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 articles: list[models.Article] = models.Article.query.all()
                 
                 returnableArticles = [article.toJSONPartial() for article in articles]
@@ -194,8 +196,7 @@ class Article(MethodView):
         
     def get(self):
         try:
-            print("Request args: ", request.args)
-            if 'current_user_id' in session:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 id = request.args.get("articleID")
                 if id:
                     article = models.Article.query.filter(models.Article.ID == id).all()
@@ -219,22 +220,28 @@ class Article(MethodView):
             return {'msg': f"Error: {e}"}, 500
     def post(self):
         try:
-            if 'current_user_id' in session:
-                article = request.json
-                if article:
-                    title: str = article.get('Title')
-                    content: str = article.get('Content')
-                    desc: str = article.get('Article_Description')
-                    image: str = article.get('Image')
-        
-                    article = Article(Title=title, Content=content,
-                                      Article_Description=desc,
-                                      Image=image)
-                    
-                    db.session.add(article)
-                    db.session.commit()
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if 1 in session['current_user_privileges']:
+                    article = request.json
+                    if article:
+                        title: str = article.get('Title')
+                        content: str = article.get('Content')
+                        desc: str = article.get('Article_Description')
+                        image: str = article.get('Image')
+            
+                        article = Article(Title=title, Content=content,
+                                        Article_Description=desc,
+                                        Image=image)
+                        
+                        db.session.add(article)
+                        db.session.commit()
+                    else:
+                        return {'msg': 'No article submitted'}, 400
                 else:
-                    return {'msg': 'No article submitted'}, 400
+                    if session['current_user_role'] == "student":
+                        return {'msg': 'Unauthorized access'}, 403
+                    else:
+                        return {'msg': 'You do not have permission to create articles.'}, 403
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
@@ -243,34 +250,39 @@ class Article(MethodView):
             return {'msg': f"Error: {e}"}, 500
     def put(self):
         try:
-            if 'current_user_id' in session:
-                article_updated = request.json
-                ## userID = request.args.get("userID")
-                userID = session['current_user_id']
-                
-                if article_updated:
-                    id: int = article_updated.get("ID")
-                    title: str = article_updated.get('Title')
-                    content: str = article_updated.get('Content')
-                    desc: str = article_updated.get('Article_Description')
-                    image: str = article_updated.get('Image')
-
-                    article = models.Article.query.filter(models.Article.ID == id).first()
-                    if not article:
-                        return {'msg': 'Article not found'}, 404
-                    article.Title = title
-                    article.Content = content
-                    article.Article_Description = desc
-                    article.Image = image
-
-                    time = datetime.now()
-                    eh = models.EditHistory(ArticleID=id, UserID=userID, Edit_Time=time)
-                    db.session.add(eh)
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if 3 in session['current_user_privileges']:
+                    article_updated = request.json
+                    userID = session['current_user_id']
                     
-                    db.session.commit()
-                    return {'msg': 'Article updated successfully'}, 200
+                    if article_updated:
+                        id: int = article_updated.get("ID")
+                        title: str = article_updated.get('Title')
+                        content: str = article_updated.get('Content')
+                        desc: str = article_updated.get('Article_Description')
+                        image: str = article_updated.get('Image')
+
+                        article = models.Article.query.filter(models.Article.ID == id).first()
+                        if not article:
+                            return {'msg': 'Article not found'}, 404
+                        article.Title = title
+                        article.Content = content
+                        article.Article_Description = desc
+                        article.Image = image
+
+                        time = datetime.now()
+                        eh = models.EditHistory(ArticleID=id, UserID=userID, Edit_Time=time)
+                        db.session.add(eh)
+                        
+                        db.session.commit()
+                        return {'msg': 'Article updated successfully'}, 200
+                    else:
+                        return {'msg': 'No update data submitted'}, 400
                 else:
-                    return {'msg': 'No update data submitted'}, 400
+                    if session['current_user_role'] == "student":
+                        return {'msg': 'Unauthorized access'}, 403
+                    else:
+                        return {'msg': 'You do not have permission to edit articles.'}, 403
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
@@ -284,12 +296,23 @@ class Users(MethodView):
         return '', 200
     def get(self):
         try:
-            if 'current_user_id' in session and 'current_user_role' in session:
-                users: models.User = models.User.query.all()
-                
-                returnableUsers = [user.toJSONPartial() for user in users]
-                
-                return {'users': returnableUsers}, 200
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_' and 'current_user_privileges' in session:
+                if 5 in session['current_user_privileges']:
+                    users: list[models.User] = models.User.query.all()
+
+                    for user in users:
+                        privs: list[AdminPrivileges] = user.AdminPrivileges
+                        if len(privs) > 0:
+                            users.remove(user)
+                        
+                    returnableUsers = [user.toJSONPartial() for user in users]
+                    
+                    return {'users': returnableUsers}, 200
+                else:
+                    if session['current_user_role'] == "student":
+                        return {'msg': 'Unauthorized access'}, 403
+                    else:
+                        return {'msg': 'You do not have permission to add/remove users as admins.'}, 403
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
@@ -303,20 +326,31 @@ class UserSearch(MethodView):
         return '', 200
     def get(self):
         try:
-            if 'current_user_id' in session and 'current_user_role' in session:
-                searchQuery = request.args.get("searchQuery")
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if 5 in session['current_user_privileges']:
+                    searchQuery = request.args.get("searchQuery")
 
-                users = models.User.query.filter(
-                    or_(
-                        models.User.FName.ilike(f"%{searchQuery}%"),
-                        models.User.LName.ilike(f"%{searchQuery}%"),
-                        models.User.Email.ilike(f"%{searchQuery}%")
-                    )
-                ).all()
-                
-                returnableUsers = [user.toJSONPartial() for user in users]
-                
-                return {'users': returnableUsers}, 200
+                    users: list[models.User] = models.User.query.filter(
+                        or_(
+                            models.User.FName.ilike(f"%{searchQuery}%"),
+                            models.User.LName.ilike(f"%{searchQuery}%"),
+                            models.User.Email.ilike(f"%{searchQuery}%")
+                        )
+                    ).all()
+                    
+                    for user in users:
+                        privs: list[AdminPrivileges] = user.AdminPrivileges
+                        if len(privs) > 0:
+                            users.remove(user)
+
+                    returnableUsers = [user.toJSONPartial() for user in users]
+                    
+                    return {'users': returnableUsers}, 200
+                else:
+                    if session['current_user_role'] == "student":
+                        return {'msg': 'Unauthorized access'}, 403
+                    else:
+                        return {'msg': 'You do not have permission to add/remove users as admins.'}, 403
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
@@ -330,26 +364,32 @@ class User(MethodView):
         return '', 200
     def get(self):
         try:
-            if 'current_user_id' in session and 'current_user_role' in session:
-                id = request.args.get("ID")
-                user: models.User = models.User.query.filter_by(ID=id).first()
-                
-                if user:
-                    return {
-                        'user': user.toJSONPartial(),
-                        'adminPrivileges': [ap.toJSONPartial for ap in user.AdminPrivileges]
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if 5 in session['current_user_privileges']:
+                    id = request.args.get("ID")
+                    user: models.User = models.User.query.filter_by(ID=id).first()
+                    
+                    if user:
+                        return {
+                            'user': user.toJSONPartial(),
+                            'adminPrivileges': [ap.toJSONPartial for ap in user.AdminPrivileges]
                         }, 200
+                    else:
+                        return {'msg': 'No such user'}, 404
                 else:
-                    return {'msg': 'No such user'}, 404
+                    if session['current_user_role'] == "student":
+                        return {'msg': 'Unauthorized access'}, 403
+                    else:
+                        return {'msg': 'You do not have permission to add/remove users as admins.'}, 403
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-    def post(self):
+    def post(self): # useless?
         try:
-            if 'current_user_id' in session and 'current_user_role' in session:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 data = request.json
                 if data:
                     email = data.get("Email")
@@ -387,59 +427,67 @@ class User(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-    def put(self):
+    def put(self): # admin only? where will this be used?
         try:
-            if 'current_user_id' in session and 'current_user_role' in session:
-                data = request.json
-                if data:
-                    id = data.get("ID")
-                    if id:
-                        user: models.User = models.User.query.filter_by(ID=id).first()
-                        if user:
-                            # Email = db.Column(db.Unicode, nullable=True)
-                            if data.get("Email"):
-                                user.Email = data.get("Email")
-                            # Device = db.Column(db.Unicode, nullable=True)
-                            if data.get("Device"):
-                                user.Device = data.get("Device")
-                            # Major = db.Column(db.Unicode, nullable=True)
-                            if data.get("Major"):
-                                user.Major = data.get("Major")
-                            # GradYear = db.Column(db.Integer, nullable=True)
-                            if data.get("GradYear"):
-                                user.GradYear = data.get("GradYear")
-                            # LName = db.Column(db.Unicode, nullable=True)
-                            if data.get("LName"):
-                                user.LName = data.get("LName")
-                            # FName = db.Column(db.Unicode, nullable=True)
-                            if data.get("FName"):
-                                user.FName = data.get("FName")
-                                
-                            db.session.commit()
-                            return {'user': user.toJSONPartial()}, 201
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if 5 in session['current_user_privileges']:
+                    data = request.json
+                    if data:
+                        id = data.get("ID")
+                        if id:
+                            user: models.User = models.User.query.filter_by(ID=id).first()
+                            if user:
+                                if data.get("Email"):
+                                    user.Email = data.get("Email")
+                                if data.get("Device"):
+                                    user.Device = data.get("Device")
+                                if data.get("Major"):
+                                    user.Major = data.get("Major")
+                                if data.get("GradYear"):
+                                    user.GradYear = data.get("GradYear")
+                                if data.get("LName"):
+                                    user.LName = data.get("LName")
+                                if data.get("FName"):
+                                    user.FName = data.get("FName")
+                                    
+                                db.session.commit()
+                                return {'user': user.toJSONPartial()}, 201
+                            else:
+                                return {'msg', 'No user found with given ID'}, 404
                         else:
-                            return {'msg', 'No user found with given ID'}, 404
+                            return {'msg': 'No user id included in request'}, 400
                     else:
-                        return {'msg': 'No user id included in request'}, 400
+                        return {'msg': 'No body in the request'}, 400
                 else:
-                    return {'msg': 'No body in the request'}, 400
+                    if session['current_user_role'] == "student":
+                        return {'msg': 'Unauthorized access'}, 403
+                    else:
+                        return {'msg': 'You do not have permission to edit a user.'}, 403
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-    def delete(self):
+    def delete(self): # unused?
         try:
-            if 'current_user_id' in session and 'current_user_role' in session:
-                id = request.args.get("ID")
-                user: models.User = models.User.query.filter_by(ID=id).first()
-                db.session.delete(user)
-                db.session.commit()
-                if user:
-                    return '', 200
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if 5 in session['current_user_privileges']:
+                    id = request.args.get("ID")
+                    user: models.User = models.User.query.filter_by(ID=id).first()
+
+                    if user:
+                        db.session.delete(user)
+                        db.session.commit()
+
+                        return {'msg': 'User successfully deleted', 'ID': user.ID}, 200
+                    else:
+                        return {'msg': 'No such user'}, 404
                 else:
-                    return {'msg': 'No such user'}, 404
+                    if session['current_user_role'] == "student":
+                        return {'msg': 'Unauthorized access'}, 403
+                    else:
+                        return {'msg': 'You do not have permission to delete a user.'}, 403
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
@@ -453,10 +501,13 @@ class AdminPrivileges(MethodView):
         return '', 200
     def get(self):
         try:
-            if 'current_user_id' in session and 'current_user_role' in session:
-                privileges: list[models.AdminPrivilege] = models.AdminPrivilege.query.all()
-                returnablePrivileges = [priv.toJSONPartial() for priv in privileges]
-                return {'privileges': returnablePrivileges}, 200
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if len(session['current_user_privileges']) > 0:
+                    privileges: list[models.AdminPrivilege] = models.AdminPrivilege.query.all()
+                    returnablePrivileges = [priv.toJSONPartial() for priv in privileges]
+                    return {'privileges': returnablePrivileges}, 200
+                else:
+                    return {'msg': 'Unauthorized access'}, 403
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
@@ -470,17 +521,20 @@ class Admin(MethodView):
         return '', 200
     def get(self):
         try:
-            if 'current_user_id' in session and 'current_user_role' in session:
-                id = request.args.get("ID")
-                user: models.User = models.User.query.filter_by(ID=id).first()
-                
-                if user:
-                    return {
-                        'user': user.toJSONPartial(),
-                        'adminPrivileges': [ap.toJSONPartial for ap in user.AdminPrivileges]
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if len(session['current_user_privileges']) > 0:
+                    id = request.args.get("ID")
+                    user: models.User = models.User.query.filter_by(ID=id).first()
+                    
+                    if user:
+                        return {
+                            'user': user.toJSONPartial(),
+                            'adminPrivileges': [ap.toJSONPartial for ap in user.AdminPrivileges]
                         }, 200
+                    else:
+                        return {'msg': 'No such user'}, 404
                 else:
-                    return {'msg': 'No such user'}, 404
+                    return {'msg': 'Unauthorized access'}, 403
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
@@ -489,28 +543,34 @@ class Admin(MethodView):
             return {'msg': f"Error: {e}"}, 500
     def put(self):
         try:
-            if 'current_user_id' in session and 'current_user_role' in session:
-                data = request.json
-                if data:
-                    id = data.get("ID")
-                    if id:
-                        user: models.User = models.User.query.filter_by(ID=id).first()
-                        privilegeIDs = data.get("privilegeIDs")
-                        
-                        userPrivileges: list[models.AdminPrivilege] = []
-                        
-                        for id in privilegeIDs:
-                            priv: models.AdminPrivilege = models.AdminPrivilege.query.filter_by(ID=id).first()
-                            if priv:
-                                userPrivileges.append(priv)
-                        
-                        user.AdminPrivileges = userPrivileges
-                        db.session.commit()
-                        return {'user': user.toJSONPartial()}, 201   
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if 5 in session['current_user_privileges']:
+                    data = request.json
+                    if data:
+                        id = data.get("ID")
+                        if id:
+                            user: models.User = models.User.query.filter_by(ID=id).first()
+                            privilegeIDs = data.get("privilegeIDs")
+                            
+                            userPrivileges: list[models.AdminPrivilege] = []
+                            
+                            for id in privilegeIDs:
+                                priv: models.AdminPrivilege = models.AdminPrivilege.query.filter_by(ID=id).first()
+                                if priv:
+                                    userPrivileges.append(priv)
+                            
+                            user.AdminPrivileges = userPrivileges
+                            db.session.commit()
+                            return {'user': user.toJSONPartial()}, 201   
+                        else:
+                            return {'msg': 'No user id included in request'}, 400
                     else:
-                        return {'msg': 'No user id included in request'}, 400
+                        return {'msg': 'No body in the request'}, 400
                 else:
-                    return {'msg': 'No body in the request'}, 400
+                    if session['current_user_role'] == "student":
+                        return {'msg': 'Unauthorized access'}, 403
+                    else:
+                        return {'msg': 'You do not have permission to edit admin privileges.'}, 403
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
@@ -519,31 +579,36 @@ class Admin(MethodView):
             return {'msg': f"Error: {e}"}, 500
     def post(self):
         try:
-            if 'current_user_id' in session and 'current_user_role' in session:
-                data = request.json
-                if data:
-                    print(data)
-                    id = data.get("ID")
-                    if id:
-                        user: models.User = models.User.query.filter_by(ID=id).first()
-                        if user:                            
-                            privileges: list[models.AdminPrivilege] = []
-                            
-                            allPrivileges: list[models.AdminPrivilege] = models.AdminPrivilege.query.all()
-                            
-                            privileges.append(allPrivileges[0])
-                            privileges.append(allPrivileges[2])
-                            privileges.append(allPrivileges[3])
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if 5 in session['current_user_privileges']:
+                    data = request.json
+                    if data:
+                        id = data.get("ID")
+                        if id:
+                            user: models.User = models.User.query.filter_by(ID=id).first()
+                            if user:                            
+                                privileges: list[models.AdminPrivilege] = []
                                 
-                            user.AdminPrivileges = privileges
-                            db.session.commit()
-                            return {'user': user.toJSONPartial()}, 201
+                                allPrivileges: list[models.AdminPrivilege] = models.AdminPrivilege.query.all()
+                                
+                                privileges.append(allPrivileges[0])
+                                privileges.append(allPrivileges[2])
+                                privileges.append(allPrivileges[3])
+                                    
+                                user.AdminPrivileges = privileges
+                                db.session.commit()
+                                return {'user': user.toJSONPartial()}, 201
+                            else:
+                                return {'msg', 'No user found with given ID'}, 404
                         else:
-                            return {'msg', 'No user found with given ID'}, 404
+                            return {'msg': 'No user id included in request'}, 400
                     else:
-                        return {'msg': 'No user id included in request'}, 400
+                        return {'msg': 'No body in the request'}, 400
                 else:
-                    return {'msg': 'No body in the request'}, 400
+                    if session['current_user_role'] == "student":
+                        return {'msg': 'Unauthorized access'}, 403
+                    else:
+                        return {'msg': 'You do not have permission to add users as admins.'}, 403
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
@@ -552,15 +617,40 @@ class Admin(MethodView):
             return {'msg': f"Error: {e}"}, 500
     def delete(self):
         try:
-            if 'current_user_id' in session and 'current_user_role' in session:
-                id = request.args.get("ID")
-                user: models.User = models.User.query.filter_by(ID=id).first()
-                if user:
-                    user.AdminPrivileges = []
-                    db.session.commit()
-                    return {'msg': 'Admin Deleted'}, 200
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if 5 in session['current_user_privileges']:
+                    id = request.args.get("ID")
+                    user: models.User = models.User.query.filter_by(ID=id).first()
+                    if user:
+                        user_privs: list[int] = [priv.ID for priv in user.AdminPrivileges]
+
+                        if 5 in user_privs:
+                            super_admins: list[models.User] = []
+                            users = models.User.query.all()
+                            for user in users:
+                                for priv in user.AdminPrivileges:
+                                    if priv.ID == 5:
+                                        super_admins.append(user)
+
+                            if len(super_admins) > 1:
+                                user.AdminPrivileges = []
+                                db.session.commit()
+
+                                return {'msg': 'Super Admin Deleted'}, 200
+                            else:
+                                return {'msg': 'WARNING: Please add at least one other super admin before deleting sole super admin!'}, 403
+                        else:
+                            user.AdminPrivileges = []
+                            db.session.commit()
+
+                            return {'msg': 'Admin Deleted'}, 200
+                    else:
+                        return {'msg': 'No such admin user'}, 404
                 else:
-                    return {'msg': 'No such user'}, 404
+                    if session['current_user_role'] == "student":
+                        return {'msg': 'Unauthorized access'}, 403
+                    else:
+                        return {'msg': 'You do not have permission to remove users as admins.'}, 403
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
@@ -575,18 +665,21 @@ class Admins(MethodView):
 
     def get(self):
         try:
-            if 'current_user_id' in session:
-                admins = []
-                users = models.User.query.all()
-                for user in users:
-                    data = user.toJSON()
-                    if data["AdminPrivileges"]:
-                        admins.append(user)
-                returnableAdmins = [admin.toJSONPartial() for admin in admins]
-                if returnableAdmins:
-                    return {'admins': returnableAdmins}, 200
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if len(session['current_user_privileges']) > 0:
+                    admins = []
+                    users = models.User.query.all()
+                    for user in users:
+                        data = user.toJSON()
+                        if data["AdminPrivileges"]:
+                            admins.append(user)
+                    returnableAdmins = [admin.toJSONPartial() for admin in admins]
+                    if returnableAdmins:
+                        return {'admins': returnableAdmins}, 200
+                    else:
+                        return {'msg': 'No admins'}, 200
                 else:
-                    return {'msg': 'No admins'}, 200
+                    return {'msg': 'Unauthorized access'}, 403
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
@@ -601,7 +694,7 @@ class Category(MethodView):
     
     def get(self):
         try:
-            if 'current_user_id' in session:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 id = request.args.get("ID")
                 category: models.MetaTag = models.MetaTag.query.filter_by(ID=id).first()
                 return {'category': category.toJSON()}, 200
@@ -614,17 +707,20 @@ class Category(MethodView):
         
     def post(self):
         try:
-            if 'current_user_id' in session and (session['current_user_role'] == "admin" or session['current_user_role'] == 'superadmin'):
-                data = request.json()
-                if data:
-                    tagName = data.get("TagName")
-                    newCategory = models.MetaTag(TagName=tagName)
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if len(session['current_user_privileges']) > 0:
+                    data = request.json()
+                    if data:
+                        tagName = data.get("TagName")
+                        newCategory = models.MetaTag(TagName=tagName)
 
-                    db.session.add(newCategory)
-                    db.session.commit()
-                    return {'Category': newCategory.toJSON()}, 201
+                        db.session.add(newCategory)
+                        db.session.commit()
+                        return {'Category': newCategory.toJSON()}, 201
+                    else:
+                        return {'msg': 'No content submitted'}, 400
                 else:
-                    return {'msg': 'No content submitted'}, 400
+                    return {'msg': 'Unauthorized access'}, 403
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
@@ -633,23 +729,26 @@ class Category(MethodView):
             return {'msg': f"Error: {e}"}, 500
     def put(self):
         try:
-            if 'current_user_id' in session and (session['current_user_role'] == "admin" or session['current_user_role'] == 'superadmin'):
-                category_updated = request.json
-                userID = session['current_user_id']
-                
-                if category_updated:
-                    id: int = category_updated.get("ID")
-                    tagName: str = category_updated.get('TagName')
-
-                    category = models.MetaTag.query.filter(models.MetaTag.ID == id).first()
-                    if not category:
-                        return {'msg': 'Article not found'}, 404
-                    category.TagName = tagName
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if len(session['current_user_privileges']) > 0:
+                    category_updated = request.json
+                    userID = session['current_user_id']
                     
-                    db.session.commit()
-                    return {'msg': 'Category updated successfully'}, 200
+                    if category_updated:
+                        id: int = category_updated.get("ID")
+                        tagName: str = category_updated.get('TagName')
+
+                        category = models.MetaTag.query.filter(models.MetaTag.ID == id).first()
+                        if not category:
+                            return {'msg': 'Article not found'}, 404
+                        category.TagName = tagName
+                        
+                        db.session.commit()
+                        return {'msg': 'Category updated successfully'}, 200
+                    else:
+                        return {'msg': 'No content submitted'}, 400
                 else:
-                    return {'msg': 'No content submitted'}, 400
+                    return {'msg': 'Unauthorized access'}, 403
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
@@ -664,10 +763,13 @@ class ArticleTag(MethodView):
     
     def get(self):
         try:
-            if 'current_user_id' in session:
-                id = request.args.get("ID")
-                category: models.Tag = models.Tag.query.filter_by(ID=id).first()
-                return {'Tag': category.toJSON()}, 200
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if len(session['current_user_privileges']) > 0:
+                    id = request.args.get("ID")
+                    category: models.Tag = models.Tag.query.filter_by(ID=id).first()
+                    return {'Tag': category.toJSON()}, 200
+                else:
+                    return {'msg': 'Unauthorized access'}, 403
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
@@ -676,17 +778,23 @@ class ArticleTag(MethodView):
             return {'msg': f"Error: {e}"}, 500
     def post(self):
         try:
-            if 'current_user_id' in session and (session['current_user_role'] == "admin" or session['current_user_role'] == 'superadmin'):
-                data = request.json()
-                if data:
-                    tagName = data.get("TagName")
-                    newTag = models.Tag(TagName=tagName)
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if 5 in session['current_user_privileges']:
+                    data = request.json()
+                    if data:
+                        tagName = data.get("TagName")
+                        newTag = models.Tag(TagName=tagName)
 
-                    db.session.add(newTag)
-                    db.session.commit()
-                    return {'Article tag': newTag.toJSON()}, 201
+                        db.session.add(newTag)
+                        db.session.commit()
+                        return {'Article tag': newTag.toJSON()}, 201
+                    else:
+                        return {'msg': 'No content submitted'}, 400
                 else:
-                    return {'msg': 'No content submitted'}, 400
+                    if session['current_user_role'] == "student":
+                        return {'msg': 'Unauthorized access'}, 403
+                    else:
+                        return {'msg': 'You do not have permission to create a new article tag.'}, 403
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
@@ -695,22 +803,28 @@ class ArticleTag(MethodView):
             return {'msg': f"Error: {e}"}, 500
     def put(self):
         try:
-            if 'current_user_id' in session and (session['current_user_role'] == "admin" or session['current_user_role'] == 'superadmin'):
-                tag_updated = request.json
-                
-                if tag_updated:
-                    id: int = tag_updated.get("ID")
-                    tagName: str = tag_updated.get('TagName')
-
-                    tag = models.Tag.query.filter(models.Tag.ID == id).first()
-                    if not tag:
-                        return {'msg': 'Tag not found'}, 404
-                    tag.TagName = tagName
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if 5 in session['current_user_privileges']:
+                    tag_updated = request.json
                     
-                    db.session.commit()
-                    return {'msg': 'Article tag updated successfully'}, 200
+                    if tag_updated:
+                        id: int = tag_updated.get("ID")
+                        tagName: str = tag_updated.get('TagName')
+
+                        tag = models.Tag.query.filter(models.Tag.ID == id).first()
+                        if not tag:
+                            return {'msg': 'Tag not found'}, 404
+                        tag.TagName = tagName
+                        
+                        db.session.commit()
+                        return {'msg': 'Article tag updated successfully'}, 200
+                    else:
+                        return {'msg': 'No content submitted'}, 400
                 else:
-                    return {'msg': 'No content submitted'}, 400
+                    if session['current_user_role'] == "student":
+                        return {'msg': 'Unauthorized access'}, 403
+                    else:
+                        return {'msg': 'You do not have permission to edit an existing article tag.'}, 403
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
@@ -742,7 +856,7 @@ class Categories(MethodView):
 
     def get(self):
         try:
-            if 'current_user_id' in session:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 categories: list[models.MetaTag] = models.MetaTag.query.all()
                 returnableCategories = [category.toJSONPartial() for category in categories]
                 return {'categories': returnableCategories}, 200
@@ -760,7 +874,7 @@ class Search(MethodView):
     
     def get(self):
         try:
-            if 'current_user_id' in session:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 searchQuery = request.args.get("searchQuery")
 
                 articles = models.Article.query.filter(
@@ -805,21 +919,21 @@ class Search(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
+
 @apiv1.route("/categories/articles", methods=["OPTIONS", "GET"])
 class ArticleCategories(MethodView):
     def options(self):
         return '', 200
     
-    def get(self):
+    def get(self): # not used in any student only routes, but doesn't seem like it needs to be admin only?
         try:
-            if 'current_user_id' in session:
+            if 'current_user_id' in session and 'current_user_roles' in session and 'current_user_privileges' in session:
                 category = request.args.get("category")
                 metaTag: models.MetaTag = models.MetaTag.query.filter_by(tagName=category).first()
                 articles: list[models.Article] = metaTag.Articles
                 returnableArticles = [article.toJSONPartial() for article in articles]
                 return {'articles': returnableArticles}, 200
             else:
-
                 return {'msg': 'Unauthorized access'}, 401
 
         except Exception as e:
@@ -834,7 +948,7 @@ class UserViewHistory(MethodView):
     
     def get(self):
         try:
-            if 'current_user_id' in session:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 recentlyViewedArticles: list[models.Article] = models.Article.query.join(
                     models.ViewHistory
                 ).filter_by(
@@ -858,77 +972,80 @@ class ArticlesInDepth(MethodView):
         return '', 200
     def get(self):
         try:
-            if 'current_user_id' in session and session['current_user_role'] == "admin":
-                time = request.args.get("time")
-                if time:
-                    try:
-                        time_int = float(time)
-                        time_datetime = datetime.fromtimestamp(time_int)
-                        size = request.args.get("size")
-                        size_int = 10
-                        if size:
-                            try:
-                                size_int = int(size)
-                            except ValueError:
-                                return {'msg': 'Incorrect size argument. size should be an int'}, 400
-                        
-                        articles: list[models.Article] = models.Article.query.all()
-                        thumbs_up_counts = [article.ThumbsUp for article in articles]
-                        thumbs_down_counts = [article.ThumbsDown for article in articles]
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if len(session['current_user_privileges']) > 0:
+                    time = request.args.get("time")
+                    if time:
+                        try:
+                            time_int = float(time)
+                            time_datetime = datetime.fromtimestamp(time_int)
+                            size = request.args.get("size")
+                            size_int = 10
+                            if size:
+                                try:
+                                    size_int = int(size)
+                                except ValueError:
+                                    return {'msg': 'Incorrect size argument. size should be an int'}, 400
+                            
+                            articles: list[models.Article] = models.Article.query.all()
+                            thumbs_up_counts = [article.ThumbsUp for article in articles]
+                            thumbs_down_counts = [article.ThumbsDown for article in articles]
 
-                        returnable_articles = [article.toJSONPartial() for article in articles]
-                        
-                        articleSearches = {}
-                        searches: list[models.Search] = models.Search.query.filter(
-                            models.Search.SearchTime >= time_datetime
-                        ).all()
-                        for search in searches:
-                            if search.TopResult in articleSearches:
-                                articleSearches[search.TopResult] += 1
-                            else:
-                                articleSearches[search.TopResult] = 1
-                                
-                            if search.SecondResult in articleSearches:
-                                articleSearches[search.SecondResult] += 1
-                            else:
-                                articleSearches[search.SecondResult] = 1
-                                
-                            if search.ThirdResult in articleSearches:
-                                articleSearches[search.ThirdResult] += 1
-                            else:
-                                articleSearches[search.ThirdResult] = 1
-                                
-                            if search.FourthResult in articleSearches:
-                                articleSearches[search.FourthResult] += 1
-                            else:
-                                articleSearches[search.FourthResult] = 1
-                                
-                            if search.FifthResult in articleSearches:
-                                articleSearches[search.FifthResult] += 1
-                            else:
-                                articleSearches[search.FifthResult] = 1
-                                
-                        returnableSearchCount = []
-                        
-                        for addr in articles:
-                            if addr.ID in articleSearches:
-                                returnableSearchCount.append(articleSearches[addr.ID])
-                            else:
-                                returnableSearchCount.append(0)
-                        
-                        return {
-                            'articles': returnable_articles, 
-                            'thumbs_up': thumbs_up_counts,
-                            'thumbs_down': thumbs_down_counts,
-                            'searches': returnableSearchCount
-                        }, 200 
-                        
-                    except ValueError as e:
-                        print(f"Error: {e}")
-                        traceback.print_exc()
-                        return {'msg': 'Incorrect time format. time should be in unix format'}, 400
+                            returnable_articles = [article.toJSONPartial() for article in articles]
+                            
+                            articleSearches = {}
+                            searches: list[models.Search] = models.Search.query.filter(
+                                models.Search.SearchTime >= time_datetime
+                            ).all()
+                            for search in searches:
+                                if search.TopResult in articleSearches:
+                                    articleSearches[search.TopResult] += 1
+                                else:
+                                    articleSearches[search.TopResult] = 1
+                                    
+                                if search.SecondResult in articleSearches:
+                                    articleSearches[search.SecondResult] += 1
+                                else:
+                                    articleSearches[search.SecondResult] = 1
+                                    
+                                if search.ThirdResult in articleSearches:
+                                    articleSearches[search.ThirdResult] += 1
+                                else:
+                                    articleSearches[search.ThirdResult] = 1
+                                    
+                                if search.FourthResult in articleSearches:
+                                    articleSearches[search.FourthResult] += 1
+                                else:
+                                    articleSearches[search.FourthResult] = 1
+                                    
+                                if search.FifthResult in articleSearches:
+                                    articleSearches[search.FifthResult] += 1
+                                else:
+                                    articleSearches[search.FifthResult] = 1
+                                    
+                            returnableSearchCount = []
+                            
+                            for addr in articles:
+                                if addr.ID in articleSearches:
+                                    returnableSearchCount.append(articleSearches[addr.ID])
+                                else:
+                                    returnableSearchCount.append(0)
+                            
+                            return {
+                                'articles': returnable_articles, 
+                                'thumbs_up': thumbs_up_counts,
+                                'thumbs_down': thumbs_down_counts,
+                                'searches': returnableSearchCount
+                            }, 200 
+                            
+                        except ValueError as e:
+                            print(f"Error: {e}")
+                            traceback.print_exc()
+                            return {'msg': 'Incorrect time format. time should be in unix format'}, 400
+                    else:
+                        return {'msg': 'no time argument included in request'}, 400
                 else:
-                    return {'msg': 'no time argument included in request'}, 400
+                    return {'msg': 'Unauthorized access'}, 403
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
@@ -942,44 +1059,47 @@ class ArticlesPopular(MethodView):
         return '', 200
     def get(self):
         try:
-            if 'current_user_id' in session and session['current_user_role'] == "admin":
-                time = request.args.get("time")
-                if time:
-                    try:
-                        time_int = float(time)
-                        time_datetime = datetime.fromtimestamp(time_int)
-                        size = request.args.get("size")
-                        size_int = 10
-                        if size:
-                            try:
-                                size_int = int(size)
-                            except ValueError:
-                                return {'msg': 'Incorrect size argument. size should be an int'}, 400
-                        
-                        articles_with_thumbs_up = db.session.query(
-                            models.Article,
-                            func.count(models.Feedback.ID).label('thumbs_up_count')
-                        ).join(
-                            models.Feedback, models.Article.ID == models.Feedback.ArticleID
-                        ).filter(
-                            models.Feedback.Submission_Time >= time_datetime,
-                            models.Feedback.Positive == True
-                        ).group_by(
-                            models.Article.ID
-                        ).order_by(
-                            func.count(models.Feedback.ID).desc()
-                        ).limit(size_int).all()
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if len(session['current_user_privileges']) > 0:
+                    time = request.args.get("time")
+                    if time:
+                        try:
+                            time_int = float(time)
+                            time_datetime = datetime.fromtimestamp(time_int)
+                            size = request.args.get("size")
+                            size_int = 10
+                            if size:
+                                try:
+                                    size_int = int(size)
+                                except ValueError:
+                                    return {'msg': 'Incorrect size argument. size should be an int'}, 400
+                            
+                            articles_with_thumbs_up = db.session.query(
+                                models.Article,
+                                func.count(models.Feedback.ID).label('thumbs_up_count')
+                            ).join(
+                                models.Feedback, models.Article.ID == models.Feedback.ArticleID
+                            ).filter(
+                                models.Feedback.Submission_Time >= time_datetime,
+                                models.Feedback.Positive == True
+                            ).group_by(
+                                models.Article.ID
+                            ).order_by(
+                                func.count(models.Feedback.ID).desc()
+                            ).limit(size_int).all()
 
-                        articles = [article for article, thumbs_up_count in articles_with_thumbs_up]
-                        thumbs_up_counts = [thumbs_up_count for article, thumbs_up_count in articles_with_thumbs_up]
-                        
-                        returnable_articles = [article.toJSONPartial() for article in articles]
-                        return {'articles': returnable_articles, 'thumbs_up': thumbs_up_counts}, 200 
-                        
-                    except ValueError:
-                        return {'msg': 'Incorrect time format. time should be in unix format'}, 400
+                            articles = [article for article, thumbs_up_count in articles_with_thumbs_up]
+                            thumbs_up_counts = [thumbs_up_count for article, thumbs_up_count in articles_with_thumbs_up]
+                            
+                            returnable_articles = [article.toJSONPartial() for article in articles]
+                            return {'articles': returnable_articles, 'thumbs_up': thumbs_up_counts}, 200 
+                            
+                        except ValueError:
+                            return {'msg': 'Incorrect time format. time should be in unix format'}, 400
+                    else:
+                        return {'msg': 'no time argument included in request'}, 400
                 else:
-                    return {'msg': 'no time argument included in request'}, 400
+                    return {'msg': 'Unauthorized access'}, 403
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
@@ -993,36 +1113,37 @@ class ArticlesProblems(MethodView):
         return '', 200
     def get(self):
         try:
-            if 'current_user_id' in session and session['current_user_role'] == "admin":
-                time = request.args.get("time")
-                if time:
-                    try:
-                        time_int = float(time)
-                        time_datetime = datetime.fromtimestamp(time_int)
-                        size = request.args.get("size")
-                        size_int = 10
-                        if size:
-                            try:
-                                size_int = int(size)
-                            except ValueError:
-                                return {'msg': 'Incorrect size argument. size should be an int'}, 400
-                        
-                        articles: list[models.Article] = (
-                                                    db.session.query(models.Article)
-                                                    .filter(models.Article.ThumbsDown > 0)  # Only include articles with more than 0 thumbs down
-                                                    .order_by(desc(models.Article.ThumbsDown))  # Sort by ThumbsDown in descending order
-                                                    .limit(10)  # Limit to the top 10 articles
-                                                    .all()  # Execute the query and return the results
-                                                )
-
-                        
-                        
-                        returnable_articles = [article.toJSONPartial() for article in articles]
-                        return {'articles': returnable_articles}, 200   
-                    except ValueError:
-                        return {'msg': 'Incorrect time format. time should be in unix format'}, 400
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if len(session['current_user_privileges']) > 0:
+                    time = request.args.get("time")
+                    if time:
+                        try:
+                            time_int = float(time)
+                            time_datetime = datetime.fromtimestamp(time_int)
+                            size = request.args.get("size")
+                            size_int = 10
+                            if size:
+                                try:
+                                    size_int = int(size)
+                                except ValueError:
+                                    return {'msg': 'Incorrect size argument. size should be an int'}, 400
+                            
+                            articles: list[models.Article] = (
+                                                        db.session.query(models.Article)
+                                                        .filter(models.Article.ThumbsDown > 0)  # Only include articles with more than 0 thumbs down
+                                                        .order_by(desc(models.Article.ThumbsDown))  # Sort by ThumbsDown in descending order
+                                                        .limit(10)  # Limit to the top 10 articles
+                                                        .all()  # Execute the query and return the results
+                                                    )
+                            
+                            returnable_articles = [article.toJSONPartial() for article in articles]
+                            return {'articles': returnable_articles}, 200   
+                        except ValueError:
+                            return {'msg': 'Incorrect time format. time should be in unix format'}, 400
+                    else:
+                        return {'msg': 'no time argument included in request'}, 400
                 else:
-                    return {'msg': 'no time argument included in request'}, 400
+                    return {'msg': 'Unauthorized access'}, 403
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
@@ -1034,23 +1155,25 @@ class ArticlesProblems(MethodView):
 class Trending(MethodView):
     def options(self):
         return '', 200
-    def get(self):
+    def get(self): # not currently implemented in the student home page, temporarily putting it as admin only until we implement it
         try:
-            if 'current_user_id' in session:
-
-                articles = db.session.query(
-                    models.Article,
-                    func.count(models.ViewHistory.ArticleID).label('view_count')
-                ).join(
-                    models.ViewHistory, models.Article.ID == models.ViewHistory.ArticleID
-                ).group_by(
-                    models.Article.ID
-                ).order_by(
-                    func.count(models.ViewHistory.ArticleID).desc()
-                ).all()
-                
-                returnableArticles = [article.toJSONPartial() for article, ranking in articles]
-                return {'articles': returnableArticles}, 200
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if len(session['current_user_privileges']) > 0:
+                    articles = db.session.query(
+                        models.Article,
+                        func.count(models.ViewHistory.ArticleID).label('view_count')
+                    ).join(
+                        models.ViewHistory, models.Article.ID == models.ViewHistory.ArticleID
+                    ).group_by(
+                        models.Article.ID
+                    ).order_by(
+                        func.count(models.ViewHistory.ArticleID).desc()
+                    ).all()
+                    
+                    returnableArticles = [article.toJSONPartial() for article, ranking in articles]
+                    return {'articles': returnableArticles}, 200
+                else:
+                    return {'msg': 'Not yet implemented for student use'}, 501
             else:
                 return {'msg': 'Unauthorized access'}, 401
         
@@ -1066,25 +1189,30 @@ class Backlog(MethodView):
     
     def get(self):
         try:
-            if 'current_user_id' in session:
-                articles = models.Article.query.all()
-                published = []
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if 4 in session['current_user_privileges']:
+                    articles = models.Article.query.all()
+                    published = []
 
-                for article in articles:  
-                    for tag in article.Tags:
-                        if tag.ID == 1:
-                            published.append(article)
+                    for article in articles:  
+                        for tag in article.Tags:
+                            if tag.ID == 1:
+                                published.append(article)
 
-                backlog = [article for article in articles if article not in published]
-                returnableBacklog = [article.toJSONPartial() for article in backlog]
-                return {'backlog': returnableBacklog}, 200
+                    backlog = [article for article in articles if article not in published]
+                    returnableBacklog = [article.toJSONPartial() for article in backlog]
+                    return {'backlog': returnableBacklog}, 200
+                else:
+                    if session['current_user_role'] == "student":
+                        return {'msg': 'Unauthorized access'}, 403
+                    else:
+                        return {'msg': 'You do not have permission to access the admin backlog.'}, 403
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-
               
 @apiv1.route("/nosolution", methods=["OPTIONS", "POST"])
 class NoSolution(MethodView):
@@ -1093,7 +1221,7 @@ class NoSolution(MethodView):
     
     def post(self):
         try:
-            if 'current_user_id' in session:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 data = request.json
                 if data:
                     content = data.get("content")
@@ -1120,7 +1248,7 @@ class Feedback(MethodView):
 
     def post(self):
         try:
-            if 'current_user_id' in session:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 data = request.json
                 if data:
                     submission_time = datetime.now()
@@ -1152,53 +1280,56 @@ class Feedback(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
+
 @apiv1.route("/searches/problems", methods=["OPTIONS", "GET"])
 class SearchesProblems(MethodView):
     def options(self):
         return '', 200
-    
+
     def get(self):
         try:
-            if 'current_user_id' in session and session['current_user_role'] == "admin":
-                time = request.args.get("time")
-                if time:
-                    try:
-                        time_int = float(time)
-                        time_datetime = datetime.fromtimestamp(time_int)
-                        
-                        no_solutions: list[models.NoSolution] = models.NoSolution.query.filter(
-                            models.NoSolution.Submission_Time >= time_datetime
-                        ).order_by(
-                            models.NoSolution.Submission_Time.desc()
-                        ).all()
-                        
-                        problemSearches: list[models.Search] = []
-                        seen_search_ids = set()
-                        
-                        for noSol in no_solutions:
-                            submitTime = noSol.Submission_Time
-                            uid = noSol.UserID
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if len(session['current_user_privileges']) > 0:
+                    time = request.args.get("time")
+                    if time:
+                        try:
+                            time_int = float(time)
+                            time_datetime = datetime.fromtimestamp(time_int)
                             
-                            closest_search: models.Search = models.Search.query.filter(
-                                models.Search.UserID == uid,
-                                models.Search.SearchTime <= submitTime
+                            no_solutions: list[models.NoSolution] = models.NoSolution.query.filter(
+                                models.NoSolution.Submission_Time >= time_datetime
                             ).order_by(
-                                models.Search.SearchTime.desc()
-                            ).first()
+                                models.NoSolution.Submission_Time.desc()
+                            ).all()
                             
-                            if closest_search and closest_search.SearchID not in seen_search_ids:
-                                problemSearches.append(closest_search)
-                                seen_search_ids.add(closest_search.SearchID)
-                        
-                        
-                        returnableSearches = [s.toJSONPartial() for s in problemSearches]
-                        
-                        return {'searches': returnableSearches}                            
-                        
-                    except ValueError:
-                        return {'msg': 'Incorrect time format. time should be in unix format'}, 400
+                            problemSearches: list[models.Search] = []
+                            seen_search_ids = set()
+                            
+                            for noSol in no_solutions:
+                                submitTime = noSol.Submission_Time
+                                uid = noSol.UserID
+                                
+                                closest_search: models.Search = models.Search.query.filter(
+                                    models.Search.UserID == uid,
+                                    models.Search.SearchTime <= submitTime
+                                ).order_by(
+                                    models.Search.SearchTime.desc()
+                                ).first()
+                                
+                                if closest_search and closest_search.SearchID not in seen_search_ids:
+                                    problemSearches.append(closest_search)
+                                    seen_search_ids.add(closest_search.SearchID)
+                            
+                            returnableSearches = [s.toJSONPartial() for s in problemSearches]
+                            
+                            return {'searches': returnableSearches}                            
+                            
+                        except ValueError:
+                            return {'msg': 'Incorrect time format. time should be in unix format'}, 400
+                    else:
+                        return {'msg': 'no time argument included in request'}, 400
                 else:
-                    return {'msg': 'no time argument included in request'}, 400
+                    return {'msg': 'Unauthorized access'}, 403
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
@@ -1212,18 +1343,21 @@ class SystemStats(MethodView):
         return '', 200
     def get(self):
         try:
-            if 'current_user_id' in session and session['current_user_role'] == "admin":
-                one_week_ago = datetime.now() - timedelta(weeks=1)
-    
-                user_count = db.session.query(func.count(models.User.ID)).scalar()
-                article_count = db.session.query(func.count(models.Article.ID)).scalar()
-                search_count = db.session.query(func.count(models.Search.SearchID)).filter(models.Search.SearchTime >= one_week_ago).scalar()
-                
-                return {
-                    'user_count': user_count,
-                    'article_count': article_count,
-                    'search_count': search_count
-                }
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if len(session['current_user_privileges']) > 0:
+                    one_week_ago = datetime.now() - timedelta(weeks=1)
+        
+                    user_count = db.session.query(func.count(models.User.ID)).scalar()
+                    article_count = db.session.query(func.count(models.Article.ID)).scalar()
+                    search_count = db.session.query(func.count(models.Search.SearchID)).filter(models.Search.SearchTime >= one_week_ago).scalar()
+                    
+                    return {
+                        'user_count': user_count,
+                        'article_count': article_count,
+                        'search_count': search_count
+                    }
+                else:
+                    return {'msg': 'Unauthorized access'}, 403
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
@@ -1232,40 +1366,41 @@ class SystemStats(MethodView):
             return {'msg': f"Error: {e}"}, 500
 
 @apiv1.route("/articles/search/tagandquery", methods=["OPTIONS", "GET"])
-class SystemStats(MethodView):
+class SystemStatsSearch(MethodView):
     def options(self):
         return '', 200
     def get(self):
         try:
-            if 'current_user_id' in session and session['current_user_role'] == "admin":
-            
-                searchQuery = request.args.get("searchQuery")
-                tagName = request.args.get("tagName")
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if len(session['current_user_privileges']) > 0:
+                    searchQuery = request.args.get("searchQuery")
+                    tagName = request.args.get("tagName")
 
-                articlesQuery = models.Article.query.filter(
-                    or_(
-                        models.Article.Title.ilike(f"%{searchQuery}%"),
-                        models.Article.Content.ilike(f"%{searchQuery}%"),
-                        models.Article.Article_Description.ilike(f"%{searchQuery}%")
-                    )
+                    articlesQuery = models.Article.query.filter(
+                        or_(
+                            models.Article.Title.ilike(f"%{searchQuery}%"),
+                            models.Article.Content.ilike(f"%{searchQuery}%"),
+                            models.Article.Article_Description.ilike(f"%{searchQuery}%")
+                        )
                     ).all()
 
-                tag: models.Tag = models.Tag.query.filter_by(tagName=tagName).first()
-                articlesTag: list[models.Article] = tag.Articles
-                totalArticles = []
+                    tag: models.Tag = models.Tag.query.filter_by(tagName=tagName).first()
+                    articlesTag: list[models.Article] = tag.Articles
+                    totalArticles = []
 
-                for x in articlesQuery:
-                    for y in articlesTag:
-                        if x.ID == y.ID:
-                            totalArticles.append(x)
-
-            
-                returnableArticles = [article.toJSONPartial() for article in totalArticles]
-
-                db.session.commit()
+                    for x in articlesQuery:
+                        for y in articlesTag:
+                            if x.ID == y.ID:
+                                totalArticles.append(x)
                 
-                return {'results': returnableArticles}, 200
-        
+                    returnableArticles = [article.toJSONPartial() for article in totalArticles]
+                    db.session.commit()
+                    
+                    return {'results': returnableArticles}, 200
+                else:
+                    return {'msg': 'Unauthorized access'}, 403
+            else:
+                return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
             print(f"Error: {e}")
             traceback.print_exc()

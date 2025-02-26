@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import ArticleCard from "../../components/ArticleCard";
 import ArticleModal from "../../components/ArticleModal";
 import { Typography, Button } from '@mui/material';
+import { useMediaQuery } from "react-responsive"; 
 
 interface Props{
     currentScreen: Screen
@@ -16,20 +17,42 @@ function StudentBrowse({ currentScreen, setCurrentScreen }: Props){
     const [viewArticles, setViewArticles] = useState(false);
     const [currentCategory, setCurrentCategory] = useState<PartialMetaTag | null>(null)
 
+    const isMobile = useMediaQuery({ maxWidth: 767 });
+
     if (viewArticles){
         return(
-            <div style={{width: "100vw", height: "100vh"}}>
-                <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></StudentAppBar>
-                <div style={{ flexShrink: 0, height: "10%", width: "100%"}}></div>
+            <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                {!isMobile && (
+                    <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                        <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></StudentAppBar>
+                    </div>
+                )}
+                
                 <BrowseArticles currentCategory={currentCategory} setCurrentCategory={setCurrentCategory} setViewArticles={setViewArticles}></BrowseArticles>
+                
+                {isMobile && (
+                <div style={{height: "6%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                    <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></StudentAppBar>
+                </div>
+                )}
             </div>
         )
     } else {
         return(
-            <div style={{width: "100vw", height: "100vh"}}>
-                <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></StudentAppBar>
-                <div style={{ flexShrink: 0, height: "10%", width: "100%"}}></div>
+            <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                {!isMobile && (
+                    <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                        <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></StudentAppBar>
+                    </div>
+                )}
+                
                 <BrowseCategories setViewArticles={setViewArticles} setCurrentCategory={setCurrentCategory}></BrowseCategories>
+                
+                {isMobile && (
+                <div style={{height: "6%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                    <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></StudentAppBar>
+                </div>
+                )}
             </div>
         )
     }
@@ -73,21 +96,22 @@ function BrowseArticles({currentCategory, setCurrentCategory, setViewArticles}: 
     }
 
     return(
-        <div style={{width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
-            <div style={{width: "100%", height: "20px", display: "flex", flexDirection: "row", alignItems: "center", marginBottom: "10px"}}>
-                <div style={{width: "10px"}}></div>
+        <div style={{width: "100%", height: "95%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+            <div style={{width: "100%", height: "5%", display: "flex", flexDirection: "row", alignItems: "center", marginBottom: "10px", paddingTop: "5%"}}>
                 <Button onClick={() => {
                     setCurrentCategory(null);
                     setViewArticles(false);
                 }}
                     variant="text" sx={{fontSize: "20px", fontWeight: "700"}}>{"< Categories"}</Button>
             </div>
-            {articles?.map((article) => {
-                return <ArticleCard onClick={() => {
-                    setCurrentArticle(article);
-                    setOpenArticleModal(true)
-                }} article={article} lineNumber={3} key={article.ID}/>;
-            })}
+            <div style={{width: "100%", height: "95%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto"}}>
+                {articles?.map((article) => {
+                    return <ArticleCard onClick={() => {
+                        setCurrentArticle(article);
+                        setOpenArticleModal(true)
+                    }} article={article} lineNumber={3} key={article.ID}/>;
+                })}
+            </div>
             <ArticleModal handleClose={() => {
                 setOpenArticleModal(false);
                 setCurrentArticle(null);
@@ -131,7 +155,7 @@ function BrowseCategories({setViewArticles, setCurrentCategory}: BrowseCategorie
     }
 
     return(
-        <div style={{width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+        <div style={{width: "100%", height: "95%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto", paddingTop: "5%", paddingBottom: "5%"}}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', width: '90%' }}>
                 {categories.map((category) => (
                     <CategoryCard key={category.ID} category={category} onClick={() => {handleClick(category)}}/>
@@ -150,7 +174,7 @@ function CategoryCard({ category, onClick }: CategoryCardProps) {
     console.log(category.TagName)
     return (
         <div onClick={onClick}
-            style={{ cursor: "pointer", width: '100%', height: "80px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", border: "1px solid grey", borderRadius: "20px"}}>
+            style={{ cursor: "pointer", width: '100%', height: "80px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", border: "1px solid grey", borderRadius: "20px", boxShadow: "0px 0px 10px 0px Gainsboro" }}>
             <Typography variant="h6">{category.TagName}</Typography>
         </div>
     );
