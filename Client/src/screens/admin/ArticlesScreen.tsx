@@ -6,7 +6,8 @@ import AdminArticleCard from '../../components/AdminArticleCard';
 import EditArticleModal from './EditScreen';
 import AdminSearchBar from "../../components/AdminSearchBar";
 import { useMediaQuery } from "react-responsive";
-import { useTheme, FormControl, InputLabel, Select, OutlinedInput, MenuItem, Checkbox, ListItemText, SelectChangeEvent } from "@mui/material";
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import { useTheme, FormControl, InputLabel, Select, OutlinedInput, MenuItem, Checkbox, ListItemText, SelectChangeEvent, Button } from "@mui/material";
 
 interface Props{
     currentScreen: Screen
@@ -164,29 +165,40 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
             )}
             
             <div style={{ width: "100%", height: "95%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto", backgroundColor: theme.palette.secondary.main}}>
-                <div style={{width: "90%", height: "20%", display: "flex", flexDirection: "row", justifyContent: "evenly-spaced", alignItems: "center", gap: "10%"}}>
-                    <AdminSearchBar setSearchVal={setSearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={"medium"}></AdminSearchBar>
-                
-                    <FormControl size="small" className='HaveShadow' sx={{ m: 1, width: 300, backgroundColor: "white", borderRadius: "5px"}}>
-                        <InputLabel id="demo-multiple-checkbox-label" sx={{color: "black"}}>Filter tags</InputLabel>
-                        <Select
-                        labelId="demo-multiple-checkbox-label"
-                        id="demo-multiple-checkbox"
-                        multiple
-                        value={tags}
-                        onChange={handleChange}
-                        input={<OutlinedInput label="Tags" />}
-                        renderValue={(selected) => selected.join(', ')}
-                        MenuProps={MenuProps}
-                        >
-                        {allTags.map((tag) => (
-                            <MenuItem key={tag} value={tag}>
-                            <Checkbox checked={tags.includes(tag)} />
-                            <ListItemText primary={tag} />
-                            </MenuItem>
-                        ))}
-                        </Select>
-                    </FormControl>
+                <div style={{width: "100%", height: "20%", display: "flex", flexDirection: "row", justifyContent: "evenly-spaced", alignItems: "center"}}>
+                    <div style={{height: "100%", width: "7.5%", display: "flex", flexDirection: "row", alignItems: "space-evenly", gap: "10%"}}>
+
+                    </div>
+                    <div style={{height: "100%", width: "85%", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: "10%"}}>
+                        <AdminSearchBar setSearchVal={setSearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={"medium"}></AdminSearchBar>
+                    
+                        <FormControl size="small" className='HaveShadow' sx={{ m: 1, width: 300, backgroundColor: "white", borderRadius: "5px"}}>
+                            <InputLabel id="demo-multiple-checkbox-label" sx={{color: "black"}}>Filter tags</InputLabel>
+                            <Select
+                            labelId="demo-multiple-checkbox-label"
+                            id="demo-multiple-checkbox"
+                            multiple
+                            value={tags}
+                            onChange={handleChange}
+                            input={<OutlinedInput label="Tags" />}
+                            renderValue={(selected) => selected.join(', ')}
+                            MenuProps={MenuProps}
+                            >
+                            {allTags.map((tag) => (
+                                <MenuItem key={tag} value={tag}>
+                                <Checkbox checked={tags.includes(tag)} />
+                                <ListItemText primary={tag} />
+                                </MenuItem>
+                            ))}
+                            </Select>
+                        </FormControl>
+                    </div>
+                    <div style={{height: "100%", width: "7.5%", display: "flex", flexDirection: "column", alignItems: "felx-start", justifyContent: "center"}}>
+                        <Button onClick={() => {handleEditArticle(createEmptyArticle())}}>
+                            <AddCircleOutlineIcon sx={{ height: "40px", width: "40px", color: "white" }} />
+                        </Button>
+                    </div>
+                    
                 </div>
                 {articles.map((article) => (
                     <AdminArticleCard
@@ -209,6 +221,18 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
             )}
         </div>
     )
+}
+
+function createEmptyArticle(): PartialArticle {
+    return {
+        ID: -1,
+        Title: "",
+        Content: "",
+        Article_Description: "",
+        Image: "",
+        ThumbsUp: 0,
+        ThumbsDown: 0
+    };
 }
 
 export default AdminArticles;
