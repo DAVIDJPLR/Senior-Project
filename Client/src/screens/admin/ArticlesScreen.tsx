@@ -5,7 +5,8 @@ import {PartialArticle} from "../../custom_objects/models"
 import AdminArticleCard from '../../components/AdminArticleCard';
 import EditArticleModal from './EditScreen';
 import AdminSearchBar from "../../components/AdminSearchBar";
-import { useMediaQuery } from "react-responsive"; 
+import { useMediaQuery } from "react-responsive";
+import { useTheme } from "@mui/material";
 
 interface Props{
     currentScreen: Screen
@@ -16,11 +17,12 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
     const [editModalOpen, setEditModalOpen] = useState(false)
     const [selectedArticle, setSelectedArticle] = useState<PartialArticle | null>(null)
     const [articles, setArticles] = useState<PartialArticle[]>([])
-    const [searchVal, setsearchVal] = useState("");
-    const [tagVal, settagVal] = useState("");
-    const [hasSearched, setHasSearched] = useState(false);
+    const [searchVal, setSearchVal] = useState("");
+    const [tags, setTags] = useState("");
 
     const isMobile = useMediaQuery({ maxWidth: 767 });
+
+    const theme = useTheme();
 
     const handleEditArticle = (article: PartialArticle) => {
         setSelectedArticle(article)
@@ -54,7 +56,6 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
     const handleKeyUp = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === "Enter") {
             console.log(searchVal); 
-            setHasSearched(true);
             handleSearch()
         }
     };
@@ -86,10 +87,10 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
     const searchArticles = async () => {
         const params = new URLSearchParams({
             searchQuery: searchVal,
-            tagName: tagVal
+            tags: tags
         });
 
-        console.log(`searching with val ${searchVal} and tag ${tagVal}`)
+        console.log(`searching with val ${searchVal} and tag ${tags}`)
 
         const response = await fetch(`http://localhost:5000/api/v1/articles/search/tagandquery?${params.toString()}`, {
             method: 'GET',
@@ -110,10 +111,12 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
             {!isMobile && (
                 <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
                     <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
-                    <AdminSearchBar setSearchVal={setsearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={"medium"}></AdminSearchBar>
                 </div>
             )}
-            <div style={{ width: "100%", height: "95%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto"}}>
+            
+            <div style={{ width: "100%", height: "95%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto", backgroundColor: theme.palette.secondary.main}}>
+                <AdminSearchBar setSearchVal={setSearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={"medium"}></AdminSearchBar>
+                
                 {articles.map((article) => (
                     <AdminArticleCard
                         key={article.ID}

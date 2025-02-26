@@ -10,8 +10,9 @@ interface Props{
 
 function AdminSearchBar({setSearchVal, searchVal, handleKeyUp, size}: Props){
     return(
-        <TextField label="Search" variant="outlined" size={size} sx={{width: "90%", "& .MuiOutlinedInput-root": {borderRadius: 8}}} 
+        <TextField variant="outlined" size={size} sx={{width: "90%", "& .MuiOutlinedInput-root": {borderRadius: 8}, marginTop: "10px", backgroundColor: "white", borderRadius: "30px", color: "black"}} 
         onChange={(e) => setSearchVal(e.target.value)}
+        className= "HaveShadow"
         value={searchVal}
         onKeyUp={handleKeyUp}
         slotProps={{

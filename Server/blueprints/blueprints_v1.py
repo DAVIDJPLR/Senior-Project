@@ -1358,27 +1358,43 @@ class SystemStatsSearch(MethodView):
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 if len(session['current_user_privileges']) > 0:
                     searchQuery = request.args.get("searchQuery")
-                    tagName = request.args.get("tagName")
+                    tags = request.args.get("tags")
+                    if len(tags) > 0:
+                        tagNames = tags.split(",")
+                    else:
+                        tagNames = []
 
-                    articlesQuery = models.Article.query.filter(
-                        or_(
-                            models.Article.Title.ilike(f"%{searchQuery}%"),
-                            models.Article.Content.ilike(f"%{searchQuery}%"),
-                            models.Article.Article_Description.ilike(f"%{searchQuery}%")
-                        )
-                    ).all()
+                    if len(searchQuery) > 0:
+                        articlesQuery: list[models.Article] = models.Article.query.filter(
+                            or_(
+                                models.Article.Title.ilike(f"%{searchQuery}%"),
+                                models.Article.Content.ilike(f"%{searchQuery}%"),
+                                models.Article.Article_Description.ilike(f"%{searchQuery}%")
+                            )
+                        ).all()
 
-                    tag: models.Tag = models.Tag.query.filter_by(tagName=tagName).first()
-                    articlesTag: list[models.Article] = tag.Articles
-                    totalArticles = []
+                        tagIds: list[int] = []
+                        if len(tagNames) > 0:
+                            for tag in tagNames:
+                                tagId = models.Tag.query.filter_by(TagName=tag).first().ID
+                                tagIds.append(tagId)
+                        
+                        totalArticles: list[models.Article] = []
 
-                    for x in articlesQuery:
-                        for y in articlesTag:
-                            if x.ID == y.ID:
-                                totalArticles.append(x)
-                
+                        for x in articlesQuery:
+                            for tag in x.Tags:
+                                if tag.ID in tagIds or len(tagIds) == 0:
+                                    totalArticles.append(x)
+                                    break
+                    
+                    else:
+                        totalArticles = []
+                        if len(tagNames) > 0:
+                            for tag in tagNames:
+                                actualTag: list[models.Tag] = models.Tag.query.filter_by(TagName=tag).first()
+                                totalArticles.extend(actualTag.Articles)
+                        
                     returnableArticles = [article.toJSONPartial() for article in totalArticles]
-                    db.session.commit()
                     
                     return {'results': returnableArticles}, 200
                 else:

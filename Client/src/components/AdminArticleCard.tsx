@@ -1,5 +1,6 @@
 import { Typography } from "@mui/material";
 import { PartialArticle } from "../custom_objects/models";
+import "../global.css";
 
 interface Props{
     article: PartialArticle,
@@ -13,7 +14,8 @@ function AdminArticleCard({ article, lineNumber, onClick }: Props){
     const heightString: string = height.toString() + "px";
     return (
         <div onClick={() => {onClick(article)}}
-            style={{width: "85%", height: heightString, display: "flex", flexDirection: "column", alignItems: "center", border: "1px solid grey", borderRadius: "20px", margin: "10px", position: "relative" }}
+            className="HaveShadow"
+            style={{width: "85%", height: heightString, display: "flex", flexDirection: "column", alignItems: "center", border: "1px solid grey", borderRadius: "20px", margin: "10px", position: "relative", cursor: "pointer", backgroundColor: "white" }}
         >
             <Typography style={{
                 fontSize: "18px",
