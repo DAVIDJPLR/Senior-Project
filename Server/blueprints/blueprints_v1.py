@@ -189,6 +189,56 @@ class Articles(MethodView):
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
 
+@apiv1.route("/article/tag", methods=["OPTIONS", "GET", "PUT"])
+class ArticleTag(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                id = request.args.get("ID")
+                if id:
+                    article: models.Article = models.Article.query.filter_by(ID=id).first()
+                    if article:
+                        tag: models.Tag = article.Tags[0]
+                        tags: list[models.Tag] = models.Tag.query.all()
+                        
+                        return{
+                            'tag': tag.TagName,
+                            'tags': [tag.TagName for tag in tags]
+                        }, 200
+                    else:
+                        return {'msg': 'No such article'}, 404
+                else:
+                    return {'msg': 'No article id specified'}, 400
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+    def put(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session and 3 in session['current_user_privileges']:
+                id = request.args.get("ID")
+                tagName = request.args.get("TagName")
+                if id and tagName:
+                    tag: models.Tag = models.Tag.query.filter_by(TagName=tagName).first()
+                    article: models.Article = models.Article.query.filter_by(ID=id).first()
+                    
+                    article.Tags = [tag]
+                    db.session.commit()
+                    
+                    return {'msg': 'Article tag updated successfully'}, 200
+                else:
+                    return {'msg': 'No article id or tag name specified'}, 400
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+
 @apiv1.route("/article", methods=["OPTIONS", "GET", "POST", "PUT"])
 class Article(MethodView):
     def options(self):
