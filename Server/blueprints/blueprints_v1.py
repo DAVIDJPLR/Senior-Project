@@ -1389,3 +1389,33 @@ class SystemStatsSearch(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
+        
+@apiv1.route("/article/categories", methods=["OPTIONS", "GET"])
+class SystemStatsSearch(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if len(session['current_user_privileges']) > 0:
+
+                    articleID = request.args.get("ArticleID")
+                    article: models.Article = models.Article.query.filter_by(ID=articleID).first()
+
+                    tags = []
+                    for tag in article.Tags:
+                        tags.append(tag)
+                    
+                    returnableTags = [tag.toJSONPartial() for tag in tags]
+                    db.session.commit()
+
+                    return {'tags': returnableTags}, 200
+
+                else:
+                    return {'msg': 'Unauthorized access'}, 403
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
