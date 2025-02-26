@@ -7,11 +7,12 @@ import { FormatBold, FormatItalic, FormatUnderlined, FormatQuote,
        FormatListBulleted, FormatListNumbered,
         Code, Title } from '@mui/icons-material'
 import { PartialArticle } from '../custom_objects/models'
+import TagDropdown from './TagDropdown'
 
 
 
 interface TextEditorProps {
-  articleID?: number
+  articleID: number
 }
 
 export const TextEditor = ({articleID}: TextEditorProps) => {
@@ -173,7 +174,8 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
       }}
     
     >
-      <Toolbar editor={editor}/>
+      <Toolbar editor={editor}
+                articleID={articleID}/>
       <Editable
         label="Content"
         style={{
@@ -378,7 +380,12 @@ const DefaultElement = props => {
   return <p {...props.attributes}>{props.children}</p>
 }
 
-const Toolbar = ({ editor }: {editor: Editor}) => {
+interface ToolbarProps {
+  editor: Editor
+  articleID: number
+}
+const Toolbar = ({editor, articleID}: ToolbarProps) => {
+//const Toolbar = ({ editor }: {editor: Editor}) => {
   return (
     <MuiToolbar variant="dense" style={{ marginBottom: '8px', borderBottom: '1px solid #ddd'}}>
         <IconButton
@@ -464,6 +471,8 @@ const Toolbar = ({ editor }: {editor: Editor}) => {
         >
           <FormatListNumbered/>
         </IconButton>
+        <div style={{flexGrow: 1}} />
+        <TagDropdown articleID={articleID}/>
       </MuiToolbar>
   )
 }

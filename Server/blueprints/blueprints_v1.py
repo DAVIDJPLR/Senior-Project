@@ -832,7 +832,24 @@ class ArticleTag(MethodView):
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
 
-
+@apiv1.route("/articletag/getall", methods=["OPTIONS", "GET"])
+class TagNames(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        try:
+            if 'current_user_id' in session:
+                tags = models.Tag.query.all()
+                returnTags = [tag.toJSONPartial() for tag in tags]
+                db.session.commit()
+                return {'Tags': returnTags}, 200
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+        
 @apiv1.route("/categories", methods=["OPTIONS", "GET"])
 class Categories(MethodView):
     def options(self):
@@ -1390,7 +1407,7 @@ class SystemStatsSearch(MethodView):
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
         
-@apiv1.route("/article/categories", methods=["OPTIONS", "GET"])
+@apiv1.route("/article/categories", methods=["OPTIONS", "GET", "PUT"])
 class SystemStatsSearch(MethodView):
     def options(self):
         return '', 200
@@ -1415,6 +1432,33 @@ class SystemStatsSearch(MethodView):
                     return {'msg': 'Unauthorized access'}, 403
             else:
                 return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+    def put(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if 3 in session['current_user_privileges']:
+                    tag_updated = request.json
+
+                    if tag_updated:
+                        article_id: int = tag_updated.get("articleID")
+                        tag_id: int = tag_updated.get("tagID")
+
+                        article = models.Article.query.get(article_id)
+                        tag = models.Tag.query.get(tag_id)
+                        article.Tags = [tag]
+                        db.session.commit()
+
+                        return {'msg': 'Article tag updated successfully.'}, 200
+
+                    else:
+                        return {'msg': 'No data provided.'}, 400
+                else:
+                    return {'msg': 'Unauthorized privileges.'}, 403
+            else:
+                return {'msg': 'Unauthorized access.'}, 401
         except Exception as e:
             print(f"Error: {e}")
             traceback.print_exc()
