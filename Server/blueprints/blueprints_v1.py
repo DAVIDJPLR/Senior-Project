@@ -718,7 +718,23 @@ class ArticleTag(MethodView):
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
 
-
+@apiv1.route("/articletag/getall", methods=["OPTIONS", "GET"])
+class TagNames(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        try:
+            if 'current_user_id' in session:
+                tags = models.Tag.query.all()
+                tag_names = [tag.TagName for tag in tags]
+                return {'Tags': tag_names}, 200
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+        
 @apiv1.route("/categories", methods=["OPTIONS", "GET"])
 class Categories(MethodView):
     def options(self):

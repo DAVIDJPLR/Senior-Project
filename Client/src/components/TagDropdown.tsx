@@ -3,15 +3,38 @@ import { FormControl, InputLabel, Select, SelectChangeEvent, MenuItem, Input } f
 import { Article, PartialTag } from "../custom_objects/models"
 
 interface TagDropdownProps {
-    article: Article
+    articleID: number
 }
 
-function TagDropdown( {article}: TagDropdownProps) {
+function TagDropdown( {articleID}: TagDropdownProps) {
     const [tags, setTags] = useState<string[]>([])
-    const [selectedTag, setSelectedTag] = useState<string>(article.Tags[0].TagName || "")
+    const [selectedTag, setSelectedTag] = useState<string>('')
+    
+    useEffect(() => {
+        fetch(`http://localhost:5000/api/v1/articletag?ID=${articleID}`, {
+            method: "GET",
+            credentials: "include"
+        })
+        .then(response => {
+            if(!response.ok) {
+                throw new Error('Failed to fetch article tag')
+            }
+            return response.json()
+        })
+        .then(data => {
+            console.log("Article tag = ", data)
+            if (data && data.Tag) {
+                setSelectedTag(data.Tag.TagName)
+                console.log(selectedTag)
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching tag: ", error)
+        })
+    }, [])
 
     useEffect(() => {
-        fetch("http://localhost:5000/api/v1/articletag/getall", {
+        fetch('http://localhost:5000/api/v1/articletag/getall', {
             method: "GET",
             credentials: "include"
         })
@@ -39,7 +62,7 @@ function TagDropdown( {article}: TagDropdownProps) {
     }
 
     return (
-        <FormControl variant="outlined" size="small" style={{marginTop: "10px"}}>
+        <FormControl variant="outlined" size="small" sx={{width: 200}}>
             <InputLabel id="tag-dropdown-label">Tag</InputLabel>
             <Select
                 labelId="tag-dropdown-label"
