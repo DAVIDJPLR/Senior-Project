@@ -266,7 +266,7 @@ class Article(MethodView):
                         if not article:
                             return {'msg': 'Article not found'}, 404
                         article.Title = title
-                        article.Content = content
+                        article.Content = json.dumps(content)
                         article.Article_Description = desc
                         article.Image = image
 

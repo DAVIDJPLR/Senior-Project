@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import { useMemo } from 'react';
 import { Modal, Typography }  from '@mui/material';
 import ThumbDownAltOutlinedIcon from '@mui/icons-material/ThumbDownAltOutlined';
 import ThumbUpAltOutlinedIcon from '@mui/icons-material/ThumbUpAltOutlined';
 import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
 import { PartialArticle } from '../custom_objects/models';
+import { createEditor } from 'slate';
+import { Slate, Editable, withReact } from 'slate-react'
 
 interface Props {
     handleClose: () => void;
@@ -14,6 +16,8 @@ interface Props {
 function ArticleModal({ handleClose, open, article }: Props) {
 
     const articleURL: string = "URL_" + article?.Title;
+
+    const editor = useMemo(() => withReact(createEditor()), []);
 
     const copyToClipboard = () => {
         navigator.clipboard.writeText(articleURL).then(() => {
@@ -75,7 +79,10 @@ function ArticleModal({ handleClose, open, article }: Props) {
                             <Typography sx={{textAlign: "center", fontSize: "20px", fontWeight: "600"}}>{article.Title}</Typography>
                         </div>
                         <div style={{width: "90%", minHeight: "65%"}}>
-                            <Typography sx={{textAlign: "left", fontSize: "16px", fontWeight: "400"}}>{article.Content}</Typography>
+                            {/* <Typography sx={{textAlign: "left", fontSize: "16px", fontWeight: "400"}}>{article.Content}</Typography> */}
+                            <Slate editor={editor} initialValue={JSON.parse(article.Content)}>
+                                <Editable readOnly />
+                            </Slate>
                         </div>
                         <div style={{width: "90%", height: "20%", display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: "10px"}}>
                             <Typography sx={{ width: "100%", textAlign: "left", fontSize: "16px", fontWeight: "400"}}>Was this article helpful?</Typography>

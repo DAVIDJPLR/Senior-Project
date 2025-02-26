@@ -18,14 +18,15 @@ interface TextEditorProps {
 export const TextEditor = ({articleID}: TextEditorProps) => {
   const editor = useMemo(() => withHistory(withReact(createEditor())), [])
 
-  // const [value, setValue] = useState<Descendant[]>([
-  //   {
-  //     type: 'paragraph',
-  //     children: [{text: 'A line of text in a paragraph.'}]
-  //   },
-  // ])
+  const [value, setValue] = useState<Descendant[]>([
+    {
+      type: 'paragraph',
+      children: [{text: 'A line of text in a paragraph.'}]
+    },
+  ])
 
-  const [value, setValue] = useState("")
+  //const [value, setValue] = useState("")
+  //const [value, setValue] = useState<Descendant[]>([])
   const [title, setTitle] = useState("Untitled Article")
   const [description, setDescription] = useState("")
   const [loading, setLoading] = useState<boolean>(!!articleID)
@@ -55,9 +56,9 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
         if (data.article) {
           console.log("beginning parse")
           try {
-            // const parsedContent = JSON.parse(data.article.Content)
-            const parsedContent = data.article.Content
-            setValue(parsedContent)
+            // const parsedContent = data.article.Content
+            // setValue(parsedContent)
+            setValue(JSON.parse(data.article.Content))
             console.log("json parsed")
           } catch (e) {
             throw new Error('Error parsing article content')
@@ -101,6 +102,7 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
       },
       credentials: 'include',
       body: JSON.stringify(articlePayload)
+      //body: articlePayload
     })
     .then(response => {
       if(!response.ok) {
@@ -124,9 +126,10 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
     setSaveSuccess(false)
   }
   console.log("Article content: ", value)
-  console.log("Deserialized: ", deserialize(value))
+  //console.log("Deserialized: ", deserialize(value))
 
-  const initialValue = deserialize(value)
+  //const initialValue = deserialize(value)
+  const initialValue = value
   console.log("Initial value should be: ", initialValue)
 
   if (loading) {
@@ -169,7 +172,8 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
           op => 'set_selection' !== op.type
         )
         if (isAstChange) {
-          setValue(serialize(newValue))
+          //setValue(serialize(newValue))
+          setValue(newValue)
         }
       }}
     
