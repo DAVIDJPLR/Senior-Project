@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from "react"
 import { FormControl, InputLabel, Select, SelectChangeEvent, MenuItem, Input } from "@mui/material"
-import { Article, PartialTag } from "../custom_objects/models"
+import { Article, PartialTag, Tag } from "../custom_objects/models"
 
 interface TagDropdownProps {
     articleID: number
 }
 
 function TagDropdown( {articleID}: TagDropdownProps) {
-    const [tags, setTags] = useState<string[]>([])
-    const [selectedTag, setSelectedTag] = useState<string>('')
-    
+    const [tags, setTags] = useState<PartialTag[]>([])
+    const [selectedTagLabel, setSelectedTagLabel] = useState<string>('')
+    const [selectedTagID, setSelectedTagID] = useState<number>(0)
+    const [selectedTag, setSelectedTag] = useState<Tag>()
+
     useEffect(() => {
-        fetch(`http://localhost:5000/api/v1/articletag?ID=${articleID}`, {
+        fetch(`http://localhost:5000/api/v1/article/categories?ArticleID=${articleID}`, {
             method: "GET",
             credentials: "include"
         })
@@ -23,8 +25,12 @@ function TagDropdown( {articleID}: TagDropdownProps) {
         })
         .then(data => {
             console.log("Article tag = ", data)
-            if (data && data.Tag) {
-                setSelectedTag(data.Tag.TagName)
+            if (data && data.tags) {
+                setSelectedTagLabel(data.tags[0].TagName)
+                setSelectedTagID(data.tags[0].ID)
+                setSelectedTag(data.tags[0])
+                console.log(selectedTagLabel)
+                console.log(selectedTagID)
                 console.log(selectedTag)
             }
         })
@@ -46,7 +52,7 @@ function TagDropdown( {articleID}: TagDropdownProps) {
             return response.json()
         })
         .then(data => {
-            console.log("Setting tags", data)
+            console.log("Setting tags", data) 
             if (data && data.Tags) {
                 setTags(data.Tags)
             }            
@@ -57,8 +63,37 @@ function TagDropdown( {articleID}: TagDropdownProps) {
     }, [])
 
     const tagChanged = (event: SelectChangeEvent<string>) => {
-        const newTag = event.target.value as string;
-        setSelectedTag(newTag)
+        const newTagID = parseInt(event.target.value)
+        setSelectedTagID(newTagID)
+        const newTag = tags.find((tag) => tag.ID === newTagID);
+        const newTagLabel = newTag ? newTag.TagName : ""
+        setSelectedTagLabel(newTagLabel)
+        console.log(newTagID)
+        console.log(newTagLabel)
+        
+        fetch("http://localhost:5000/api/v1/article/categories", {
+            method: "PUT",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                articleID: articleID,
+                tagID: newTagID
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Failed to update article tag")
+            }
+            return response.json()
+        })
+        .then(data => {
+            console.log("Article tag updated: ", data)
+        })
+        .catch(error => {
+            console.error("Error updating tag: ", error)
+        })
     }
 
     return (
@@ -67,13 +102,13 @@ function TagDropdown( {articleID}: TagDropdownProps) {
             <Select
                 labelId="tag-dropdown-label"
                 id="tag-dropdown"
-                value={selectedTag}
+                value={selectedTagID.toString()}
                 onChange={tagChanged}
                 label="Tag"
             >
                 {tags.map((tag, index) => (
-                    <MenuItem key={index} value={tag}>
-                        {tag}
+                    <MenuItem key={tag.ID} value={tag.ID.toString()}>
+                        {tag.TagName}
                     </MenuItem>
                 ))}
             </Select>
