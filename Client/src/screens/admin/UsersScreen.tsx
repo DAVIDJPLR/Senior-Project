@@ -1,7 +1,7 @@
 import AdminAppBar from "../../components/AdminAppBar";
 import { Screen } from "../../custom_objects/Screens";
 import AdminCard from "../../components/AdminCard";
-import { Typography, Button, Popover, Modal, Table, TableBody, TableRow, TableCell, TableContainer, DialogContent, DialogTitle, Dialog, DialogContentText, DialogActions } from "@mui/material";
+import { Typography, Button, Popover, Modal, Table, TableBody, TableRow, TableCell, TableContainer, DialogContent, DialogTitle, Dialog, DialogContentText, DialogActions, useTheme } from "@mui/material";
 import SearchBar from "../../components/SearchBar";
 import { useState, useEffect } from "react";
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
@@ -24,6 +24,7 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
     const [selectedAdmin, setSelectedAdmin] = useState<PartialUser | null>(null)
 
     const isMobile = useMediaQuery({ maxWidth: 767 });
+    const theme = useTheme();
 
     const [refresh, setRefresh] = useState(false);
 
@@ -79,21 +80,20 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
                     <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
                 </div>
             )}
-            <div style={{ width: "90%", height: "10%", display: "flex", flexDirection: "column", alignItems: "end", justifyContent: "center" }}>
-                <Button
-                    aria-label="Add admin User"
-                    variant="outlined"
-                    sx={{ height: "40px", width: "40px", borderWidth: "0px", padding: 0, borderRadius: "50%", display: "flex", justifyContent: "center", minWidth: 0, zIndex: 9000 }}
-                    onClick={handleClick}
-                >
-                    <AddCircleOutlineIcon sx={{ height: "40px", width: "40px" }} />
-                </Button>
-            </div>
 
-            <div style={{ width: "100%", height: "85%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto" }}>
-                <div style={{height: "3%"}}></div>
-                <SearchBar setSearchVal={setSearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={'small'} />
-                <Typography style={{ fontSize: "24px", fontWeight: "600" }}>Current Administrators</Typography>
+            <div style={{ width: "100%", height: "95%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto", backgroundColor: theme.palette.secondary.main }}>
+                <div style={{width: "100%", height: "10%", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-evenly", marginTop: "10px"}}>
+                    <SearchBar setSearchVal={setSearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={'small'} />
+                    <Button
+                        aria-label="Add admin User"
+                        variant="outlined"
+                        sx={{ height: "40px", width: "40px", borderWidth: "0px", padding: 0, borderRadius: "50%", display: "flex", justifyContent: "center", minWidth: 0, zIndex: 9000 }}
+                        onClick={handleClick}
+                    >
+                        <AddCircleOutlineIcon sx={{ height: "40px", width: "40px", color: "white" }} />
+                    </Button>
+                </div>
+                <Typography style={{ fontSize: "24px", fontWeight: "600", color: "white" }}>Current Administrators</Typography>
                 {admins?.map((admin) => <AdminCard user={admin} key={admin.ID} width={isMobile ? "90%" : "60%"}
                     onClick={() => {
                         setSelectedAdmin(admin);
