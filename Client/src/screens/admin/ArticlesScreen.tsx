@@ -275,4 +275,16 @@ function createEmptyArticle(): PartialArticle {
     };
 }
 
+function createEmptyArticle(): PartialArticle {
+    return {
+        ID: -1,
+        Title: "",
+        Content: "",
+        Article_Description: "",
+        Image: "",
+        ThumbsUp: 0,
+        ThumbsDown: 0
+    };
+}
+
 export default AdminArticles;

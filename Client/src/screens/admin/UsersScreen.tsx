@@ -1,7 +1,7 @@
 import AdminAppBar from "../../components/AdminAppBar";
 import { Screen } from "../../custom_objects/Screens";
 import AdminCard from "../../components/AdminCard";
-import { Typography, Button, Popover, Modal, Table, TableBody, TableRow, TableCell, TableContainer, DialogContent, DialogTitle, Dialog, DialogContentText, DialogActions } from "@mui/material";
+import { Typography, Button, Popover, Modal, Table, TableBody, TableRow, TableCell, TableContainer, DialogContent, DialogTitle, Dialog, DialogContentText, DialogActions, useTheme } from "@mui/material";
 import SearchBar from "../../components/SearchBar";
 import { useState, useEffect } from "react";
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
@@ -24,6 +24,7 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
     const [selectedAdmin, setSelectedAdmin] = useState<PartialUser | null>(null)
 
     const isMobile = useMediaQuery({ maxWidth: 767 });
+    const theme = useTheme();
 
     const [refresh, setRefresh] = useState(false);
 
