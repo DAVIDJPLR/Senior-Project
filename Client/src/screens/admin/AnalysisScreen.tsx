@@ -1,6 +1,6 @@
 import AdminAppBar from "../../components/AdminAppBar";
 import { Screen } from "../../custom_objects/Screens";
-import { TableContainer, Table, TableHead, TableRow, TableCell, Typography, TableBody } from "@mui/material";
+import { TableContainer, Table, TableHead, TableRow, TableCell, Typography, TableBody, useTheme } from "@mui/material";
 import { PartialArticle } from "../../custom_objects/models";
 import { useState, useEffect } from "react";
 import { useMediaQuery } from "react-responsive"; 
@@ -17,6 +17,7 @@ function AdminAnalysis({ currentScreen, setCurrentScreen }: Props){
     const sixtyDaysAgoInSeconds = (currentTime - tenDaysInMilliseconds)/1000;
 
     const isMobile = useMediaQuery({ maxWidth: 767 });
+    const theme = useTheme();
 
     const lstSize = 10;
     
@@ -59,8 +60,8 @@ function AdminAnalysis({ currentScreen, setCurrentScreen }: Props){
                     <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
                 </div>
             )}
-            <div style={{ width: "100%", height: "95%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "10px", overflow: "auto" }}>
-                <TableContainer sx={{border: 1, borderWidth: 1, borderRadius: "4px", borderColor: "gray", height: "98%", width: "98%"}}>
+            <div style={{ width: "100%", height: "95%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "10px", overflow: "auto", backgroundColor: theme.palette.secondary.main }}>
+                <TableContainer className="HaveShadow" sx={{border: 1, borderWidth: 1, borderRadius: "4px", borderColor: "gray", height: "98%", width: "98%", backgroundColor: "white"}}>
                     <Table stickyHeader size="small">
                         <TableHead>
                             <TableRow>

@@ -189,6 +189,56 @@ class Articles(MethodView):
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
 
+@apiv1.route("/article/tag", methods=["OPTIONS", "GET", "PUT"])
+class ArticleTag(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                id = request.args.get("ID")
+                if id:
+                    article: models.Article = models.Article.query.filter_by(ID=id).first()
+                    if article:
+                        tag: models.Tag = article.Tags[0]
+                        tags: list[models.Tag] = models.Tag.query.all()
+                        
+                        return{
+                            'tag': tag.TagName,
+                            'tags': [tag.TagName for tag in tags]
+                        }, 200
+                    else:
+                        return {'msg': 'No such article'}, 404
+                else:
+                    return {'msg': 'No article id specified'}, 400
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+    def put(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session and 3 in session['current_user_privileges']:
+                id = request.args.get("ID")
+                tagName = request.args.get("TagName")
+                if id and tagName:
+                    tag: models.Tag = models.Tag.query.filter_by(TagName=tagName).first()
+                    article: models.Article = models.Article.query.filter_by(ID=id).first()
+                    
+                    article.Tags = [tag]
+                    db.session.commit()
+                    
+                    return {'msg': 'Article tag updated successfully'}, 200
+                else:
+                    return {'msg': 'No article id or tag name specified'}, 400
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+
 @apiv1.route("/article", methods=["OPTIONS", "GET", "POST", "PUT"])
 class Article(MethodView):
     def options(self):
@@ -1375,27 +1425,43 @@ class SystemStatsSearch(MethodView):
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 if len(session['current_user_privileges']) > 0:
                     searchQuery = request.args.get("searchQuery")
-                    tagName = request.args.get("tagName")
+                    tags = request.args.get("tags")
+                    if len(tags) > 0:
+                        tagNames = tags.split(",")
+                    else:
+                        tagNames = []
 
-                    articlesQuery = models.Article.query.filter(
-                        or_(
-                            models.Article.Title.ilike(f"%{searchQuery}%"),
-                            models.Article.Content.ilike(f"%{searchQuery}%"),
-                            models.Article.Article_Description.ilike(f"%{searchQuery}%")
-                        )
-                    ).all()
+                    if len(searchQuery) > 0:
+                        articlesQuery: list[models.Article] = models.Article.query.filter(
+                            or_(
+                                models.Article.Title.ilike(f"%{searchQuery}%"),
+                                models.Article.Content.ilike(f"%{searchQuery}%"),
+                                models.Article.Article_Description.ilike(f"%{searchQuery}%")
+                            )
+                        ).all()
 
-                    tag: models.Tag = models.Tag.query.filter_by(tagName=tagName).first()
-                    articlesTag: list[models.Article] = tag.Articles
-                    totalArticles = []
+                        tagIds: list[int] = []
+                        if len(tagNames) > 0:
+                            for tag in tagNames:
+                                tagId = models.Tag.query.filter_by(TagName=tag).first().ID
+                                tagIds.append(tagId)
+                        
+                        totalArticles: list[models.Article] = []
 
-                    for x in articlesQuery:
-                        for y in articlesTag:
-                            if x.ID == y.ID:
-                                totalArticles.append(x)
-                
+                        for x in articlesQuery:
+                            for tag in x.Tags:
+                                if tag.ID in tagIds or len(tagIds) == 0:
+                                    totalArticles.append(x)
+                                    break
+                    
+                    else:
+                        totalArticles = []
+                        if len(tagNames) > 0:
+                            for tag in tagNames:
+                                actualTag: list[models.Tag] = models.Tag.query.filter_by(TagName=tag).first()
+                                totalArticles.extend(actualTag.Articles)
+                        
                     returnableArticles = [article.toJSONPartial() for article in totalArticles]
-                    db.session.commit()
                     
                     return {'results': returnableArticles}, 200
                 else:
