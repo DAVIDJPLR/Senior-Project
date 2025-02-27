@@ -43,7 +43,7 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
     const theme = useTheme();
 
     const loadPrivileges = async () => {
-            const response = await fetch('http://localhost:5000/api/v1/admin/privileges', {
+            const response = await fetch('http://localhost:5000/api/v1/user/info', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -53,8 +53,8 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
     
             const data = await response.json();
     
-            setPrivileges(data.privileges as PartialAdminPrivilege[])
-            const temp1 = data.privileges as PartialAdminPrivilege[]
+            setPrivileges(data.current_privileges as PartialAdminPrivilege[])
+            const temp1 = data.current_privileges as PartialAdminPrivilege[]
             const temp2 = temp1.map(priv => priv.ID)
             setPrivilegesIDs(temp2)
     }

@@ -122,7 +122,8 @@ class UserLogin(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-    
+
+# Grabs and returns user info (including admin privileges)
 @apiv1.route("/user/info", methods=["OPTIONS", "GET"])
 class UserInfo(MethodView):
     def options(self):
@@ -544,7 +545,8 @@ class User(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-        
+
+# Returns ALL admin privileges for testing purposes (Does NOT get an individual admin's privileges)
 @apiv1.route("/admin/privileges", methods=["OPTIONS", "GET"])
 class AdminPrivileges(MethodView):
     def options(self):
@@ -553,8 +555,7 @@ class AdminPrivileges(MethodView):
         try:
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 if len(session['current_user_privileges']) > 0:
-                    priv = session['current_user_privileges'][0]
-                    privileges: list[models.AdminPrivilege] = models.AdminPrivilege.query.filter(models.AdminPrivilege.ID <= priv).all()
+                    privileges: list[models.AdminPrivilege] = models.AdminPrivilege.query.all()
                     returnablePrivileges = [priv.toJSONPartial() for priv in privileges]
                     return {'privileges': returnablePrivileges}, 200
                 else:
