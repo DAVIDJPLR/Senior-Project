@@ -1,11 +1,12 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Modal, Typography }  from '@mui/material';
 import ThumbDownAltOutlinedIcon from '@mui/icons-material/ThumbDownAltOutlined';
 import ThumbUpAltOutlinedIcon from '@mui/icons-material/ThumbUpAltOutlined';
 import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
 import { PartialArticle } from '../custom_objects/models';
-import { createEditor } from 'slate';
+import { createEditor, Descendant } from 'slate';
 import { Slate, Editable, withReact } from 'slate-react'
+import { renderLeaf, renderElement } from './slate components/TextRenderers';
 
 interface Props {
     handleClose: () => void;
@@ -81,7 +82,10 @@ function ArticleModal({ handleClose, open, article }: Props) {
                         <div style={{width: "90%", minHeight: "65%"}}>
                             {/* <Typography sx={{textAlign: "left", fontSize: "16px", fontWeight: "400"}}>{article.Content}</Typography> */}
                             <Slate editor={editor} initialValue={JSON.parse(article.Content)}>
-                                <Editable readOnly />
+                                <Editable readOnly
+                                    renderElement = {renderElement}
+                                    renderLeaf = {renderLeaf}
+                                />
                             </Slate>
                         </div>
                         <div style={{width: "90%", height: "20%", display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: "10px"}}>

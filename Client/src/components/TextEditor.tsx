@@ -8,6 +8,7 @@ import { FormatBold, FormatItalic, FormatUnderlined, FormatQuote,
         Code, Title } from '@mui/icons-material'
 import { PartialArticle } from '../custom_objects/models'
 import TagDropdown from './TagDropdown'
+import { renderLeaf, renderElement } from './slate components/TextRenderers'
 
 
 
@@ -248,20 +249,6 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
   )
 }
 
-const serialize = (value: Descendant[]): string => {
-  return (
-    value.map(n => Node.string(n)).join('\n')
-  )
-}
-
-const deserialize = (string: string): Descendant[] => {
-  return string.split('\n').map(line => {
-    return {
-      children: [{ text: line }],
-    }
-  })
-}
-
 const CustomEditor = {
   isBoldMarkActive(editor: Editor) {
       const marks = Editor.marks(editor)
@@ -323,67 +310,6 @@ const CustomEditor = {
   },
 }
 
-
-
-const Leaf = props => {
-  return (
-    <span
-      {...props.attributes}
-      style={{
-        fontWeight: props.leaf.bold ? 'bold' : 'normal',
-        fontStyle: props.leaf.italic ? 'italic' : 'normal',
-        textDecoration: props.leaf.underline ? 'underline' : 'none',  
-      }}
-    >
-      {props.children}
-    </span>
-  )
-}
-
-const renderLeaf = props => {
-  return <Leaf {...props} />
-}
-
-const renderElement = props => {
-  switch (props.element.type) {
-    case 'code':
-      return <CodeElement {...props} />
-    case 'block-quote':
-      return <BlockQuote {...props} />
-    case 'heading-one':
-      return <h1 {...props.attributes}>{props.children}</h1>
-    case 'bulleted-list':
-      return (<ul {...props.attributes} style={{ paddingLeft: '24px', listStyleType: 'circle #ddd'}}>
-        {props.children}
-      </ul>)
-    case 'numbered-list':
-      return <ol {...props.attributes} style={{ paddingLeft: '24px', listStyleType: 'decimal #ddd'}}>
-        {props.children}</ol>
-    default:
-      return <DefaultElement {...props} />
-  }
-}
-
-const CodeElement = props => {
-  return (
-    <pre {...props.attributes} style={{ background: '#f4f4f4', padding: '8px', borderRadius: '4px'}}>
-      <code>{props.children}</code>
-    </pre>
-  )
-}
-
-const BlockQuote = props => {
-  return (
-    <blockquote {...props.attributes} style={{ borderLeft: '4px solid #ddd', paddingLeft: '8px', color: '#666' }}>
-          {props.children}
-    </blockquote>
-  )
-}
-
-const DefaultElement = props => {
-  return <p {...props.attributes}>{props.children}</p>
-}
-
 interface ToolbarProps {
   editor: Editor
   articleID: number
@@ -425,7 +351,7 @@ const Toolbar = ({editor, articleID}: ToolbarProps) => {
         >
           <FormatUnderlined/>
         </IconButton>
-        <IconButton
+        {/* <IconButton
         size="small"
           onMouseDown={(event) => {
             event.preventDefault()
@@ -474,7 +400,7 @@ const Toolbar = ({editor, articleID}: ToolbarProps) => {
         aria-label="Numbered List"
         >
           <FormatListNumbered/>
-        </IconButton>
+        </IconButton> */}
         <div style={{flexGrow: 1}} />
         <TagDropdown articleID={articleID}/>
       </MuiToolbar>
