@@ -316,7 +316,7 @@ class Article(MethodView):
                         if not article:
                             return {'msg': 'Article not found'}, 404
                         article.Title = title
-                        article.Content = content
+                        article.Content = json.dumps(content)
                         article.Article_Description = desc
                         article.Image = image
 
@@ -553,7 +553,8 @@ class AdminPrivileges(MethodView):
         try:
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 if len(session['current_user_privileges']) > 0:
-                    privileges: list[models.AdminPrivilege] = models.AdminPrivilege.query.all()
+                    priv = session['current_user_privileges'][0]
+                    privileges: list[models.AdminPrivilege] = models.AdminPrivilege.query.filter(models.AdminPrivilege.ID <= priv).all()
                     returnablePrivileges = [priv.toJSONPartial() for priv in privileges]
                     return {'privileges': returnablePrivileges}, 200
                 else:

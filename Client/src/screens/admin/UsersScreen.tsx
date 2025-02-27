@@ -30,6 +30,9 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
 
     const [admins, setAdmins] = useState<PartialUser[]>([])
 
+    const [privileges, setPrivileges] = useState<PartialAdminPrivilege[]>([]);
+    const [privilegeIDs, setPrivilegesIDs] = useState([0])
+
     const loadAdmins = async () => {
         const response = await fetch('http://localhost:5000/api/v1/admins', {
             method: 'GET',
@@ -45,15 +48,34 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
         setAdmins(data.admins as PartialUser[])
     }
 
+    const loadPrivileges = async () => {
+        const response = await fetch('http://localhost:5000/api/v1/admin/privileges', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+
+        setPrivileges(data.privileges as PartialAdminPrivilege[])
+        const temp1 = data.privileges as PartialAdminPrivilege[]
+        const temp2 = temp1.map(priv => priv.ID)
+        setPrivilegesIDs(temp2)
+    }
+
     useEffect(() => {
         if (refresh === true){
             loadAdmins()
+            loadPrivileges()
         }
         setRefresh(false)
     }, [refresh])
 
     useEffect(() => {
         loadAdmins()
+        loadPrivileges()
     }, []);
 
     const handleKeyUp = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -73,61 +95,84 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
     const open = Boolean(anchorEl);
     const id = open ? 'simple-popover' : undefined;
 
-    return (
-        <div style={{ width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center" }}>
-            {!isMobile && (
-                <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
-                    <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
-                </div>
-            )}
+    while (privilegeIDs[0] === 0) {
 
-            <div style={{ width: "100%", height: "95%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto", backgroundColor: theme.palette.secondary.main }}>
-                <div style={{width: "100%", height: "10%", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-evenly", marginTop: "10px"}}>
-                    <SearchBar setSearchVal={setSearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={'small'} />
-                    <Button
-                        aria-label="Add admin User"
-                        variant="outlined"
-                        sx={{ height: "40px", width: "40px", borderWidth: "0px", padding: 0, borderRadius: "50%", display: "flex", justifyContent: "center", minWidth: 0, zIndex: 9000 }}
-                        onClick={handleClick}
-                    >
-                        <AddCircleOutlineIcon sx={{ height: "40px", width: "40px", color: "white" }} />
-                    </Button>
-                </div>
-                <Typography style={{ fontSize: "24px", fontWeight: "600", color: "white" }}>Current Administrators</Typography>
-                {admins?.map((admin) => <AdminCard user={admin} key={admin.ID} width={isMobile ? "90%" : "60%"}
-                    onClick={() => {
+        return (
+            <div>
+                <p>Loading...</p>
+            </div>
+        );
+    }
+
+    while (privilegeIDs[0] !== 0) {
+
+        return (
+            
+        <div style={{ width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center" }}>
+        {!isMobile && (
+            <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
+            </div>
+        )}
+        {privilegeIDs.includes(5) && (
+            <div style={{ width: "90%", height: "10%", display: "flex", flexDirection: "column", alignItems: "end", justifyContent: "center" }}>
+            <Button
+                aria-label="Add admin User"
+                variant="outlined"
+                sx={{ height: "40px", width: "40px", borderWidth: "0px", padding: 0, borderRadius: "50%", display: "flex", justifyContent: "center", minWidth: 0, zIndex: 9000 }}
+                onClick={handleClick}
+            >
+                <AddCircleOutlineIcon sx={{ height: "40px", width: "40px" }} />
+            </Button>
+        </div>
+        )}
+        
+
+        <div style={{ width: "100%", height: "85%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto" }}>
+            <div style={{height: "3%"}}></div>
+            <SearchBar setSearchVal={setSearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={'small'} />
+            <Typography style={{ fontSize: "24px", fontWeight: "600" }}>Current Administrators</Typography>
+            {admins?.map((admin) => <AdminCard user={admin} key={admin.ID} width={isMobile ? "90%" : "60%"}
+                onClick={() => {
+                    if (privilegeIDs.includes(5)) {
                         setSelectedAdmin(admin);
                         setOpenAdminModal(true);
-                    }} />)}
-            </div>
-
-            
-            {isMobile && (
-                <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
-                    <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
-                </div>
-            )}
-            <Popover
-                id={id}
-                open={open}
-                anchorEl={anchorEl}
-                onClose={handleClose}
-                anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'center',
-                }}
-                transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'center',
-                }}
-                sx={{zIndex: 9999}}
-            >
-                <UserModal handleClose={handleClose} setRefresh={setRefresh} />
-            </Popover>
-
-            <AdminModal open={openAdminModal} handleClose={ () => {setOpenAdminModal(false)} } selectedAdmin={selectedAdmin} setRefresh={setRefresh} ></AdminModal>
+                    }
+                    else {
+                        
+                    }
+                    
+                }} />)}
         </div>
-    );
+
+        
+        {isMobile && (
+            <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
+            </div>
+        )}
+        <Popover
+            id={id}
+            open={open}
+            anchorEl={anchorEl}
+            onClose={handleClose}
+            anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'center',
+            }}
+            transformOrigin={{
+                vertical: 'top',
+                horizontal: 'center',
+            }}
+            sx={{zIndex: 9999}}
+        >
+            <UserModal handleClose={handleClose} setRefresh={setRefresh} />
+        </Popover>
+
+        <AdminModal open={openAdminModal} handleClose={ () => {setOpenAdminModal(false)} } selectedAdmin={selectedAdmin} setRefresh={setRefresh} ></AdminModal>
+    </div>
+        );
+    }
 }
 
 interface AdminModalProps{
