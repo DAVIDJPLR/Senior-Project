@@ -8,12 +8,12 @@ interface Props{
     size: 'small' | 'medium';
 }
 
-function SearchBar({setSearchVal, searchVal, handleKeyUp, size}: Props){
+function AdminSearchBar({setSearchVal, searchVal, handleKeyUp, size}: Props){
     return(
-        <TextField variant="outlined" size={size} sx={{width: "90%", "& .MuiOutlinedInput-root": {borderRadius: 8}, backgroundColor: "white", borderRadius: "30px", color: "black"}} 
+        <TextField variant="outlined" size={size} sx={{width: "90%", "& .MuiOutlinedInput-root": {borderRadius: 8}, marginTop: "10px", backgroundColor: "white", borderRadius: "30px", color: "black"}} 
         onChange={(e) => setSearchVal(e.target.value)}
+        className= "HaveShadow"
         value={searchVal}
-        className="HaveShadow"
         onKeyUp={handleKeyUp}
         slotProps={{
             input: {
@@ -26,4 +26,4 @@ function SearchBar({setSearchVal, searchVal, handleKeyUp, size}: Props){
     );
 }
 
-export default SearchBar;
+export default AdminSearchBar;
