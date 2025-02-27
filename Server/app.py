@@ -1,11 +1,12 @@
 import os
 
-from flask import Flask, session, redirect, render_template, request, url_for
+from flask import Flask, session, redirect, render_template, request, url_for, jsonify
+from werkzeug.utils import secure_filename
+import posixpath as psx
 from flask_cors import CORS, cross_origin
 from flask_sqlalchemy import SQLAlchemy
 
 scriptdir = os.path.abspath(os.path.dirname(__file__))
-
 app = Flask(__name__)
 
 # The supports_credentials argument ensures that cookies get passed back 
@@ -16,6 +17,9 @@ CORS(app, supports_credentials=True, origins=['http://localhost:5173'])
 app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://root:C0dePr0j$@10.18.103.22:3306/helpgccedu"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+# app.config['UPLOAD_FOLDER'] = 'C:\\helpgccedu\\images'
+app.config['UPLOAD_FOLDER'] = r"C:\Senior Project\Senior-Project\Server\static"
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg'}
 
 # TODO: Change secret key to something more secure at some point
 app.config['SECRET_KEY'] = 'correcthorsebatterystaple'

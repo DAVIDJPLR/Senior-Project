@@ -21,6 +21,8 @@ export const renderLeaf = props => {
   
 export const renderElement = props => {
     switch (props.element.type) {
+      case 'image':
+        return <ImageElement {...props} />
       case 'code':
         return <CodeElement {...props} />
       case 'block-quote':
@@ -58,3 +60,14 @@ export const renderElement = props => {
   const DefaultElement = props => {
     return <p {...props.attributes}>{props.children}</p>
   }
+
+const ImageElement = ({attributes, children, element}) => {
+  return (
+    <div {...attributes}>
+      <div contentEditable={false}>
+        <img src={element.url} alt="" style={{maxWidth: "100%", display: "block", margin: "0 auto"}}/>
+      </div>
+      {children}
+    </div>
+  )
+}

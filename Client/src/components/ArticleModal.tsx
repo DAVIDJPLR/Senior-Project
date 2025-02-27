@@ -6,7 +6,7 @@ import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
 import { PartialArticle } from '../custom_objects/models';
 import { createEditor, Descendant } from 'slate';
 import { Slate, Editable, withReact } from 'slate-react'
-import { renderLeaf, renderElement } from './slate components/TextRenderers';
+import { renderLeaf, renderElement } from './slate components/Renderers';
 
 interface Props {
     handleClose: () => void;
@@ -72,14 +72,14 @@ function ArticleModal({ handleClose, open, article }: Props) {
             sx={{display: 'flex', alignItems: 'center', justifyContent: 'center', height: "100%", width: "100%"}}
         >
             <div
-                style={{height: '70%', width: '80%', backgroundColor: 'white', padding: '20px', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}
+                style={{height: '70%', width: '80%', backgroundColor: 'white', padding: '20px', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: "auto"}}
             >
                 {article ?(
                     <>
                         <div style={{width: "100%", height: "10%"}}>
                             <Typography sx={{textAlign: "center", fontSize: "20px", fontWeight: "600"}}>{article.Title}</Typography>
                         </div>
-                        <div style={{width: "90%", minHeight: "65%"}}>
+                        <div style={{width: "90%", height: "70%"}}>
                             {/* <Typography sx={{textAlign: "left", fontSize: "16px", fontWeight: "400"}}>{article.Content}</Typography> */}
                             <Slate editor={editor} initialValue={JSON.parse(article.Content)}>
                                 <Editable readOnly
