@@ -123,7 +123,8 @@ class UserLogin(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-    
+
+# Grabs and returns user info (including admin privileges)
 @apiv1.route("/user/info", methods=["OPTIONS", "GET"])
 class UserInfo(MethodView):
     def options(self):
@@ -279,6 +280,15 @@ class Article(MethodView):
                         content: str = article.get('Content')
                         desc: str = article.get('Article_Description')
                         image: str = article.get('Image')
+
+                        if len(title) > 100:
+                            return {'msg': 'Article title length exceeds database limit of 100 characters.'}, 400
+                        if len(content) > 5000:
+                            return {'msg': 'Article content length exceeds database limit of 5000 characters.'}, 400
+                        if len(desc) > 500:
+                            return {'msg': 'Article description length exceeds database limit of 500 characters.'}, 400
+                        if len(image) > 100:
+                            return {'msg': 'Article image path length exceeds database limit of 100 characters.'}, 400
             
                         article = Article(Title=title, Content=content,
                                         Article_Description=desc,
@@ -312,6 +322,15 @@ class Article(MethodView):
                         content: str = article_updated.get('Content')
                         desc: str = article_updated.get('Article_Description')
                         image: str = article_updated.get('Image')
+
+                        if len(title) > 100:
+                            return {'msg': 'Updated article title length exceeds database limit of 100 characters.'}, 400
+                        if len(content) > 5000:
+                            return {'msg': 'Updated article content length exceeds database limit of 5000 characters.'}, 400
+                        if len(desc) > 500:
+                            return {'msg': 'Updated article description length exceeds database limit of 500 characters.'}, 400
+                        if len(image) > 100:
+                            return {'msg': 'Updated article image path length exceeds database limit of 100 characters.'}, 400
 
                         article = models.Article.query.filter(models.Article.ID == id).first()
                         if not article:
@@ -545,7 +564,8 @@ class User(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-        
+
+# Returns ALL admin privileges for testing purposes (Does NOT get an individual admin's privileges)
 @apiv1.route("/admin/privileges", methods=["OPTIONS", "GET"])
 class AdminPrivileges(MethodView):
     def options(self):
@@ -763,6 +783,9 @@ class Category(MethodView):
                     data = request.json()
                     if data:
                         tagName = data.get("TagName")
+                        if len(tagName) > 30:
+                            return {'msg': 'Category name exceeds database limit of 30 characters.'}, 400
+
                         newCategory = models.MetaTag(TagName=tagName)
 
                         db.session.add(newCategory)
@@ -788,6 +811,8 @@ class Category(MethodView):
                     if category_updated:
                         id: int = category_updated.get("ID")
                         tagName: str = category_updated.get('TagName')
+                        if len(tagName) > 30:
+                            return {'msg': 'Category name exceeds database limit of 30 characters.'}, 400
 
                         category = models.MetaTag.query.filter(models.MetaTag.ID == id).first()
                         if not category:
@@ -938,8 +963,13 @@ class Search(MethodView):
                 ).all()
 
                 returnedArticles = [article.toJSONPartial() for article in articles]
-                
-                search = models.Search(SearchQuery=searchQuery, UserID=session.get('current_user_id'))
+
+                if len(searchQuery) > 500:
+                    truncatedQuery: str = searchQuery[:500]
+                else:
+                    truncatedQuery: str = searchQuery
+
+                search = models.Search(SearchQuery=truncatedQuery, UserID=session.get('current_user_id'))
                 db.session.add(search)
                 
                 topResult = articles[0] if len(articles) > 0 else None
@@ -1278,7 +1308,12 @@ class NoSolution(MethodView):
                 if data:
                     content = data.get("content")
                     if content:
-                        newNoSolution: models.NoSolution = models.NoSolution(Content=content, UserID=session["current_user_id"])
+                        if len(content) > 500:
+                            truncatedContent: str = content[:500]
+                        else:
+                            truncatedContent: str = content
+
+                        newNoSolution: models.NoSolution = models.NoSolution(Content=truncatedContent, UserID=session["current_user_id"])
                         db.session.add(newNoSolution)
                         db.session.commit()
                         return {'NoSolution': newNoSolution.toJSON()}, 201
@@ -1308,7 +1343,30 @@ class Feedback(MethodView):
                     userID = session['current_user_id']
                     articleID = data.get("ArticleID")
                     
+                    oldFeedback: models.Feedback = models.Feedback.query.filter(
+                        and_(
+                            models.Feedback.UserID == userID,
+                            models.Feedback.ArticleID == articleID)
+                    ).first()
+
                     article: models.Article = models.Article.query.filter_by(ID=articleID).first()
+
+                    if oldFeedback:
+                        if positive == True and oldFeedback.Positive == False:
+                            article.ThumbsUp = (article.ThumbsUp + 1) if article.ThumbsUp else 1
+                            article.ThumbsDown = (article.ThumbsDown - 1) if article.ThumbsDown else 0
+                        elif positive == False and oldFeedback.Positive == True:
+                            article.ThumbsUp = (article.ThumbsUp - 1) if article.ThumbsUp else 0
+                            article.ThumbsDown = (article.ThumbsDown + 1) if article.ThumbsDown else 1
+                        else:
+                            return {'msg': 'No update made in request'}, 400
+                        
+                        oldFeedback.Positive = positive
+                        oldFeedback.Submission_Time = submission_time
+
+                        db.session.commit()
+                        return {'Feedback': oldFeedback.toJSON()}, 201
+
                     if positive == True:
                         if article.ThumbsUp:
                             article.ThumbsUp = article.ThumbsUp + 1
