@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Modal, Typography }  from '@mui/material';
 import ThumbDownAltOutlinedIcon from '@mui/icons-material/ThumbDownAltOutlined';
 import ThumbUpAltOutlinedIcon from '@mui/icons-material/ThumbUpAltOutlined';
@@ -14,7 +14,43 @@ interface Props {
     article: PartialArticle | null;
 }
 
+interface getFeedbackProps {
+    articleID: number
+}
+
+function getFeedback({articleID}: getFeedbackProps): {exists: boolean; positive?: boolean} {
+    fetch(`http://localhost:5000/api/v1/feedback?articleID=${articleID}`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Feedback retrieval failed")
+          }
+          return response.json()
+        })
+        .then(data => {
+          console.log("Feedback data:", data)
+          if (data.exists) {
+            return {exists: true, positive: data.positive}
+          } else {
+            return {exists: false}
+          }
+        })
+        .catch(error => {
+          console.error("Error getting feedback:", error)
+          return {exists: false}
+        })
+    return {exists: false}
+}
+
 function ArticleModal({ handleClose, open, article }: Props) {
+
+    const [exists, setExists] = useState(false)
+    const [oldValue, setOldValue] = useState<boolean | null>(null)
 
     const articleURL: string = "URL_" + article?.Title;
 
@@ -27,40 +63,66 @@ function ArticleModal({ handleClose, open, article }: Props) {
             console.error('Failed to copy: ', err);
         });
     };
-    
+
+    useEffect(() => {
+        if (article && open) {
+            const potentiallyFeedback = getFeedback({articleID: article.ID})
+            if (potentiallyFeedback.exists) {
+                setExists(true)
+                setOldValue(potentiallyFeedback.positive ?? null)
+            } else {
+                setExists(false)
+            }
+        }
+    }, [article, open])
+
+    var upColor = exists ? (oldValue ? 'green' : 'grey') : 'black'
+    var downColor = exists ? (oldValue ? 'grey' : 'red') : 'black'
+
     const handleFeedback = (feedback: 'up' | 'down') => {
         
         if (!article) return;
         
-            const payload = {
-                Positive: feedback === 'up',
-                ArticleID: article.ID
-            };
-    
-            fetch('http://localhost:5000/api/v1/feedback', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include',
-                body: JSON.stringify(payload),
-            })
-                .then(response => {
-                    if(!response.ok) {
-                        throw new Error('Feedback submission failed')
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log("Feedback submitted successfully: ", data)
-                    // could display confirmation message here
-                })
-                .catch(error => {
-                     console.error("Error submitting feedback: ", error)
-            })
+        upColor = exists ? (oldValue ? 'green' : 'grey') : 'black'
+        downColor = exists ? (oldValue ? 'grey' : 'red') : 'black'
         
-    };
+        if (!exists) {
+            setExists(true)
+            setOldValue(feedback === 'up')
+        } else {
+            if (oldValue !== (feedback === 'up')) {
+                setOldValue(feedback === 'up')
+            }
+        }
+
+        const payload = {
+            Positive: feedback === 'up',
+            ArticleID: article.ID
+        };
     
+        fetch('http://localhost:5000/api/v1/feedback', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(payload),
+        })
+        .then(response => {
+            if(!response.ok) {
+                throw new Error('Feedback submission failed')
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log("Feedback submitted successfully: ", data)
+            // could display confirmation message here
+        })
+        .catch(error => {
+            console.error("Error submitting feedback: ", error)
+        })
+    };
+
     return(
         <Modal 
             open={open}
@@ -93,12 +155,12 @@ function ArticleModal({ handleClose, open, article }: Props) {
                                 <ThumbUpAltOutlinedIcon sx={{cursor: 'pointer',
                                                              width: "64px",
                                                              height: "64px",
-                                                             color: 'black'}}
+                                                             color: upColor}}
                                                         onClick={() => handleFeedback('up')}/>
                                 <ThumbDownAltOutlinedIcon sx={{cursor: 'pointer',
                                                                width: "64px",
                                                                height: "64px",
-                                                               color: 'black'}}
+                                                               color: downColor}}
                                                         onClick={() => handleFeedback('down')}/>
                             </div>
                         </div>
