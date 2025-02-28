@@ -95,6 +95,18 @@ function BrowseArticles({currentCategory, setCurrentCategory, setViewArticles}: 
         setArticles((data.category as MetaTag).Articles)
     }
 
+    const logView = async(article: PartialArticle) => {
+        const response = await fetch(`http://localhost:5000/api/v1/article?articleID=${article.ID}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        console.log("Article view logged.")
+    }
+
     return(
         <div style={{width: "100%", height: "95%", display: "flex", flexDirection: "column", alignItems: "center"}}>
             <div style={{width: "100%", height: "5%", display: "flex", flexDirection: "row", alignItems: "center", marginBottom: "10px", paddingTop: "5%"}}>
@@ -109,6 +121,7 @@ function BrowseArticles({currentCategory, setCurrentCategory, setViewArticles}: 
                     return <ArticleCard onClick={() => {
                         setCurrentArticle(article);
                         setOpenArticleModal(true)
+                        logView(article)
                     }} article={article} lineNumber={3} key={article.ID}/>;
                 })}
             </div>

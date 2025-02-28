@@ -1423,11 +1423,25 @@ class NoSolution(MethodView):
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
         
-@apiv1.route("/feedback", methods=["OPTIONS", "POST"])
+@apiv1.route("/feedback", methods=["OPTIONS", "GET", "POST"])
 class Feedback(MethodView):
     def options(self):
         return '', 200
-
+    def get(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                    user = session['current_user_id']
+                    article = request.args.get("articleID")
+                    recentFeedback: models.Feedback = models.Feedback.query.filter(models.Feedback.UserID == user, models.Feedback.ArticleID == article).first()
+                    if recentFeedback:
+                        return {"exists": True, "positive": recentFeedback.Positive}
+                    else:
+                        return {"exists": False}
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f'Error: {e}'}
+        
     def post(self):
         try:
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
@@ -1439,9 +1453,8 @@ class Feedback(MethodView):
                     articleID = data.get("ArticleID")
                     
                     oldFeedback: models.Feedback = models.Feedback.query.filter(
-                        and_(
-                            models.Feedback.UserID == userID,
-                            models.Feedback.ArticleID == articleID)
+                        models.Feedback.UserID == userID,
+                        models.Feedback.ArticleID == articleID
                     ).first()
 
                     article: models.Article = models.Article.query.filter_by(ID=articleID).first()

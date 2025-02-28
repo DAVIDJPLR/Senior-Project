@@ -37,6 +37,18 @@ function StudentRecent({ currentScreen, setCurrentScreen }: Props){
         }
     }
 
+    const logView = async(article: PartialArticle) => {
+        const response = await fetch(`http://localhost:5000/api/v1/article?articleID=${article.ID}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        console.log("Article view logged.")
+    }
+
     useEffect(() => {
         getRecentArticles();
     }, []);
@@ -59,6 +71,7 @@ function StudentRecent({ currentScreen, setCurrentScreen }: Props){
                         return <ArticleCard onClick={() => {
                             setCurrentArticle(article);
                             setOpenArticleModal(true)
+                            logView(article)
                         }} article={article} lineNumber={3} key={article.ID}/>;
                     })}
                 </div>
