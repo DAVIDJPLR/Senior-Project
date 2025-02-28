@@ -1554,7 +1554,8 @@ class ImageUpload(MethodView):
         except Exception as e:
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-        
+
+# this route is only used by the /image POST route to fetch the URL of an image        
 @app.route('/uploads/<path:filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)

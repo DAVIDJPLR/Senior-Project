@@ -437,8 +437,10 @@ const InsertImageButton = ( {articleID}: InsertImageButtonProps) => {
       .then(data => {
         if (data.url) {
           const text = {text: ""}
-          const imageNode = {type: "image", url: data.url, children: [text]}
-          Transforms.insertNodes(editor, imageNode)
+          const nodes = [{type: "image", url: data.url, children: [text]}, {type: "paragraph", children: [text]}]
+          nodes.forEach((node) => 
+            Transforms.insertNodes(editor, node)
+          )
         } else {
           throw new Error('Upload error')
         }
