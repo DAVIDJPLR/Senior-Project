@@ -426,7 +426,7 @@ class UserSearch(MethodView):
                     ).all()
                     
                     for user in users:
-                        privs: list[AdminPrivileges] = user.AdminPrivileges
+                        privs: list[int] = [priv.ID for priv in user.AdminPrivileges]
                         if len(privs) > 0:
                             users.remove(user)
 
@@ -659,8 +659,12 @@ class Admin(MethodView):
                                                 userPrivileges.append(priv)
                                         
                                         user.AdminPrivileges = userPrivileges
-                                        db.session.commit()
 
+                                        if (session['current_user_id'] == user.ID):
+                                            newPrivileges: list[int] = [priv.ID for priv in userPrivileges]
+                                            session['current_user_privileges'] = newPrivileges
+
+                                        db.session.commit()
                                         return {'user': user.toJSONPartial()}, 201 
                                     else:
                                         return {'msg': 'WARNING: Please add at least one other super admin before editing or removing super admin privileges!'}, 403
@@ -673,6 +677,10 @@ class Admin(MethodView):
                                             userPrivileges.append(priv)
                                     
                                     user.AdminPrivileges = userPrivileges
+                                    if (session['current_user_id'] == user.ID):
+                                        newPrivileges: list[int] = [priv.ID for priv in userPrivileges]
+                                        session['current_user_privileges'] = newPrivileges
+
                                     db.session.commit()
                                     return {'user': user.toJSONPartial()}, 201 
                             else:
@@ -711,6 +719,10 @@ class Admin(MethodView):
                                 privileges.append(allPrivileges[3])
                                     
                                 user.AdminPrivileges = privileges
+                                if (session['current_user_id'] == user.ID):
+                                    adminPrivs: list[int] = [priv.ID for priv in privileges]
+                                    session['current_user_privileges'] = adminPrivs
+
                                 db.session.commit()
                                 return {'user': user.toJSONPartial()}, 201
                             else:
@@ -749,15 +761,19 @@ class Admin(MethodView):
 
                             if len(super_admins) > 1:
                                 user.AdminPrivileges = []
+                                if (session['current_user_id'] == user.ID):
+                                    session['current_user_privileges'] = []
+                                    
                                 db.session.commit()
-
                                 return {'msg': 'Super Admin Deleted'}, 200
                             else:
                                 return {'msg': 'WARNING: Please add at least one other super admin before deleting sole super admin!'}, 403
                         else:
                             user.AdminPrivileges = []
-                            db.session.commit()
+                            if (session['current_user_id'] == user.ID):
+                                session['current_user_privileges'] = []
 
+                            db.session.commit()
                             return {'msg': 'Admin Deleted'}, 200
                     else:
                         return {'msg': 'No such admin user'}, 404
