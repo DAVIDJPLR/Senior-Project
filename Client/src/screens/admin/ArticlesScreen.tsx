@@ -246,11 +246,14 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
                         />
                     ))}
                     
-                    <EditArticleModal
+                    {privilegeIDs.includes(3) && (
+                        <EditArticleModal
                         open={editModalOpen}
                         article={selectedArticle}
                         onClose={handleCloseModal}
-                    />
+                        />
+                    )}
+                    
                     
                 </div>
                 {isMobile && (

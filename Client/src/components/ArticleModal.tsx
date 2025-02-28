@@ -102,10 +102,10 @@ function ArticleModal({ handleClose, open, article }: Props) {
                                                         onClick={() => handleFeedback('down')}/>
                             </div>
                         </div>
-                        <div onClick={copyToClipboard} style={{cursor: 'pointer', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
+                        {/*help<div onClick={copyToClipboard} style={{cursor: 'pointer', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
                             <Typography sx={{textDecoration: "underline", fontSize: "16px", fontWeight: "400"}}>{articleURL}</Typography>
                             <ContentCopyOutlinedIcon sx={{fontSize: "25px", fontWeight: "400"}}/>
-                        </div>
+                        </div>*/}
                         </div>
                     </>
                 ) : (
