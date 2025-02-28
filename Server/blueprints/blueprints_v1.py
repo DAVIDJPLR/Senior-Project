@@ -722,7 +722,42 @@ class Admin(MethodView):
                     else:
                         return {'msg': 'You do not have permission to remove users as admins.'}, 403
             else:
-                return {'msg': 'Unauthorized access'}, 401
+                return {'msg': 'Unauthorized access'}, 403
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+        
+@apiv1.route("/admins/search", methods=["OPTIONS", "GET"])
+class AdminSearch(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        try:
+            if 'current_user_privileges' in session:
+                if len(session['current_user_privileges']) > 0:
+                    searchQuery = request.args.get("searchQuery")
+
+                    users: list[models.User] = models.User.query.filter(
+                        or_(
+                            models.User.FName.ilike(f"%{searchQuery}%"),
+                            models.User.LName.ilike(f"%{searchQuery}%"),
+                            models.User.Email.ilike(f"%{searchQuery}%")
+                        )
+                    ).all()
+                    
+                    admins = []
+                    for user in users:
+                        if len(user.AdminPrivileges) > 0:
+                            admins.append(user)
+                    
+                    returnableAdmins = [admin.toJSONPartial() for admin in admins]
+                    
+                    return {'admins': returnableAdmins}, 200
+                else:
+                    return {'msg': 'Unauthorized access'}, 403
+            else:
+                return {'msg': 'Unauthorized access'}, 403
         except Exception as e:
             print(f"Error: {e}")
             traceback.print_exc()

@@ -6,10 +6,11 @@ import "../global.css";
 interface Props{
     article: PartialArticle,
     lineNumber: number,
-    onClick: (article: PartialArticle) => void
+    onClick: (article: PartialArticle) => void,
+    userPrivileges: number[]
 }
 
-function AdminArticleCard({ article, lineNumber, onClick }: Props){
+function AdminArticleCard({ article, lineNumber, onClick, userPrivileges }: Props){
 
     const lineNumberString: string = lineNumber.toString();
     const height: number = (18*1.5) + ((lineNumber)*(16*1.5)) + 15;
@@ -71,7 +72,7 @@ function AdminArticleCard({ article, lineNumber, onClick }: Props){
     return (
         <div onClick={() => {onClick(article)}}
             className="HaveShadow"
-            style={{width: "85%", height: heightString, display: "flex", flexDirection: "column", alignItems: "center", border: "1px solid grey", borderRadius: "20px", margin: "10px", position: "relative", cursor: "pointer", backgroundColor: "white" }}
+            style={{width: "85%", height: heightString, display: "flex", flexDirection: "column", alignItems: "center", border: "1px solid grey", borderRadius: "20px", margin: "10px", position: "relative", cursor: userPrivileges.includes(3)?"pointer":"auto", backgroundColor: "white" }}
         >
 
             <div style={{width: "100%",  display: "flex", flexDirection: "row", alignItems: "space-evenly", }}>
@@ -87,22 +88,23 @@ function AdminArticleCard({ article, lineNumber, onClick }: Props){
                     WebkitBoxOrient: "vertical",
                 }}> {article.Title}</Typography>
 
-                <FormControl size="small" sx={{minWidth: "20%", marginTop: "8px", marginRight: "40px", borderRadius: "10px"}}>
-                    <Select
-                        labelId="demo-simple-select-label"
-                        id="demo-simple-select"
-                        value={tag}
-                        onChange={handleChange}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {tags.map((tempTag) => (
-                            <MenuItem key={tempTag} value={tempTag}>
-                                {tempTag}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-
+                {userPrivileges.includes(3) && (
+                    <FormControl size="small" sx={{minWidth: "20%", marginTop: "8px", marginRight: "40px", borderRadius: "10px"}}>
+                        <Select
+                            labelId="demo-simple-select-label"
+                            id="demo-simple-select"
+                            value={tag}
+                            onChange={handleChange}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {tags.map((tempTag) => (
+                                <MenuItem key={tempTag} value={tempTag}>
+                                    {tempTag}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                )}
             </div>
 
             <Typography style={{

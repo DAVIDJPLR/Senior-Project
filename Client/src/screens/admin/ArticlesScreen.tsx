@@ -178,7 +178,7 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
         setArticles(data.results as PartialArticle[])
     }
 
-    while (privilegeIDs[0] === 0) {
+    if (privilegeIDs[0] === 0) {
 
         return (
             <div>
@@ -187,7 +187,7 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
         );
     }
 
-    while (privilegeIDs[0] !== 0) {
+    if (privilegeIDs[0] !== 0) {
 
         return(
             <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center", overflow: "hidden"}}>
@@ -242,6 +242,7 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
                             article={article}
                             lineNumber={3}
                             onClick={handleEditArticle}
+                            userPrivileges={privilegeIDs}
                         />
                     ))}
                     {privilegeIDs.includes(3) && (
@@ -261,18 +262,6 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
             </div>
         );
     }
-}
-
-function createEmptyArticle(): PartialArticle {
-    return {
-        ID: -1,
-        Title: "",
-        Content: "",
-        Article_Description: "",
-        Image: "",
-        ThumbsUp: 0,
-        ThumbsDown: 0
-    };
 }
 
 function createEmptyArticle(): PartialArticle {

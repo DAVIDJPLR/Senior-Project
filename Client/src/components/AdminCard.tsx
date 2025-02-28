@@ -5,9 +5,10 @@ interface Props{
     user: PartialUser,
     onClick: () => void,
     width: string,
+    userPrivileges: number[]
 }
 
-function AdminCard({ user, onClick, width }: Props){
+function AdminCard({ user, onClick, width, userPrivileges }: Props){
 
     const privilegeString: string = `| ${user.AdminPrivileges.map((privilege) => privilege.PrivilegeName).join(" | ")} |`;
 
@@ -21,10 +22,12 @@ function AdminCard({ user, onClick, width }: Props){
                     <Typography style={{ fontSize: "12px", textAlign: "center", width: "95%", overflow: "hidden"}}>{user.Email}</Typography>
                 </Grid2>
                 <Grid2 sx={{width: "33%"}}>
-                    <Typography 
-                        onClick={onClick}
-                        sx={{ fontSize: "12px", textAlign: "right", width: "95%", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", color: 'text.secondary', cursor: 'pointer', textDecoration: 'underline'}}
-                    >Manage User</Typography>
+                    {userPrivileges.includes(5) &&(
+                        <Typography 
+                            onClick={onClick}
+                            sx={{ fontSize: "12px", textAlign: "right", width: "95%", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", color: 'text.secondary', cursor: 'pointer', textDecoration: 'underline'}}
+                        >Manage User</Typography>
+                    )}
                 </Grid2>
             </Grid2>
             <Typography style={{ fontSize: "12px", textAlign: "center", width: "95%", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical",}}>{privilegeString}</Typography>
