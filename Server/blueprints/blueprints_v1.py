@@ -978,6 +978,66 @@ class TagNames(MethodView):
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
         
+@apiv1.route("/article/categories", methods=["OPTIONS", "GET", "PUT"])
+class ArticleCatgories(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                categories = []
+                articleID = request.args.get("articleID")
+                article: models.Article = models.Article.query.filter_by(ID=articleID).first()
+                if article:
+                    if article.MetaTags:
+                        metaTags = article.MetaTags
+                        categories = [metaTag.TagName for metaTag in metaTags]
+                        
+                        print(categories)
+                        return {"categories": jsonify(categories)}, 200
+                else:
+                    return {
+                        "msg": "No article provided"}, 220
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+    
+    def put(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if (3 in session["current_user_privileges"]):
+                    articleID = request.args.get("articleID")
+                    catName = request.args.get("category")
+                    
+                    article: models.Article = models.Article.query.filter_by(ID=articleID).first()
+                    potentialCat: models.MetaTag = models.MetaTag.query.filter_by(TagName=catName).first()
+                    newCat = None
+                    if not potentialCat:
+                        print("HELOOOOOOOOOO")
+                        newCat = models.MetaTag(TagName=catName)
+                        db.session.add(newCat)
+                    else:
+                        newCat = potentialCat
+                    
+                    cats: list[models.MetaTag] = article.MetaTags
+                    cats.append(newCat)
+                    article.MetaTags = cats
+                    db.session.commit()
+                        
+                    return {"msg": "Category added"}, 200
+                        
+                else:
+                    return {'msg': 'Unauthorized access'}, 401
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+        
 @apiv1.route("/categories", methods=["OPTIONS", "GET"])
 class Categories(MethodView):
     def options(self):
