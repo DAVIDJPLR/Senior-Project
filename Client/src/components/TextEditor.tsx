@@ -90,7 +90,7 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
     let method = 'POST'
 
     // If the article already exists we use PUT
-    if (articleID) {
+    if (articleID >= 0) {
       method = 'PUT'
       articlePayload.ID = articleID
       url = `http://localhost:5000/api/v1/article?articleID=${articleID}`

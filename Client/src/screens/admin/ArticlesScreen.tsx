@@ -7,7 +7,7 @@ import EditArticleModal from './EditScreen';
 import AdminSearchBar from "../../components/AdminSearchBar";
 import { useMediaQuery } from "react-responsive";
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import { PartialAdminPrivilege, PartialUser } from "../../custom_objects/models";
+import { PartialAdminPrivilege } from "../../custom_objects/models";
 import { useTheme, FormControl, InputLabel, Select, OutlinedInput, MenuItem, Checkbox, ListItemText, SelectChangeEvent, Button } from "@mui/material";
 
 interface Props{
@@ -29,7 +29,7 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
     };
 
     const [editModalOpen, setEditModalOpen] = useState(false)
-    const [selectedArticle, setSelectedArticle] = useState<PartialArticle | null>(null)
+    const [selectedArticle, setSelectedArticle] = useState<PartialArticle>(createEmptyArticle())
     const [articles, setArticles] = useState<PartialArticle[]>([])
     const [searchVal, setSearchVal] = useState("");
     const [tags, setTags] = useState<string[]>([]);
@@ -43,20 +43,20 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
     const theme = useTheme();
 
     const loadPrivileges = async () => {
-            const response = await fetch('http://localhost:5000/api/v1/user/info', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'include'
-            });
-    
-            const data = await response.json();
-    
-            setPrivileges(data.current_privileges as PartialAdminPrivilege[])
-            const temp1 = data.current_privileges as PartialAdminPrivilege[]
-            const temp2 = temp1.map(priv => priv.ID)
-            setPrivilegesIDs(temp2)
+        const response = await fetch('http://localhost:5000/api/v1/user/info', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+
+        setPrivileges(data.current_privileges as PartialAdminPrivilege[])
+        const temp1 = data.current_privileges as PartialAdminPrivilege[]
+        const temp2 = temp1.map(priv => priv.ID)
+        setPrivilegesIDs(temp2)
     }
 
     const handleEditArticle = (article: PartialArticle) => {
@@ -66,7 +66,7 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
 
     const handleCloseModal = () => {
         setEditModalOpen(false)
-        setSelectedArticle(null)
+        setSelectedArticle(createEmptyArticle())
     };
     
     useEffect(() => {
@@ -245,13 +245,12 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
                             userPrivileges={privilegeIDs}
                         />
                     ))}
-                    {privilegeIDs.includes(3) && (
-                        <EditArticleModal
-                            open={editModalOpen}
-                            article={selectedArticle}
-                            onClose={handleCloseModal}
-                        />
-                    )}
+                    
+                    <EditArticleModal
+                        open={editModalOpen}
+                        article={selectedArticle}
+                        onClose={handleCloseModal}
+                    />
                     
                 </div>
                 {isMobile && (
