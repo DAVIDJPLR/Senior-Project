@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from "react"
-import { FormControl, InputLabel, Select, SelectChangeEvent, MenuItem, Input } from "@mui/material"
-import { Article, PartialTag, Tag } from "../custom_objects/models"
+import { useEffect, useState } from "react"
+import { FormControl, InputLabel, Select, SelectChangeEvent, MenuItem } from "@mui/material"
+import { PartialTag, Tag } from "../custom_objects/models"
 
 interface TagDropdownProps {
-    articleID: number
+    articleID: number,
+    setCurrentTag: (x: string) => void
 }
 
-function TagDropdown( {articleID}: TagDropdownProps) {
+function TagDropdown( {articleID, setCurrentTag}: TagDropdownProps) {
     const [tags, setTags] = useState<PartialTag[]>([])
     const [selectedTagLabel, setSelectedTagLabel] = useState<string>('')
     const [selectedTagID, setSelectedTagID] = useState<number>(0)
@@ -68,6 +69,7 @@ function TagDropdown( {articleID}: TagDropdownProps) {
         const newTag = tags.find((tag) => tag.ID === newTagID);
         const newTagLabel = newTag ? newTag.TagName : ""
         setSelectedTagLabel(newTagLabel)
+        setCurrentTag(newTagLabel)
         console.log(newTagID)
         console.log(newTagLabel)
         

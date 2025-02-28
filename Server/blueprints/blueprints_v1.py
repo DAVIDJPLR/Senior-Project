@@ -251,17 +251,20 @@ class Article(MethodView):
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 id = request.args.get("articleID")
                 if id:
-                    article = models.Article.query.filter(models.Article.ID == id).all()
-                    returnableArticle = article[0].toJSONPartial()
+                    if int(id) >= 0:
+                        article = models.Article.query.filter(models.Article.ID == id).all()
+                        returnableArticle = article[0].toJSONPartial()
 
-                    userID = session.get('current_user_id')
-                    time = datetime.now()
-                    vh = models.ViewHistory(ArticleID=id, UserID=userID,
-                                            View_Time=time)     
-                    db.session.add(vh)
-                    db.session.commit()
-                    
-                    return {'article': returnableArticle}, 200
+                        userID = session.get('current_user_id')
+                        time = datetime.now()
+                        vh = models.ViewHistory(ArticleID=id, UserID=userID,
+                                                View_Time=time)     
+                        db.session.add(vh)
+                        db.session.commit()
+                        
+                        return {'article': returnableArticle}, 200
+                    else:
+                        return {'msg': "Creating Article"}, 200
                 else:
                     return {'msg': 'No article specified'}, 400
             else:
@@ -274,30 +277,46 @@ class Article(MethodView):
         try:
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 if 1 in session['current_user_privileges']:
-                    article = request.json
-                    if article:
-                        title: str = article.get('Title')
-                        content: str = article.get('Content')
-                        desc: str = article.get('Article_Description')
-                        image: str = article.get('Image')
+                    
+                    data = request.json
+                    
+                    title: str = data.get('title')
+                    content: str = data.get('content')
+                    desc: str = data.get('desc')
+                    tag: str = data.get('tag')
+                    image: str = data.get('image')
+                    
+                    if not image:
+                        image = ""
+                    
 
-                        if len(title) > 100:
-                            return {'msg': 'Article title length exceeds database limit of 100 characters.'}, 400
-                        if len(content) > 5000:
-                            return {'msg': 'Article content length exceeds database limit of 5000 characters.'}, 400
-                        if len(desc) > 500:
-                            return {'msg': 'Article description length exceeds database limit of 500 characters.'}, 400
-                        if len(image) > 100:
-                            return {'msg': 'Article image path length exceeds database limit of 100 characters.'}, 400
-            
-                        article = Article(Title=title, Content=content,
-                                        Article_Description=desc,
-                                        Image=image)
-                        
-                        db.session.add(article)
-                        db.session.commit()
+                    if len(title) > 100:
+                        return {'msg': 'Article title length exceeds database limit of 100 characters.'}, 400
+                    if len(content) > 5000:
+                        return {'msg': 'Article content length exceeds database limit of 5000 characters.'}, 400
+                    if len(desc) > 500:
+                        return {'msg': 'Article description length exceeds database limit of 500 characters.'}, 400
+                    if len(image) > 100:
+                        return {'msg': 'Article image path length exceeds database limit of 100 characters.'}, 400
+        
+                    addTag: models.Tag = models.Tag.query.filter_by(TagName=tag).first()
+        
+                    if len(image) > 0:
+                        article: models.Article = models.Article(Title=title, Content=json.dumps(content),
+                                    Article_Description=desc,
+                                    Image=image)
                     else:
-                        return {'msg': 'No article submitted'}, 400
+                        article: models.Article = models.Article(Title=title, Content=json.dumps(content),
+                                    Article_Description=desc)
+                        
+                    db.session.add(article)
+                    if addTag:
+                        article.Tags = [addTag]
+                    
+                    db.session.commit()
+                    
+                    return {"msg": "Article Added successfully"}, 200
+
                 else:
                     if session['current_user_role'] == "student":
                         return {'msg': 'Unauthorized access'}, 403
@@ -346,8 +365,6 @@ class Article(MethodView):
                         
                         db.session.commit()
                         return {'msg': 'Article updated successfully'}, 200
-                    else:
-                        return {'msg': 'No update data submitted'}, 400
                 else:
                     if session['current_user_role'] == "student":
                         return {'msg': 'Unauthorized access'}, 403
@@ -1577,16 +1594,20 @@ class SystemStatsSearch(MethodView):
                 if len(session['current_user_privileges']) > 0:
 
                     articleID = request.args.get("ArticleID")
-                    article: models.Article = models.Article.query.filter_by(ID=articleID).first()
-
-                    tags = []
-                    for tag in article.Tags:
-                        tags.append(tag)
                     
-                    returnableTags = [tag.toJSONPartial() for tag in tags]
-                    db.session.commit()
+                    if int(articleID) >= 0:
+                        article: models.Article = models.Article.query.filter_by(ID=articleID).first()
 
-                    return {'tags': returnableTags}, 200
+                        tags = []
+                        for tag in article.Tags:
+                            tags.append(tag)
+                        
+                        returnableTags = [tag.toJSONPartial() for tag in tags]
+                        db.session.commit()
+
+                        return {'tags': returnableTags}, 200
+                    else:
+                        return {'msg': "Creating Article"}, 200
 
                 else:
                     return {'msg': 'Unauthorized access'}, 403
@@ -1605,14 +1626,15 @@ class SystemStatsSearch(MethodView):
                     if tag_updated:
                         article_id: int = tag_updated.get("articleID")
                         tag_id: int = tag_updated.get("tagID")
-
                         article = models.Article.query.get(article_id)
-                        tag = models.Tag.query.get(tag_id)
-                        article.Tags = [tag]
-                        db.session.commit()
+                        if article:
+                            tag = models.Tag.query.get(tag_id)
+                            article.Tags = [tag]
+                            db.session.commit()
 
-                        return {'msg': 'Article tag updated successfully.'}, 200
-
+                            return {'msg': 'Article tag updated successfully.'}, 200
+                        else:
+                            return {'msg': 'No article provided.'}, 400
                     else:
                         return {'msg': 'No data provided.'}, 400
                 else:

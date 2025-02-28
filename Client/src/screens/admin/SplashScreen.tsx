@@ -24,7 +24,7 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
     const lstSize = 10;
 
     const [editModalOpen, setEditModalOpen] = useState(false)
-    const [selectedArticle, setSelectedArticle] = useState<PartialArticle | null>(null)
+    const [selectedArticle, setSelectedArticle] = useState<PartialArticle>(createEmptyArticle())
 
     const [problemArticles, setProblemArticles] = useState<PartialArticle[]>([]);
     const [problemArticleDate, setProblemArticleDate] = useState(sixtyDaysAgoInSeconds);
@@ -52,7 +52,7 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
 
     const handleCloseModal = () => {
         setEditModalOpen(false)
-        setSelectedArticle(null)
+        setSelectedArticle(createEmptyArticle())
     };
 
     const loadPrivileges = async () => {
@@ -381,6 +381,18 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
             </div>
         );
     }
+}
+
+function createEmptyArticle(): PartialArticle {
+    return {
+        ID: -1,
+        Title: "",
+        Content: "",
+        Article_Description: "",
+        Image: "",
+        ThumbsUp: 0,
+        ThumbsDown: 0
+    };
 }
 
 export default AdminHome;
