@@ -79,7 +79,7 @@ function App() {
 
         if (response.status == 200){
             console.log(`current_user_role: ${data.current_user_role}`)
-            if (data.current_user_role === "admin"){
+            if (data.current_user_role === "admin" || data.current_user_role === "superadmin"){
                 setAdmin(true);
                 setPrivileges(data.current_privileges as PartialAdminPrivilege[]);
             } else {

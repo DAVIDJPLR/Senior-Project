@@ -30,8 +30,28 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
 
     const [admins, setAdmins] = useState<PartialUser[]>([])
 
+    const [currentAdmin, setCurrentAdmin] = useState(-1);
     const [privileges, setPrivileges] = useState<PartialAdminPrivilege[]>([]);
     const [privilegeIDs, setPrivilegesIDs] = useState([0])
+
+    const searchAdmins = async() =>{
+        const params = new URLSearchParams({
+            searchQuery: searchVal
+        });
+
+        const response = await fetch(`http://localhost:5000/api/v1/admins/search?${params.toString()}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+        console.log(`data: ${data}`)
+
+        setAdmins(data.admins as PartialUser[])
+    }
 
     const loadAdmins = async () => {
         const response = await fetch('http://localhost:5000/api/v1/admins', {
@@ -61,6 +81,8 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
 
         console.log(data)
 
+        setCurrentAdmin(data.current_user_id as number)
+
         setPrivileges(data.current_privileges as PartialAdminPrivilege[])
         const temp1 = data.current_privileges as PartialAdminPrivilege[]
         const temp2 = temp1.map(priv => priv.ID)
@@ -82,7 +104,11 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
 
     const handleKeyUp = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === "Enter") {
-            console.log(searchVal);
+            if (searchVal === "") {
+                loadAdmins()
+            } else {
+                searchAdmins()
+            }
         }
     };
 
@@ -110,69 +136,69 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
 
         return (
             
-        <div style={{ width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center" }}>
-        {!isMobile && (
-            <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
-                <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
+            <div style={{ width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                {!isMobile && (
+                    <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                        <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
+                    </div>
+                )}
+                
+
+                <div style={{ width: "100%", height: "95%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto", backgroundColor: theme.palette.secondary.main }}>
+                    <div style={{height: "3%"}}></div>
+                    <div style={{ width: "100%", height: "10%", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-evenly"}}>
+                        <SearchBar setSearchVal={setSearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={'small'} />
+                        {privilegeIDs.includes(5) && (
+                            <Button
+                                aria-label="Add admin User"
+                                variant="outlined"
+                                sx={{ height: "40px", width: "40px", borderWidth: "0px", padding: 0, borderRadius: "50%", display: "flex", justifyContent: "center", minWidth: 0, zIndex: 9000 }}
+                                onClick={handleClick}
+                            >
+                                <AddCircleOutlineIcon  sx={{ height: "40px", width: "40px", color: "white" }} />
+                            </Button>
+                        )}
+                    </div>
+                    <Typography style={{ fontSize: "24px", fontWeight: "600" }}>Current Administrators</Typography>
+                    {admins?.map((admin) => <AdminCard user={admin} key={admin.ID} width={isMobile ? "90%" : "60%"} userPrivileges={privilegeIDs}
+                        onClick={() => {
+                            if (privilegeIDs.includes(5)) {
+                                setSelectedAdmin(admin);
+                                setOpenAdminModal(true);
+                            }
+                            else {
+                                
+                            }
+                            
+                        }} />)}
+                </div>
+
+                
+                {isMobile && (
+                    <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                        <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
+                    </div>
+                )}
+                <Popover
+                    id={id}
+                    open={open}
+                    anchorEl={anchorEl}
+                    onClose={handleClose}
+                    anchorOrigin={{
+                        vertical: 'bottom',
+                        horizontal: 'center',
+                    }}
+                    transformOrigin={{
+                        vertical: 'top',
+                        horizontal: 'center',
+                    }}
+                    sx={{zIndex: 9999}}
+                >
+                    <UserModal handleClose={handleClose} setRefresh={setRefresh} />
+                </Popover>
+
+                <AdminModal open={openAdminModal} handleClose={ () => {setOpenAdminModal(false)} } selectedAdmin={selectedAdmin} setRefresh={setRefresh} currentAdmin={currentAdmin} ></AdminModal>
             </div>
-        )}
-        {privilegeIDs.includes(5) && (
-            <div style={{ width: "90%", height: "10%", display: "flex", flexDirection: "column", alignItems: "end", justifyContent: "center" }}>
-            <Button
-                aria-label="Add admin User"
-                variant="outlined"
-                sx={{ height: "40px", width: "40px", borderWidth: "0px", padding: 0, borderRadius: "50%", display: "flex", justifyContent: "center", minWidth: 0, zIndex: 9000 }}
-                onClick={handleClick}
-            >
-                <AddCircleOutlineIcon sx={{ height: "40px", width: "40px" }} />
-            </Button>
-        </div>
-        )}
-        
-
-        <div style={{ width: "100%", height: "85%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto" }}>
-            <div style={{height: "3%"}}></div>
-            <SearchBar setSearchVal={setSearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={'small'} />
-            <Typography style={{ fontSize: "24px", fontWeight: "600" }}>Current Administrators</Typography>
-            {admins?.map((admin) => <AdminCard user={admin} key={admin.ID} width={isMobile ? "90%" : "60%"}
-                onClick={() => {
-                    if (privilegeIDs.includes(5)) {
-                        setSelectedAdmin(admin);
-                        setOpenAdminModal(true);
-                    }
-                    else {
-                        
-                    }
-                    
-                }} />)}
-        </div>
-
-        
-        {isMobile && (
-            <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
-                <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
-            </div>
-        )}
-        <Popover
-            id={id}
-            open={open}
-            anchorEl={anchorEl}
-            onClose={handleClose}
-            anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'center',
-            }}
-            transformOrigin={{
-                vertical: 'top',
-                horizontal: 'center',
-            }}
-            sx={{zIndex: 9999}}
-        >
-            <UserModal handleClose={handleClose} setRefresh={setRefresh} />
-        </Popover>
-
-        <AdminModal open={openAdminModal} handleClose={ () => {setOpenAdminModal(false)} } selectedAdmin={selectedAdmin} setRefresh={setRefresh} ></AdminModal>
-    </div>
         );
     }
 }
@@ -181,10 +207,11 @@ interface AdminModalProps{
     open: boolean,
     handleClose: () => void,
     selectedAdmin: PartialUser | null,
-    setRefresh: (refresh: boolean) => void
+    setRefresh: (refresh: boolean) => void,
+    currentAdmin: number
 }
 
-function AdminModal({ open, handleClose, selectedAdmin, setRefresh }: AdminModalProps) {
+function AdminModal({ open, handleClose, selectedAdmin, setRefresh, currentAdmin }: AdminModalProps) {
 
     const [adminPrivileges, setAdminPrivileges] = useState<PartialAdminPrivilege[]>(selectedAdmin?.AdminPrivileges || []);
 
@@ -281,7 +308,9 @@ function AdminModal({ open, handleClose, selectedAdmin, setRefresh }: AdminModal
                 <TableContainer sx={{ maxHeight: '70%', width: '90%', margin: "10px", border: "1px solid grey" }}>
                     <Table>
                         <TableBody>
-                            {privileges.map((privilege) =>(
+                            {privileges
+                            .filter((privilege) => (currentAdmin===selectedAdmin?.ID && 5!==privilege.ID) || (currentAdmin!==selectedAdmin?.ID))
+                            .map((privilege) =>(
                                 <TableRow key={privilege.ID}>
                                     <TableCell sx={{width: "70%"}}>{privilege.PrivilegeName}</TableCell>
                                     <TableCell sx={{width: "10%"}}>
@@ -316,14 +345,17 @@ function AdminModal({ open, handleClose, selectedAdmin, setRefresh }: AdminModal
                     </Table>
                 </TableContainer>
                 <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: "20px"}}>
-                    <Button variant="contained" onClick={() => {
-                        // deleteAdmin()
-                        setOpenConfirmDialog(true)
-                    }}>Delete Admin</Button>
+                    {!(currentAdmin === selectedAdmin?.ID) && (
+                        <Button variant="contained" onClick={() => {
+                            // deleteAdmin()
+                            setOpenConfirmDialog(true)
+                        }}>Delete Admin</Button>
+                    )}
                     <Button variant="contained" sx={{backgroundColor: "green"}} onClick={() => {
                         saveAdmin()
                     }}>Save Changes</Button>
                 </div>
+                
                 <ConfirmSubmissionDialog open={openConfirmDialog} onClose={() => {setOpenConfirmDialog(false)}} onConfirm={() => {
                     deleteAdmin()
                     setOpenConfirmDialog(false)

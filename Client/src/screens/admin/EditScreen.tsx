@@ -3,7 +3,6 @@ import {Dialog, AppBar, Toolbar, IconButton, Typography, Slide, Icon} from "@mui
 import CloseIcon from "@mui/icons-material/Close";
 import {TransitionProps} from "@mui/material/transitions";
 // import AdminAppBar from "../../components/AdminAppBar";
-import { Screen } from "../../custom_objects/Screens";
 import { TextEditor } from "../../components/TextEditor";
 import { PartialArticle } from "../../custom_objects/models";
 
@@ -16,12 +15,12 @@ const Transition = React.forwardRef(function Transition(
 
 interface Props{
     open: boolean;
-    article: PartialArticle | null;
+    article: PartialArticle;
     onClose: () => void;
 }
 
 function EditArticleModal({ open, article, onClose }: Props) {
-    const articleID = article ? article.ID : undefined
+    const articleID = article.ID
     console.log(articleID)
     return (
         <Dialog fullScreen open={open} onClose={onClose} TransitionComponent={Transition}>

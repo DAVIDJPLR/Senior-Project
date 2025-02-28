@@ -1,9 +1,10 @@
 import { TableContainer, Typography, Table, TableHead, TableRow, TableCell, TableBody, useTheme } from "@mui/material";
 import AdminAppBar from "../../components/AdminAppBar";
-import { PartialArticle, PartialSearch } from "../../custom_objects/models";
+import { PartialArticle, PartialSearch, PartialAdminPrivilege } from "../../custom_objects/models";
 import { useState, useEffect } from "react";
 import { Screen, AdminScreen } from "../../custom_objects/Screens";
 import { useMediaQuery } from "react-responsive"; 
+import EditArticleModal from './EditScreen';
 
 interface Props{
     currentScreen: Screen
@@ -15,9 +16,15 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
     const currentTime = Date.now();
     const sixtyDaysAgoInSeconds = (currentTime - tenDaysInMilliseconds)/1000;
 
+    const [privileges, setPrivileges] = useState<PartialAdminPrivilege[]>([]);
+    const [privilegeIDs, setPrivilegesIDs] = useState([0])
+
     const isMobile = useMediaQuery({ maxWidth: 767 });
 
     const lstSize = 10;
+
+    const [editModalOpen, setEditModalOpen] = useState(false)
+    const [selectedArticle, setSelectedArticle] = useState<PartialArticle>(createEmptyArticle())
 
     const [problemArticles, setProblemArticles] = useState<PartialArticle[]>([]);
     const [problemArticleDate, setProblemArticleDate] = useState(sixtyDaysAgoInSeconds);
@@ -35,6 +42,35 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
     const [statsDate, setStatsSate] = useState(sixtyDaysAgoInSeconds)
 
     const theme = useTheme();
+
+    const handleEditArticle = (article: PartialArticle) => {
+        if (privilegeIDs.includes(3)){
+            setSelectedArticle(article)
+            setEditModalOpen(true)
+        }
+    };
+
+    const handleCloseModal = () => {
+        setEditModalOpen(false)
+        setSelectedArticle(createEmptyArticle())
+    };
+
+    const loadPrivileges = async () => {
+        const response = await fetch('http://localhost:5000/api/v1/user/info', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+
+        setPrivileges(data.current_privileges as PartialAdminPrivilege[])
+        const temp1 = data.current_privileges as PartialAdminPrivilege[]
+        const temp2 = temp1.map(priv => priv.ID)
+        setPrivilegesIDs(temp2)
+    }
 
     const getProblemArticles = async () => {
         const params = new URLSearchParams({
@@ -115,6 +151,7 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
         getGoodArticles();
         getProblemSearches();
         getStats();
+        loadPrivileges();
     }, [])
 
     useEffect(() => {
@@ -203,7 +240,9 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
                                 <div style={{ width: "90%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", overflow: "auto" }}>
                                     {problemSearches.map((search, index) => (
                                         <div key={index} style={{ width: "90%", height: "32px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px solid black", borderRadius: "8px" }}>
-                                            <Typography sx={{ fontSize: "16px", color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline' }}>{search.SearchQuery}</Typography>
+                                            <Typography 
+                                                sx={{ fontSize: "16px", color: 'black', cursor: 'pointer' }}
+                                            >{search.SearchQuery}</Typography>
                                         </div>
                                     ))}
                                 </div>
@@ -217,7 +256,10 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
                                 <div style={{ width: "90%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", overflow: "auto" }}>
                                     {problemArticles.map((article, index) => (
                                         <div key={index} style={{ width: "90%", height: "32px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px solid black", borderRadius: "8px" }}>
-                                            <Typography sx={{ fontSize: "16px", color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline' }}>{article.Title}</Typography>
+                                            <Typography 
+                                                onClick={() => {handleEditArticle(article)}}
+                                                sx={{ fontSize: "16px", color: privilegeIDs.includes(3)?'secondary.main':"black" , cursor: privilegeIDs.includes(3)?'pointer':"auto" , textDecoration: privilegeIDs.includes(3)?'underline':"none" }}
+                                                >{article.Title}</Typography>
                                         </div>
                                     ))}
                                 </div>
@@ -225,6 +267,13 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
                         </div>
                     </div>
                 </div>
+                {privilegeIDs.includes(3) && (
+                    <EditArticleModal
+                        open={editModalOpen}
+                        article={selectedArticle}
+                        onClose={handleCloseModal}
+                    />
+                )}
             </div>
         );
     } else {
@@ -276,7 +325,7 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
                             <div style={{ width: "90%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", overflow: "auto" }}>
                                 {problemSearches.map((search, index) => (
                                     <div key={index} style={{ width: "90%", height: "32px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px solid black", borderRadius: "8px" }}>
-                                        <Typography sx={{ fontSize: "16px", color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline' }}>{search.SearchQuery}</Typography>
+                                        <Typography sx={{ fontSize: "16px", color: 'black', cursor: 'pointer' }}>{search.SearchQuery}</Typography>
                                     </div>
                                 ))}
                             </div>
@@ -291,7 +340,10 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
                             <div style={{ width: "90%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", overflow: "auto" }}>
                                 {problemArticles.map((article, index) => (
                                     <div key={index} style={{ width: "90%", height: "32px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px solid black", borderRadius: "8px" }}>
-                                        <Typography sx={{ fontSize: "16px", color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline' }}>{article.Title}</Typography>
+                                        <Typography 
+                                            onClick={() => {handleEditArticle(article)}}
+                                            sx={{ fontSize: "16px", color: privilegeIDs.includes(3)?'secondary.main':"black" , cursor: privilegeIDs.includes(3)?'pointer':"auto" , textDecoration: privilegeIDs.includes(3)?'underline':"none" }}
+                                        >{article.Title}</Typography>
                                     </div>
                                 ))}
                             </div>
@@ -317,9 +369,30 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
                 <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
                     <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
                 </div>
+
+                {privilegeIDs.includes(3) && (
+                    <EditArticleModal
+                        open={editModalOpen}
+                        article={selectedArticle}
+                        onClose={handleCloseModal}
+                    />
+                )}
+
             </div>
         );
     }
+}
+
+function createEmptyArticle(): PartialArticle {
+    return {
+        ID: -1,
+        Title: "",
+        Content: "",
+        Article_Description: "",
+        Image: "",
+        ThumbsUp: 0,
+        ThumbsDown: 0
+    };
 }
 
 export default AdminHome;

@@ -28,12 +28,15 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
 
   const [title, setTitle] = useState("Untitled Article")
   const [description, setDescription] = useState("")
+  console.log(`HEEEEERE IT IS ${articleID}`)
   const [loading, setLoading] = useState<boolean>(!!articleID)
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false)
+
+  const [currentTag, setCurrentTag] = useState("")
   
   // If we were given an articleID then we load that article from the DB
   useEffect(() => {
-    if (articleID) {
+    if (articleID >= 0) {
       console.log("Text editor received articleID: ", articleID)
       const url = `http://localhost:5000/api/v1/article?articleID=${articleID}`
       console.log("Fetching article from URL: ", url)
@@ -72,6 +75,8 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
       .finally(() => {
         setLoading(false)
       })
+    } else if (articleID == -1){
+      setLoading(false)
     }
   }, [articleID])
 
@@ -88,36 +93,69 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
     // default to POST for creating a new article
     let method = 'POST'
 
-    // If the article already exists (i.e. we have an ID for it) we use PUT instead, to update what we already have
-    if (articleID) {
+    // If the article already exists we use PUT
+    if (articleID >= 0) {
       method = 'PUT'
       articlePayload.ID = articleID
       url = `http://localhost:5000/api/v1/article?articleID=${articleID}`
     }
 
-    fetch(url, {
-      method: method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify(articlePayload)
-      //body: articlePayload
-    })
-    .then(response => {
-      if(!response.ok) {
-        throw new Error ('Failed to save article')
+    if (articleID >= 0) {
+      fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(articlePayload)
+        //body: articlePayload
+      })
+      .then(response => {
+        if(!response.ok) {
+          throw new Error ('Failed to save article')
+        }
+        return response.json()
+      })
+      .then(data => {
+        console.log("Article saved successfully ", data)
+        setSaveSuccess(true)
+      })
+      .catch(error => {
+        console.error("Error saving article: ", error)
+      })
+    } else {
+
+      const payload = {
+        "title": title,
+        "content": content,
+        "desc": description,
+        "tag": currentTag
       }
-      return response.json()
-    })
-    .then(data => {
-      console.log("Article saved successfully ", data)
-      setSaveSuccess(true)
-    })
-    .catch(error => {
-      console.error("Error saving article: ", error)
-    })
-  }
+
+      fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+        //body: articlePayload
+      })
+      .then(response => {
+        if(!response.ok) {
+          throw new Error ('Failed to save article')
+        }
+        return response.json()
+      })
+      .then(data => {
+        console.log("Article saved successfully ", data)
+        setSaveSuccess(true)
+      })
+      .catch(error => {
+        console.error("Error saving article: ", error)
+      })
+    }
+  } 
 
   const handleCloseSnackbar = (event: Event | React.SyntheticEvent<any, Event>, reason: SnackbarCloseReason) => {
     if (reason === "clickaway") {
@@ -175,8 +213,7 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
       }}
     
     >
-      <Toolbar editor={editor}
-                articleID={articleID}/>
+      <Toolbar editor={editor} articleID={articleID} setCurrentTag={setCurrentTag}/>
       <Editable
         label="Content"
         style={{
@@ -309,8 +346,9 @@ const CustomEditor = {
 interface ToolbarProps {
   editor: Editor
   articleID: number
+  setCurrentTag: (x: string) => void
 }
-const Toolbar = ({editor, articleID}: ToolbarProps) => {
+const Toolbar = ({editor, articleID, setCurrentTag}: ToolbarProps) => {
 //const Toolbar = ({ editor }: {editor: Editor}) => {
   return (
     <MuiToolbar variant="dense" style={{ marginBottom: '8px', borderBottom: '1px solid #ddd'}}>
@@ -399,7 +437,7 @@ const Toolbar = ({editor, articleID}: ToolbarProps) => {
         </IconButton> */}
         <InsertImageButton articleID={articleID}/>
         <div style={{flexGrow: 1}} />
-        <TagDropdown articleID={articleID}/>
+        <TagDropdown articleID={articleID} setCurrentTag={setCurrentTag}/>
       </MuiToolbar>
   )
 }
