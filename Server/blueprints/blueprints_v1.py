@@ -1,8 +1,9 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint
-from flask import session, request, jsonify, redirect, render_template, url_for
-from sqlalchemy import or_, desc, func, case, and_
+from flask import session, request, jsonify, send_from_directory, redirect, render_template, url_for
+from sqlalchemy import or_, desc, func, case
 from datetime import datetime, timedelta
+from werkzeug.utils import secure_filename
 from app import app, db
 
 from auth import TENANT_ID, CLIENT_ID
@@ -1622,3 +1623,32 @@ class SystemStatsSearch(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
+        
+@apiv1.route("/image", methods=["OPTIONS", "GET", "PUT", "POST", "DELETE"])
+class ImageUpload(MethodView):
+    def options(self):
+        return '', 200
+    def post(self):
+        try:
+            if 'image' not in request.files:
+                return {'msg': 'No file found'}, 400
+            file = request.files['image']
+            if file.filename == '':
+                return {'msg': 'No file selected'}, 400
+            articleID = request.form.get("articleID")
+            article: models.Article = models.Article.query.get(articleID)
+            filename = secure_filename(os.path.basename(file.filename))
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+            article.Image = filepath
+            db.session.commit()
+            image_url = url_for('uploaded_file', filename=filename, _external=True)
+            return {'msg': 'Image saved successfully', 'url': image_url}, 200
+        except Exception as e:
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+
+# this route is only used by the /image POST route to fetch the URL of an image        
+@app.route('/uploads/<path:filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)

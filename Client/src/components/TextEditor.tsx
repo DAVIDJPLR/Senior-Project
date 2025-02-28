@@ -1,14 +1,14 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState, useRef } from 'react'
 import { createEditor, Editor, Transforms, Element, Descendant, Node } from 'slate'
-import { Slate, Editable, withReact } from 'slate-react'
+import { Slate, Editable, withReact, useSlate } from 'slate-react'
 import { withHistory } from 'slate-history'
 import {Button, CircularProgress, IconButton, Toolbar as MuiToolbar, Paper, Snackbar, SnackbarCloseReason, TextField} from '@mui/material'
 import { FormatBold, FormatItalic, FormatUnderlined, FormatQuote,
        FormatListBulleted, FormatListNumbered,
-        Code, Title } from '@mui/icons-material'
+        Code, Title, InsertPhotoOutlined } from '@mui/icons-material'
 import { PartialArticle } from '../custom_objects/models'
 import TagDropdown from './TagDropdown'
-import { renderLeaf, renderElement } from './slate components/TextRenderers'
+import { renderLeaf, renderElement } from './slate components/Renderers'
 
 
 
@@ -26,8 +26,6 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
     },
   ])
 
-  //const [value, setValue] = useState("")
-  //const [value, setValue] = useState<Descendant[]>([])
   const [title, setTitle] = useState("Untitled Article")
   const [description, setDescription] = useState("")
   const [loading, setLoading] = useState<boolean>(!!articleID)
@@ -87,6 +85,7 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
     }
 
     let url = 'http://localhost:5000/api/v1/article'
+    // default to POST for creating a new article
     let method = 'POST'
 
     // If the article already exists we use PUT
@@ -126,12 +125,8 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
     }
     setSaveSuccess(false)
   }
-  console.log("Article content: ", value)
-  //console.log("Deserialized: ", deserialize(value))
 
-  //const initialValue = deserialize(value)
   const initialValue = value
-  console.log("Initial value should be: ", initialValue)
 
   if (loading) {
     return (
@@ -147,6 +142,7 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
       </Paper>
     )
   }
+  console.log(articleID)
   return (
     <Paper elevation={3} style={{ padding: '16px', maxWidth: '800px', margin: 'auto' }}>
     <TextField
@@ -401,8 +397,80 @@ const Toolbar = ({editor, articleID}: ToolbarProps) => {
         >
           <FormatListNumbered/>
         </IconButton> */}
+        <InsertImageButton articleID={articleID}/>
         <div style={{flexGrow: 1}} />
         <TagDropdown articleID={articleID}/>
       </MuiToolbar>
+  )
+}
+
+interface InsertImageButtonProps {
+  articleID: number
+}
+
+const InsertImageButton = ( {articleID}: InsertImageButtonProps) => {
+  const editor = useSlate()
+  const ref: any = null
+  const fileInputRef = useRef(ref)
+  console.log(articleID)
+
+  const handleChange = async (event) => {
+    const file = event.target.files[0]
+    if (!file) return
+
+    const formData = new FormData()
+    formData.append('image', file)
+    formData.append('articleID', articleID.toString())
+    console.log(articleID.toString())
+    try {
+      fetch(`http://localhost:5000/api/v1/image?articleID=${articleID}`, {
+        method: "POST",
+        body: formData,
+        credentials: "include"
+      })
+      .then(response => {
+        if(!response.ok) {
+          throw new Error('Failed to save image')
+        }
+        return response.json()
+      })
+      .then(data => {
+        if (data.url) {
+          const text = {text: ""}
+          const nodes = [{type: "image", url: data.url, children: [text]}, {type: "paragraph", children: [text]}]
+          nodes.forEach((node) => 
+            Transforms.insertNodes(editor, node)
+          )
+        } else {
+          throw new Error('Upload error')
+        }
+      })
+    } catch (error) {
+      console.error("Upload error: ", error)
+    }
+  }
+
+  return (
+    <>
+      <IconButton
+        size='small'
+        onMouseDown={(event) => {
+          event.preventDefault()
+          if (fileInputRef.current) {
+            fileInputRef.current.click()
+          }
+        }}
+        aria-label='Insert Image'
+      >
+        <InsertPhotoOutlined />
+      </IconButton>
+      <input
+        type='file'
+        ref={fileInputRef}
+        style={{display: 'none'}}
+        accept="image/*"
+        onChange={handleChange}
+      />
+    </>
   )
 }
