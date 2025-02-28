@@ -1,7 +1,7 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint
 from flask import session, request, jsonify, send_from_directory, redirect, render_template, url_for
-from sqlalchemy import or_, desc, func, case
+from sqlalchemy import and_, or_, desc, func, case
 from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
 from app import app, db
@@ -638,18 +638,45 @@ class Admin(MethodView):
                         id = data.get("ID")
                         if id:
                             user: models.User = models.User.query.filter_by(ID=id).first()
-                            privilegeIDs = data.get("privilegeIDs")
-                            
-                            userPrivileges: list[models.AdminPrivilege] = []
-                            
-                            for id in privilegeIDs:
-                                priv: models.AdminPrivilege = models.AdminPrivilege.query.filter_by(ID=id).first()
-                                if priv:
-                                    userPrivileges.append(priv)
-                            
-                            user.AdminPrivileges = userPrivileges
-                            db.session.commit()
-                            return {'user': user.toJSONPartial()}, 201   
+                            if user:
+                                user_privs: list[int] = [priv.ID for priv in user.AdminPrivileges]
+                                privilegeIDs = data.get("privilegeIDs")
+
+                                if 5 in user_privs:
+                                    super_admins: list[models.User] = []
+                                    users = models.User.query.all()
+                                    for user in users:
+                                        for priv in user.AdminPrivileges:
+                                            if priv.ID == 5:
+                                                super_admins.append(user)
+
+                                    if len(super_admins) > 1:
+                                        userPrivileges: list[models.AdminPrivilege] = []
+                                    
+                                        for id in privilegeIDs:
+                                            priv: models.AdminPrivilege = models.AdminPrivilege.query.filter_by(ID=id).first()
+                                            if priv:
+                                                userPrivileges.append(priv)
+                                        
+                                        user.AdminPrivileges = userPrivileges
+                                        db.session.commit()
+
+                                        return {'user': user.toJSONPartial()}, 201 
+                                    else:
+                                        return {'msg': 'WARNING: Please add at least one other super admin before editing or removing super admin privileges!'}, 403
+                                else:
+                                    userPrivileges: list[models.AdminPrivilege] = []
+                                
+                                    for id in privilegeIDs:
+                                        priv: models.AdminPrivilege = models.AdminPrivilege.query.filter_by(ID=id).first()
+                                        if priv:
+                                            userPrivileges.append(priv)
+                                    
+                                    user.AdminPrivileges = userPrivileges
+                                    db.session.commit()
+                                    return {'user': user.toJSONPartial()}, 201 
+                            else:
+                                return {'msg': 'No such admin user'}, 404  
                         else:
                             return {'msg': 'No user id included in request'}, 400
                     else:
