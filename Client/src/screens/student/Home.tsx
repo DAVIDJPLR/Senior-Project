@@ -159,6 +159,8 @@ function NoResultFoundModal({ open, setOpen, setAlertVis }: NoResultFoundModalPr
     
     const [problemDescription, setProblemDescription] = useState("");
     const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+
+    const isMobile = useMediaQuery({ maxWidth: 767 });
     
     const submitContent = async () => {
         const response = await fetch('http://localhost:5000/api/v1/nosolution', {
@@ -191,11 +193,11 @@ function NoResultFoundModal({ open, setOpen, setAlertVis }: NoResultFoundModalPr
                         id="outlined-multiline-static"
                         label="What problem are you having?"
                         multiline
-                        rows={18}
+                        rows={isMobile ? 13 : 9}
                         defaultValue=""
                         onChange={(e) => setProblemDescription(e.target.value)}
                         variant="outlined"
-                        sx={{width: "99%"}}
+                        sx={{width: "99%", height: "99%"}}
                     ></TextField>
                 </div>
                 <div style={{height: "10%", width: "100%", display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
