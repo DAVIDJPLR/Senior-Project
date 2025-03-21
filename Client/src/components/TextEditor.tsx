@@ -1,12 +1,10 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react'
-import { createEditor, Editor, Transforms, Element, Descendant, Node } from 'slate'
+import { createEditor, Editor, Transforms, Element, Descendant } from 'slate'
 import { Slate, Editable, withReact, useSlate } from 'slate-react'
 import { withHistory } from 'slate-history'
 import {Button, CircularProgress, IconButton, Toolbar as MuiToolbar, Paper, Snackbar, SnackbarCloseReason, TextField} from '@mui/material'
-import { FormatBold, FormatItalic, FormatUnderlined, FormatQuote,
-       FormatListBulleted, FormatListNumbered,
-        Code, Title, InsertPhotoOutlined } from '@mui/icons-material'
-import { PartialArticle } from '../custom_objects/models'
+import { FormatBold, FormatItalic, FormatUnderlined, InsertPhotoOutlined } from '@mui/icons-material'
+// import { PartialArticle } from '../custom_objects/models'
 import TagDropdown from './TagDropdown'
 import { renderLeaf, renderElement } from './slate components/Renderers'
 
