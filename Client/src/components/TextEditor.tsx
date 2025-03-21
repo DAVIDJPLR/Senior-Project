@@ -7,8 +7,25 @@ import { FormatBold, FormatItalic, FormatUnderlined, InsertPhotoOutlined } from 
 // import { PartialArticle } from '../custom_objects/models'
 import TagDropdown from './TagDropdown'
 import { renderLeaf, renderElement } from './slate components/Renderers'
+import { BaseEditor } from 'slate'
+import { ReactEditor } from 'slate-react'
+import { HistoryEditor } from 'slate-history'
 
 
+type CustomText = { 
+  text: string;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+}
+
+type CustomElement = {
+  type: 'paragraph' | 'image' | 'code';
+  url?: string;
+  children: CustomText[];
+}
+
+type CustomEditor = BaseEditor & ReactEditor & HistoryEditor
 
 interface TextEditorProps {
   articleID: number
@@ -17,7 +34,7 @@ interface TextEditorProps {
 export const TextEditor = ({articleID}: TextEditorProps) => {
   const editor = useMemo(() => withHistory(withReact(createEditor())), [])
 
-  const [value, setValue] = useState<Descendant[]>([
+  const [value, setValue] = useState<CustomElement[]>([
     {
       type: 'paragraph',
       children: [{text: 'A line of text in a paragraph.'}]
@@ -200,13 +217,13 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
     <Slate
       editor={editor}
       initialValue={initialValue}
-      onChange={newValue => {
+      onChange={(newValue: Descendant[]) => {
         const isAstChange = editor.operations.some(
           op => 'set_selection' !== op.type
         )
         if (isAstChange) {
-          //setValue(serialize(newValue))
-          setValue(newValue)
+          // Ensure we're setting the state with the correct type
+          setValue(newValue as unknown as CustomElement[])
         }
       }}
     
@@ -281,30 +298,33 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
 }
 
 const CustomEditor = {
-  isBoldMarkActive(editor: Editor) {
-      const marks = Editor.marks(editor)
-      return marks ? marks.bold === true : false
+  isBoldMarkActive(editor: CustomEditor) {
+    const marks = Editor.marks(editor) as { bold?: boolean } | null
+    return marks ? marks.bold === true : false
   },
 
-  isItalicMarkActive(editor: Editor) {
-    const marks = Editor.marks(editor)
+  isItalicMarkActive(editor: CustomEditor) {
+    const marks = Editor.marks(editor) as { italic?: boolean } | null
     return marks ? marks.italic === true : false
   },
 
-  isUnderlineMarkActive(editor: Editor) {
-    const marks = Editor.marks(editor)
+  isUnderlineMarkActive(editor: CustomEditor) {
+    const marks = Editor.marks(editor) as { underline?: boolean } | null
     return marks ? marks.underline === true : false
   },
 
-  isBlockActive(editor: Editor, block: string) {
-      const [match] = Editor.nodes(editor, {
-        match: n => Element.isElement(n) && n.type === block,
-      })
-
-      return !!match
+  isBlockActive(editor: CustomEditor, block: 'paragraph' | 'image' | 'code') {
+    const [match] = Editor.nodes<CustomElement>(editor, {
+      match: n => 
+        !Editor.isEditor(n) && 
+        Element.isElement(n) && 
+        'type' in n && 
+        n.type === block,
+    }) || [null]
+    return !!match
   },
 
-  toggleBoldMark(editor: Editor) {
+  toggleBoldMark(editor: CustomEditor) {
     const isActive = CustomEditor.isBoldMarkActive(editor)
     if (isActive) {
       Editor.removeMark(editor, 'bold')
@@ -313,7 +333,7 @@ const CustomEditor = {
     }
   },
 
-  toggleItalicMark(editor: Editor) {
+  toggleItalicMark(editor: CustomEditor) {
     const isActive = CustomEditor.isItalicMarkActive(editor)
     if (isActive) {
       Editor.removeMark(editor, 'italic')
@@ -322,7 +342,7 @@ const CustomEditor = {
     }
   },
 
-  toggleUnderlineMark(editor: Editor) {
+  toggleUnderlineMark(editor: CustomEditor) {
     const isActive = CustomEditor.isUnderlineMarkActive(editor)
     if (isActive) {
       Editor.removeMark(editor, 'underline')
@@ -331,18 +351,24 @@ const CustomEditor = {
     }
   },
 
-  toggleBlock(editor: Editor, format: string) {
+  toggleBlock(editor: CustomEditor, format: 'paragraph' | 'image' | 'code') {
     const isActive = CustomEditor.isBlockActive(editor, format)
-    Transforms.setNodes(
+    Transforms.setNodes<CustomElement>(
       editor,
-      { type: isActive ? null : format },
-      { match: n => Element.isElement(n) && Editor.isBlock(editor, n) }
+      { 
+        type: isActive ? 'paragraph' : format,
+        children: [{ text: '' }]
+      },
+      { 
+        match: n => !Editor.isEditor(n) && Element.isElement(n),
+        mode: 'highest'
+      }
     )
   },
 }
 
 interface ToolbarProps {
-  editor: Editor
+  editor: CustomEditor  // Changed from Editor to CustomEditor
   articleID: number
   setCurrentTag: (x: string) => void
 }
@@ -450,9 +476,12 @@ const InsertImageButton = ( {articleID}: InsertImageButtonProps) => {
   const fileInputRef = useRef(ref)
   console.log(articleID)
 
-  const handleChange = async (event) => {
-    const file = event.target.files[0]
-    if (!file) return
+  const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+  if (!file || !file.type.startsWith('image/')) {
+    console.error('Please select a valid image file')
+    return
+  }
 
     const formData = new FormData()
     formData.append('image', file)
