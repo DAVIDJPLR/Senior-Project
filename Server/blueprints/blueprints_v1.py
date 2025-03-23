@@ -342,14 +342,18 @@ class Article(MethodView):
                         desc: str = article_updated.get('Article_Description')
                         image: str = article_updated.get('Image')
 
-                        if len(title) > 100:
-                            return {'msg': 'Updated article title length exceeds database limit of 100 characters.'}, 400
-                        if len(content) > 5000:
-                            return {'msg': 'Updated article content length exceeds database limit of 5000 characters.'}, 400
-                        if len(desc) > 500:
-                            return {'msg': 'Updated article description length exceeds database limit of 500 characters.'}, 400
-                        if len(image) > 100:
-                            return {'msg': 'Updated article image path length exceeds database limit of 100 characters.'}, 400
+                        if title:
+                            if len(title) > 100:
+                                return {'msg': 'Updated article title length exceeds database limit of 100 characters.'}, 400
+                        if content:
+                            if len(content) > 5000:
+                                return {'msg': 'Updated article content length exceeds database limit of 5000 characters.'}, 400
+                        if desc:
+                            if len(desc) > 500:
+                                return {'msg': 'Updated article description length exceeds database limit of 500 characters.'}, 400
+                        if image:
+                            if len(image) > 100:
+                                return {'msg': 'Updated article image path length exceeds database limit of 100 characters.'}, 400
 
                         article = models.Article.query.filter(models.Article.ID == id).first()
                         if not article:
