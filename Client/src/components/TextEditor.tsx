@@ -6,6 +6,7 @@ import {Button, CircularProgress, IconButton, Toolbar as MuiToolbar, Paper, Snac
 import { FormatBold, FormatItalic, FormatUnderlined, InsertPhotoOutlined } from '@mui/icons-material'
 // import { PartialArticle } from '../custom_objects/models'
 import TagDropdown from './TagDropdown'
+import CategoryDropdown from './CategoryDropdown'
 import { renderLeaf, renderElement } from './slate components/Renderers'
 import { BaseEditor } from 'slate'
 import { ReactEditor } from 'slate-react'
@@ -48,6 +49,7 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false)
 
   const [currentTag, setCurrentTag] = useState("")
+  const [currentCategory, setCurrentCategory] = useState("")
   
   // If we were given an articleID then we load that article from the DB
   useEffect(() => {
@@ -228,7 +230,7 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
       }}
     
     >
-      <Toolbar editor={editor} articleID={articleID} setCurrentTag={setCurrentTag}/>
+      <Toolbar editor={editor} articleID={articleID} setCurrentTag={setCurrentTag} setCurrentCategory={setCurrentCategory}/>
       <Editable
         label="Content"
         style={{
@@ -371,8 +373,9 @@ interface ToolbarProps {
   editor: CustomEditor  // Changed from Editor to CustomEditor
   articleID: number
   setCurrentTag: (x: string) => void
+  setCurrentCategory: (x: string) => void
 }
-const Toolbar = ({editor, articleID, setCurrentTag}: ToolbarProps) => {
+const Toolbar = ({editor, articleID, setCurrentTag, setCurrentCategory}: ToolbarProps) => {
 //const Toolbar = ({ editor }: {editor: Editor}) => {
   return (
     <MuiToolbar variant="dense" style={{ marginBottom: '8px', borderBottom: '1px solid #ddd'}}>
@@ -462,6 +465,7 @@ const Toolbar = ({editor, articleID, setCurrentTag}: ToolbarProps) => {
         <InsertImageButton articleID={articleID}/>
         <div style={{flexGrow: 1}} />
         <TagDropdown articleID={articleID} setCurrentTag={setCurrentTag}/>
+        <CategoryDropdown articleID={articleID} setCurrentCategory={setCurrentCategory}/>
       </MuiToolbar>
   )
 }
