@@ -4,6 +4,7 @@ import { useState, useEffect, StrictMode } from "react";
 import { loginRequest } from './authConfig';
 
 import { AuthenticatedTemplate, UnauthenticatedTemplate, useMsal } from '@azure/msal-react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
 import StudentBrowse from "./screens/student/Browse";
 import StudentHome from "./screens/student/Home";
@@ -119,40 +120,84 @@ function App() {
     * If a user is authenticated the ProfileContent component above is rendered. Otherwise a message indicating a user is not authenticated is rendered.
     */
     const MainContent = () => {
-        switch (currentScreen) {
-            case AdminScreen.Analysis:
-                return(
-                    <AdminAnalysis currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></AdminAnalysis>
-                );
-            case AdminScreen.Articles:
-                return(
-                    <AdminArticles currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></AdminArticles>
-                );
-            case AdminScreen.BackLog:
-                return(
-                    <AdminBacklog currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></AdminBacklog>
-                );
-            case AdminScreen.Splash:
-                return(
+        <Routes>
+            <Route
+                path = "/"
+                element = {
+                  admin ? (
                     <AdminHome currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></AdminHome>
-                );
-            case AdminScreen.Users:
-                return(
-                    <AdminUsers currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></AdminUsers>
-                );
-            case StudentScreen.Browse:
-                return(
-                    <StudentBrowse currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></StudentBrowse>
-                );
-            case StudentScreen.Home:
-                return(
+                  ) : (
                     <StudentHome currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></StudentHome>
-                );
-            case StudentScreen.Recently_Viewed:
-                return(
-                    <StudentRecent currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></StudentRecent>
-                );
-        }
+                  )
+                }
+            />
+            <Route
+                path = "/article:articleID"
+                // element = {
+
+                // }
+            />
+            <Route
+                path = "/article:articleID/edit"
+            />
+            <Route
+                path = "/search/"
+            />
+            <Route
+                path = "/user/viewedarticles"
+                element = { <StudentRecent currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></StudentRecent> }
+            />
+            <Route
+                path = "/categories/articles"
+                element = { <StudentBrowse currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></StudentBrowse> }
+            />
+            <Route
+
+            />
+            <Route
+
+            />
+            <Route
+
+            />
+            <Route
+
+            />
+        </Routes>
+        // switch (currentScreen) {
+        //     case AdminScreen.Analysis:
+        //         return(
+        //             <AdminAnalysis currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></AdminAnalysis>
+        //         );
+        //     case AdminScreen.Articles:
+        //         return(
+        //             <AdminArticles currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></AdminArticles>
+        //         );
+        //     case AdminScreen.BackLog:
+        //         return(
+        //             <AdminBacklog currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></AdminBacklog>
+        //         );
+        //     case AdminScreen.Splash:
+        //         return(
+        //             <AdminHome currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></AdminHome>
+        //         );
+        //     case AdminScreen.Users:
+        //         return(
+        //             <AdminUsers currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></AdminUsers>
+        //         );
+        //     case StudentScreen.Browse:
+        //         return(
+        //             <StudentBrowse currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></StudentBrowse>
+        //         );
+        //     case StudentScreen.Home:
+        //         return(
+        //             <StudentHome currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></StudentHome>
+        //         );
+        //     case StudentScreen.Recently_Viewed:
+        //         return(
+        //             <StudentRecent currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></StudentRecent>
+        //         );
+        // }
     };
 
     return (
@@ -160,7 +205,53 @@ function App() {
             <AuthenticatedTemplate>
                 <HandleToken setAuthenticated={setAuthenticated}/>
                 <StrictMode>
-                    <MainContent/>
+                    <Router>
+                        {/* <MainContent/> */}
+                        <Routes>
+                            <Route
+                                path = "/"
+                                element = {
+                                admin ? (
+                                    <AdminHome currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></AdminHome>
+                                ) : (
+                                    <StudentHome currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></StudentHome>
+                                )
+                                }
+                            />
+                            <Route
+                                path = "/article:articleID"
+                                // element = {
+
+                                // }
+                            />
+                            <Route
+                                path = "/article:articleID/edit"
+                            />
+                            <Route
+                                path = "/search/"
+                            />
+                            <Route
+                                path = "/user/viewedarticles"
+                                element = { <StudentRecent currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></StudentRecent> }
+                            />
+                            <Route
+                                path = "/categories/articles"
+                                element = { <StudentBrowse currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></StudentBrowse> }
+                            />
+                            <Route
+
+                            />
+                            <Route
+
+                            />
+                            <Route
+
+                            />
+                            <Route
+
+                            />
+                        </Routes>
+                    </Router>
                 </StrictMode>
             </AuthenticatedTemplate>
 
@@ -172,3 +263,69 @@ function App() {
 }
 
 export default App
+
+            // <Routes>
+            //   {/* Home Route */}
+            //   <Route
+            //     path="/"
+            //     element={
+            //       isUnauthorized ? (
+            //         <Navigate to="/unauthorized/" />
+            //       ) : isAuthenticated ? (
+            //         <HomePage isAuthenticated={isAuthenticated} refreshData={false} />
+            //       ) : (
+            //         <Navigate to="/auth/" />
+            //       )
+            //     }
+            //   />
+            //   {/* Student Details Route */}
+            //   <Route
+            //     path="/student/:studentId"
+            //     element={
+            //       isUnauthorized ? <Navigate to="/unauthorized/" /> : isAuthenticated ? <StudentDetails /> : <Navigate to="/auth/" />
+            //     }
+            //   />
+            //   {/* Student Local Search Route */}
+            //   <Route
+            //     path="/local_search/:studentId"
+            //     element={
+            //       isUnauthorized ? <Navigate to="/unauthorized/" /> : isAuthenticated ? <LocalSearch /> : <Navigate to="/auth/" />
+            //     }
+            //   />
+            //   {/* Requirements Route */}
+            //   <Route
+            //     path="/requirements/"
+            //     element={
+            //       isUnauthorized ? <Navigate to="/unauthorized/" /> : isAuthenticated ? <Requirements /> : <Navigate to="/auth/" />
+            //     }
+            //   />
+            //   {/* Solutions Route */}
+            //   <Route
+            //     path="/solutions/"
+            //     element={
+            //       isUnauthorized ? <Navigate to="/unauthorized/" /> : isAuthenticated ? <Solutions /> : <Navigate to="/auth/" />
+            //     }
+            //   />
+            //   {/* Admin Route */}
+            //   <Route
+            //     path="/admin/"
+            //     element={
+            //       isUnauthorized ? <Navigate to="/unauthorized/" /> : isAuthenticated ? <Admin currentUser={currentUser} /> : <Navigate to="/auth/" />
+            //     }
+            //   />
+            //   {/* Authentication Route */}
+            //   <Route
+            //     path="/auth/"
+            //     element={
+            //       <Authentication
+            //         setIsAuthenticated={setIsAuthenticated}
+            //         setIsUnauthorized={setIsUnauthorized}
+            //         setCurrentUser={setCurrentUser}
+            //         setIsLoading={setIsLoadingCallback}
+            //         setBackendData={setBackendData} 
+            //       />
+            //     }
+            //   />
+            //   {/* Unauthorized Route */}
+            //   <Route path="/unauthorized/" element={<Unauthorized />} />
+            // </Routes>

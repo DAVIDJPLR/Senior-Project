@@ -52,7 +52,7 @@ function ArticleModal({ handleClose, open, article }: Props) {
     const [exists, setExists] = useState(false)
     const [oldValue, setOldValue] = useState<boolean | null>(null)
 
-    const articleURL: string = "URL_" + article?.Title;
+    const articleURL: string = `http://localhost:5000/api/v1/article?articleID=${article?.ID}`;
 
     const editor = useMemo(() => withReact(createEditor()), []);
 
