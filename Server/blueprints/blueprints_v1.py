@@ -754,10 +754,10 @@ class Admin(MethodView):
                         if 5 in user_privs:
                             super_admins: list[models.User] = []
                             users = models.User.query.all()
-                            for tempUser in users:
-                                for priv in tempUser.AdminPrivileges:
+                            for user in users:
+                                for priv in user.AdminPrivileges:
                                     if priv.ID == 5:
-                                        super_admins.append(tempUser)
+                                        super_admins.append(user)
 
                             if len(super_admins) > 1:
                                 user.AdminPrivileges = []
