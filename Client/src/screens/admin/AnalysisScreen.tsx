@@ -1,9 +1,11 @@
 import AdminAppBar from "../../components/AdminAppBar";
 import { Screen } from "../../custom_objects/Screens";
 import { TableContainer, Table, TableHead, TableRow, TableCell, Typography, TableBody, useTheme } from "@mui/material";
-import { PartialArticle } from "../../custom_objects/models";
+import { PartialArticle, PartialSearch, PartialAdminPrivilege } from "../../custom_objects/models";
 import { useState, useEffect } from "react";
-import { useMediaQuery } from "react-responsive"; 
+import { useMediaQuery } from "react-responsive";
+import EditArticleModal from './EditScreen';
+
 
 interface Props{
     currentScreen: Screen
@@ -27,6 +29,23 @@ function AdminAnalysis({ currentScreen, setCurrentScreen }: Props){
     const [numThumbsDown, setNumThumbsDown] = useState<number[]>([]);
     const [articlesDate, setArticlesDate] = useState(sixtyDaysAgoInSeconds);
 
+    const [editModalOpen, setEditModalOpen] = useState(false)
+    const [selectedArticle, setSelectedArticle] = useState<PartialArticle>(createEmptyArticle())
+    const [privilegeIDs, setPrivilegesIDs] = useState([0])
+    const [privileges, setPrivileges] = useState<PartialAdminPrivilege[]>([]);
+
+    const handleEditArticle = (article: PartialArticle) => {
+            if (privilegeIDs.includes(3)){
+                setSelectedArticle(article)
+                setEditModalOpen(true)
+            }
+        };
+
+    const handleCloseModal = () => {
+            setEditModalOpen(false)
+            setSelectedArticle(createEmptyArticle())
+        };
+
     const getData = async() => {
         const params = new URLSearchParams({
             time: articlesDate.toString(),
@@ -49,8 +68,26 @@ function AdminAnalysis({ currentScreen, setCurrentScreen }: Props){
         setNumSearches(data.searches as number[]);
     }
 
+    const loadPrivileges = async () => {
+            const response = await fetch('http://localhost:5000/api/v1/user/info', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
+            });
+    
+            const data = await response.json();
+    
+            setPrivileges(data.current_privileges as PartialAdminPrivilege[])
+            const temp1 = data.current_privileges as PartialAdminPrivilege[]
+            const temp2 = temp1.map(priv => priv.ID)
+            setPrivilegesIDs(temp2)
+        }
+
     useEffect(() => {
         getData()
+        loadPrivileges();
     }, [])
 
     return(
@@ -83,7 +120,11 @@ function AdminAnalysis({ currentScreen, setCurrentScreen }: Props){
                             {articles.map((article, index) => (
                                 <TableRow key={index}>
                                     <TableCell>
-                                        <Typography sx={{fontSize: "12px"}}>{article.Title}</Typography>
+                                    <Typography 
+                                                onClick={() => {handleEditArticle(article)}}
+                                                sx={{ fontSize: "12px", color: privilegeIDs.includes(3)?'secondary.main':"black" , cursor: privilegeIDs.includes(3)?'pointer':"auto" , textDecoration: privilegeIDs.includes(3)?'underline':"none" }}
+                                                >{article.Title}
+                                    </Typography>
                                     </TableCell>
                                     <TableCell>
                                     <Typography sx={{fontSize: "12px"}}>{numSearches[index]}</Typography>
@@ -99,6 +140,14 @@ function AdminAnalysis({ currentScreen, setCurrentScreen }: Props){
                         </TableBody>
                     </Table>
                 </TableContainer>
+
+                {privilegeIDs.includes(3) && (
+                    <EditArticleModal
+                        open={editModalOpen}
+                        article={selectedArticle}
+                        onClose={handleCloseModal}
+                    />
+                )}
             </div>
             {isMobile && (
                 <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
@@ -107,6 +156,18 @@ function AdminAnalysis({ currentScreen, setCurrentScreen }: Props){
             )}
         </div>
     )
+}
+
+function createEmptyArticle(): PartialArticle {
+    return {
+        ID: -1,
+        Title: "",
+        Content: "",
+        Article_Description: "",
+        Image: "",
+        ThumbsUp: 0,
+        ThumbsDown: 0
+    };
 }
 
 export default AdminAnalysis;
