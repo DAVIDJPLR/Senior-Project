@@ -12,7 +12,7 @@ app = Flask(__name__)
 # The supports_credentials argument ensures that cookies get passed back 
 # and forth between the front end and the backend to maintain the same session
 # when appropriate
-CORS(app, supports_credentials=True, origins=['http://localhost:5173'])
+CORS(app, supports_credentials=True, origins=['http://localhost:5173', 'https://computerhelp.gcc.edu'])
 
 app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://root:C0dePr0j$@10.18.103.22:3306/helpgccedu"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
