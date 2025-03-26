@@ -47,6 +47,7 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
   console.log(`HEEEEERE IT IS ${articleID}`)
   const [loading, setLoading] = useState<boolean>(!!articleID)
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false)
+  const [emptyField, setEmptyField] = useState<boolean>(false)
 
   const [currentTag, setCurrentTag] = useState("")
   const [currentCategory, setCurrentCategory] = useState("")
@@ -104,6 +105,13 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
       Title: title,
       Content: content,
       Article_Description: description
+    }
+    for (const field in articlePayload) {
+      console.log(articlePayload[field])
+      if (articlePayload[field].length == 0) {
+        setEmptyField(true)
+        return;
+      }
     }
 
     let url = 'http://localhost:5000/api/v1/article'
@@ -179,6 +187,7 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
       return
     }
     setSaveSuccess(false)
+    setEmptyField(false)
   }
 
   const initialValue = value
@@ -294,6 +303,12 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
       autoHideDuration={3000}
       onClose={handleCloseSnackbar}
       message="Article saved!"
+      />
+    <Snackbar
+      open={emptyField}
+      autoHideDuration={3000}
+      onClose={handleCloseSnackbar}
+      message="One or more fields are empty!"
       />
     </Paper>
   )
