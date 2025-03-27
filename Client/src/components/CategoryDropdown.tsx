@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { FormControl, InputLabel, Select, SelectChangeEvent, MenuItem } from "@mui/material"
 import { PartialMetaTag, MetaTag } from "../custom_objects/models"
+import { APIBASE } from "../ApiBase"
 
 interface CategoryDropdownProps {
     articleID: number,
@@ -14,7 +15,7 @@ function CategoryDropdown( {articleID, setCurrentCategory}: CategoryDropdownProp
     const [selectedCategory, setSelectedCategory] = useState<MetaTag>()
 
     useEffect(() => {
-        fetch(`http://localhost:5000/api/v1/article/categories?ArticleID=${articleID}`, {
+        fetch(APIBASE + `/api/v1/article/categories?ArticleID=${articleID}`, {
             method: "GET",
             credentials: "include"
         })
@@ -41,7 +42,7 @@ function CategoryDropdown( {articleID, setCurrentCategory}: CategoryDropdownProp
     }, [])
 
     useEffect(() => {
-        fetch('http://localhost:5000/api/v1/categories', {
+        fetch(APIBASE + '/api/v1/categories', {
             method: "GET",
             credentials: "include"
         })
@@ -73,7 +74,7 @@ function CategoryDropdown( {articleID, setCurrentCategory}: CategoryDropdownProp
         console.log(newCategoryID)
         console.log(newCategoryLabel)
         
-        fetch("http://localhost:5000/api/v1/article/categories", {
+        fetch(APIBASE + "/api/v1/article/categories", {
             method: "PUT",
             credentials: "include",
             headers: {
