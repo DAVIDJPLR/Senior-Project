@@ -5,6 +5,7 @@ import ArticleCard from "../../components/ArticleCard";
 import ArticleModal from "../../components/ArticleModal";
 import { PartialArticle } from "../../custom_objects/models"
 import { useMediaQuery } from "react-responsive";  
+import { APIBASE } from "../../ApiBase";
 
 interface Props{
     currentScreen: Screen
@@ -20,7 +21,7 @@ function StudentRecent({ currentScreen, setCurrentScreen }: Props){
 
     const getRecentArticles = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/v1/user/viewedarticles', {
+            const response = await fetch(APIBASE + '/api/v1/user/viewedarticles', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -38,7 +39,7 @@ function StudentRecent({ currentScreen, setCurrentScreen }: Props){
     }
 
     const logView = async(article: PartialArticle) => {
-        const response = await fetch(`http://localhost:5000/api/v1/article?articleID=${article.ID}`, {
+        const response = await fetch(APIBASE + `/api/v1/article?articleID=${article.ID}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'

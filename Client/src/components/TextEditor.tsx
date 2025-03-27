@@ -6,10 +6,12 @@ import {Button, CircularProgress, IconButton, Toolbar as MuiToolbar, Paper, Snac
 import { FormatBold, FormatItalic, FormatUnderlined, InsertPhotoOutlined } from '@mui/icons-material'
 // import { PartialArticle } from '../custom_objects/models'
 import TagDropdown from './TagDropdown'
+import CategoryDropdown from './CategoryDropdown'
 import { renderLeaf, renderElement } from './slate components/Renderers'
 import { BaseEditor } from 'slate'
 import { ReactEditor } from 'slate-react'
 import { HistoryEditor } from 'slate-history'
+import { APIBASE } from '../ApiBase'
 
 
 type CustomText = { 
@@ -46,14 +48,16 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
   console.log(`HEEEEERE IT IS ${articleID}`)
   const [loading, setLoading] = useState<boolean>(!!articleID)
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false)
+  const [emptyField, setEmptyField] = useState<boolean>(false)
 
   const [currentTag, setCurrentTag] = useState("")
+  const [currentCategory, setCurrentCategory] = useState("")
   
   // If we were given an articleID then we load that article from the DB
   useEffect(() => {
     if (articleID >= 0) {
       console.log("Text editor received articleID: ", articleID)
-      const url = `http://localhost:5000/api/v1/article?articleID=${articleID}`
+      const url = APIBASE + `/api/v1/article?articleID=${articleID}`
       console.log("Fetching article from URL: ", url)
       fetch(url, {
         method: 'GET',
@@ -103,8 +107,15 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
       Content: content,
       Article_Description: description
     }
+    for (const field in articlePayload) {
+      console.log(articlePayload[field])
+      if (articlePayload[field].length == 0) {
+        setEmptyField(true)
+        return;
+      }
+    }
 
-    let url = 'http://localhost:5000/api/v1/article'
+    let url = APIBASE + '/api/v1/article'
     // default to POST for creating a new article
     let method = 'POST'
 
@@ -112,7 +123,7 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
     if (articleID >= 0) {
       method = 'PUT'
       articlePayload.ID = articleID
-      url = `http://localhost:5000/api/v1/article?articleID=${articleID}`
+      url = APIBASE + `/api/v1/article?articleID=${articleID}`
     }
 
     if (articleID >= 0) {
@@ -177,6 +188,7 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
       return
     }
     setSaveSuccess(false)
+    setEmptyField(false)
   }
 
   const initialValue = value
@@ -228,7 +240,7 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
       }}
     
     >
-      <Toolbar editor={editor} articleID={articleID} setCurrentTag={setCurrentTag}/>
+      <Toolbar editor={editor} articleID={articleID} setCurrentTag={setCurrentTag} setCurrentCategory={setCurrentCategory}/>
       <Editable
         label="Content"
         style={{
@@ -292,6 +304,12 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
       autoHideDuration={3000}
       onClose={handleCloseSnackbar}
       message="Article saved!"
+      />
+    <Snackbar
+      open={emptyField}
+      autoHideDuration={3000}
+      onClose={handleCloseSnackbar}
+      message="One or more fields are empty!"
       />
     </Paper>
   )
@@ -371,8 +389,9 @@ interface ToolbarProps {
   editor: CustomEditor  // Changed from Editor to CustomEditor
   articleID: number
   setCurrentTag: (x: string) => void
+  setCurrentCategory: (x: string) => void
 }
-const Toolbar = ({editor, articleID, setCurrentTag}: ToolbarProps) => {
+const Toolbar = ({editor, articleID, setCurrentTag, setCurrentCategory}: ToolbarProps) => {
 //const Toolbar = ({ editor }: {editor: Editor}) => {
   return (
     <MuiToolbar variant="dense" style={{ marginBottom: '8px', borderBottom: '1px solid #ddd'}}>
@@ -462,6 +481,7 @@ const Toolbar = ({editor, articleID, setCurrentTag}: ToolbarProps) => {
         <InsertImageButton articleID={articleID}/>
         <div style={{flexGrow: 1}} />
         <TagDropdown articleID={articleID} setCurrentTag={setCurrentTag}/>
+        <CategoryDropdown articleID={articleID} setCurrentCategory={setCurrentCategory}/>
       </MuiToolbar>
   )
 }
@@ -488,7 +508,7 @@ const InsertImageButton = ( {articleID}: InsertImageButtonProps) => {
     formData.append('articleID', articleID.toString())
     console.log(articleID.toString())
     try {
-      fetch(`http://localhost:5000/api/v1/image?articleID=${articleID}`, {
+      fetch(APIBASE + `/api/v1/image?articleID=${articleID}`, {
         method: "POST",
         body: formData,
         credentials: "include"
