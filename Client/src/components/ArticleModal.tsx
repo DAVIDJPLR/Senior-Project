@@ -7,6 +7,7 @@ import { PartialArticle } from '../custom_objects/models';
 import { createEditor } from 'slate';
 import { Slate, Editable, withReact } from 'slate-react'
 import { renderLeaf, renderElement } from './slate components/Renderers';
+import { APIBASE } from '../ApiBase';
 
 interface Props {
     handleClose: () => void;
@@ -19,7 +20,7 @@ interface getFeedbackProps {
 }
 
 function getFeedback({articleID}: getFeedbackProps): {exists: boolean; positive?: boolean} {
-    fetch(`http://localhost:5000/api/v1/feedback?articleID=${articleID}`, {
+    fetch(APIBASE + `/api/v1/feedback?articleID=${articleID}`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -100,7 +101,7 @@ function ArticleModal({ handleClose, open, article }: Props) {
             ArticleID: article.ID
         };
     
-        fetch('http://localhost:5000/api/v1/feedback', {
+        fetch(APIBASE + '/api/v1/feedback', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

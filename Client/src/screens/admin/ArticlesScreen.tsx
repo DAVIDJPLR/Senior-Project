@@ -9,6 +9,7 @@ import { useMediaQuery } from "react-responsive";
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import { PartialAdminPrivilege } from "../../custom_objects/models";
 import { useTheme, FormControl, InputLabel, Select, OutlinedInput, MenuItem, Checkbox, ListItemText, SelectChangeEvent, Button } from "@mui/material";
+import { APIBASE } from '../../ApiBase';
 
 interface Props{
     currentScreen: Screen
@@ -43,7 +44,7 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
     const theme = useTheme();
 
     const loadPrivileges = async () => {
-        const response = await fetch('http://localhost:5000/api/v1/user/info', {
+        const response = await fetch(APIBASE + '/api/v1/user/info', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -93,7 +94,7 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
     }
     
     const getTags = async () => {
-        const response = await fetch('http://localhost:5000/api/v1/articletag/getall', {
+        const response = await fetch(APIBASE + '/api/v1/articletag/getall', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -109,7 +110,7 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
     }
 
     const getArticles = async () => {
-        const response = await fetch('http://localhost:5000/api/v1/articles', {
+        const response = await fetch(APIBASE + '/api/v1/articles', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -142,7 +143,7 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
     };
 
     const defaultArticles = async () => {
-        const response = await fetch('http://localhost:5000/api/v1/articles', {
+        const response = await fetch(APIBASE + '/api/v1/articles', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -164,7 +165,7 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
 
         console.log(`searching with val ${searchVal} and tag ${tags}`)
 
-        const response = await fetch(`http://localhost:5000/api/v1/articles/search/tagandquery?${params.toString()}`, {
+        const response = await fetch(APIBASE + `/api/v1/articles/search/tagandquery?${params.toString()}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
