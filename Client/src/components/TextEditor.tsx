@@ -502,10 +502,27 @@ const InsertImageButton = ( {articleID}: InsertImageButtonProps) => {
       .then(data => {
         if (data.url) {
           const text = {text: ""}
-          const nodes = [{type: "image", url: data.url, children: [text]}, {type: "paragraph", children: [text]}]
-          nodes.forEach((node) => 
-            Transforms.insertNodes(editor, node)
-          )
+          const imageNode = {
+            type: 'image',
+            url: data.url,
+            children: [text]
+          }
+          const paragraphNode = {
+            type: 'paragraph',
+            children: [text]
+          }
+          const { selection } = editor
+          if (selection) {
+            Transforms.insertNodes(editor, imageNode)
+            console.log("Current selection after insert", editor.selection)
+
+
+            Transforms.insertNodes(editor, paragraphNode)
+            Transforms.insertNodes(editor, paragraphNode)
+
+            const point = Editor.end(editor, Editor.path(editor, selection))
+            Transforms.select(editor, Editor.start(editor, point))
+          }
         } else {
           throw new Error('Upload error')
         }
