@@ -1025,6 +1025,25 @@ class TagNames(MethodView):
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
         
+## returns all meta tags in the database, for UI purposes
+@apiv1.route("/metatags/getall", methods=["OPTIONS", "GET"])
+class MetaTagNames(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        try:
+            if 'current_user_id' in session:
+                metatags = models.MetaTag.query.all()
+                returnMetaTags = [metatag.toJSONPartial() for metatag in metatags]
+                db.session.commit()
+                return {'MetaTags': returnMetaTags}, 200
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+        
 @apiv1.route("/categories", methods=["OPTIONS", "GET"])
 class Categories(MethodView):
     def options(self):
@@ -1644,7 +1663,7 @@ class SystemStatsSearch(MethodView):
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
         
-@apiv1.route("/article/categories", methods=["OPTIONS", "GET", "PUT"])
+@apiv1.route("/article/tags", methods=["OPTIONS", "GET", "PUT"])
 class SystemStatsSearch(MethodView):
     def options(self):
         return '', 200
@@ -1705,7 +1724,70 @@ class SystemStatsSearch(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-        
+
+
+@apiv1.route("/article/categories", methods=["OPTIONS", "GET", "PUT"])
+class SystemStatsSearch(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if len(session['current_user_privileges']) > 0:
+
+                    articleID = request.args.get("ArticleID")
+                    
+                    if int(articleID) >= 0:
+                        article: models.Article = models.Article.query.filter_by(ID=articleID).first()
+
+                        metatags = []
+                        for metatag in article.MetaTags:
+                            metatags.append(metatag)
+                        
+                        returnableMetaTags = [metatag.toJSONPartial() for metatag in metatags]
+                        db.session.commit()
+
+                        return {'metatags': returnableMetaTags}, 200
+                    else:
+                        return {'msg': "Creating Article"}, 200
+
+                else:
+                    return {'msg': 'Unauthorized access'}, 403
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+    def put(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if 3 in session['current_user_privileges']:
+                    metatag_updated = request.json
+
+                    if metatag_updated:
+                        article_id: int = metatag_updated.get("articleID")
+                        metatag_id: int = metatag_updated.get("metatagID")
+                        article = models.Article.query.get(article_id)
+                        if article:
+                            metatag = models.MetaTag.query.get(metatag_id)
+                            article.MetaTags = [metatag]
+                            db.session.commit()
+
+                            return {'msg': 'Article metatag updated successfully.'}, 200
+                        else:
+                            return {'msg': 'No article provided.'}, 400
+                    else:
+                        return {'msg': 'No data provided.'}, 400
+                else:
+                    return {'msg': 'Unauthorized privileges.'}, 403
+            else:
+                return {'msg': 'Unauthorized access.'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+
 @apiv1.route("/image", methods=["OPTIONS", "GET", "PUT", "POST", "DELETE"])
 class ImageUpload(MethodView):
     def options(self):

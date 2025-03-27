@@ -6,6 +6,7 @@ import {Button, CircularProgress, IconButton, Toolbar as MuiToolbar, Paper, Snac
 import { FormatBold, FormatItalic, FormatUnderlined, InsertPhotoOutlined } from '@mui/icons-material'
 // import { PartialArticle } from '../custom_objects/models'
 import TagDropdown from './TagDropdown'
+import CategoryDropdown from './CategoryDropdown'
 import { renderLeaf, renderElement } from './slate components/Renderers'
 import { BaseEditor } from 'slate'
 import { ReactEditor } from 'slate-react'
@@ -46,8 +47,10 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
   console.log(`HEEEEERE IT IS ${articleID}`)
   const [loading, setLoading] = useState<boolean>(!!articleID)
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false)
+  const [emptyField, setEmptyField] = useState<boolean>(false)
 
   const [currentTag, setCurrentTag] = useState("")
+  const [currentCategory, setCurrentCategory] = useState("")
   
   // If we were given an articleID then we load that article from the DB
   useEffect(() => {
@@ -102,6 +105,13 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
       Title: title,
       Content: content,
       Article_Description: description
+    }
+    for (const field in articlePayload) {
+      console.log(articlePayload[field])
+      if (articlePayload[field].length == 0) {
+        setEmptyField(true)
+        return;
+      }
     }
 
     let url = 'http://localhost:5000/api/v1/article'
@@ -177,6 +187,7 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
       return
     }
     setSaveSuccess(false)
+    setEmptyField(false)
   }
 
   const initialValue = value
@@ -228,7 +239,7 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
       }}
     
     >
-      <Toolbar editor={editor} articleID={articleID} setCurrentTag={setCurrentTag}/>
+      <Toolbar editor={editor} articleID={articleID} setCurrentTag={setCurrentTag} setCurrentCategory={setCurrentCategory}/>
       <Editable
         label="Content"
         style={{
@@ -292,6 +303,12 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
       autoHideDuration={3000}
       onClose={handleCloseSnackbar}
       message="Article saved!"
+      />
+    <Snackbar
+      open={emptyField}
+      autoHideDuration={3000}
+      onClose={handleCloseSnackbar}
+      message="One or more fields are empty!"
       />
     </Paper>
   )
@@ -371,8 +388,9 @@ interface ToolbarProps {
   editor: CustomEditor  // Changed from Editor to CustomEditor
   articleID: number
   setCurrentTag: (x: string) => void
+  setCurrentCategory: (x: string) => void
 }
-const Toolbar = ({editor, articleID, setCurrentTag}: ToolbarProps) => {
+const Toolbar = ({editor, articleID, setCurrentTag, setCurrentCategory}: ToolbarProps) => {
 //const Toolbar = ({ editor }: {editor: Editor}) => {
   return (
     <MuiToolbar variant="dense" style={{ marginBottom: '8px', borderBottom: '1px solid #ddd'}}>
@@ -462,6 +480,7 @@ const Toolbar = ({editor, articleID, setCurrentTag}: ToolbarProps) => {
         <InsertImageButton articleID={articleID}/>
         <div style={{flexGrow: 1}} />
         <TagDropdown articleID={articleID} setCurrentTag={setCurrentTag}/>
+        <CategoryDropdown articleID={articleID} setCurrentCategory={setCurrentCategory}/>
       </MuiToolbar>
   )
 }
