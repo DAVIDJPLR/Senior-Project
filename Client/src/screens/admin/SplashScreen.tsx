@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { Screen, AdminScreen } from "../../custom_objects/Screens";
 import { useMediaQuery } from "react-responsive"; 
 import EditArticleModal from './EditScreen';
+import { APIBASE } from "../../ApiBase";
 
 interface Props{
     currentScreen: Screen
@@ -56,7 +57,7 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
     };
 
     const loadPrivileges = async () => {
-        const response = await fetch('http://localhost:5000/api/v1/user/info', {
+        const response = await fetch(APIBASE + '/api/v1/user/info', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -78,7 +79,7 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
             size: lstSize.toString()
         });
 
-        const response = await fetch(`http://localhost:5000/api/v1/articles/problems?${params.toString()}`, {
+        const response = await fetch(APIBASE + `/api/v1/articles/problems?${params.toString()}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -97,7 +98,7 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
             size: lstSize.toString()
         });
 
-        const response = await fetch(`http://localhost:5000/api/v1/articles/popular?${params.toString()}`, {
+        const response = await fetch(APIBASE + `/api/v1/articles/popular?${params.toString()}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -117,7 +118,7 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
             size: lstSize.toString()
         });
 
-        const response = await fetch(`http://localhost:5000/api/v1/searches/problems?${params.toString()}`, {
+        const response = await fetch(APIBASE + `/api/v1/searches/problems?${params.toString()}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -131,7 +132,7 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
     }  
 
     const getStats = async () => {
-        const response = await fetch(`http://localhost:5000/api/v1/system/stats?`, {
+        const response = await fetch(APIBASE + `/api/v1/system/stats?`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

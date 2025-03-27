@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { FormControl, InputLabel, Select, SelectChangeEvent, MenuItem } from "@mui/material"
 import { PartialTag, Tag } from "../custom_objects/models"
+import { APIBASE } from "../ApiBase"
 
 interface TagDropdownProps {
     articleID: number,
@@ -14,7 +15,7 @@ function TagDropdown( {articleID, setCurrentTag}: TagDropdownProps) {
     const [selectedTag, setSelectedTag] = useState<Tag>()
 
     useEffect(() => {
-        fetch(`http://localhost:5000/api/v1/article/tags?ArticleID=${articleID}`, {
+        fetch(APIBASE + `/api/v1/article/tags?ArticleID=${articleID}`, {
             method: "GET",
             credentials: "include"
         })
@@ -41,7 +42,7 @@ function TagDropdown( {articleID, setCurrentTag}: TagDropdownProps) {
     }, [])
 
     useEffect(() => {
-        fetch('http://localhost:5000/api/v1/articletag/getall', {
+        fetch(APIBASE + '/api/v1/articletag/getall', {
             method: "GET",
             credentials: "include"
         })

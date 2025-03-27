@@ -6,6 +6,7 @@ import ArticleCard from "../../components/ArticleCard";
 import ArticleModal from "../../components/ArticleModal";
 import { Typography, Button } from '@mui/material';
 import { useMediaQuery } from "react-responsive"; 
+import { APIBASE } from "../../ApiBase";
 
 interface Props{
     currentScreen: Screen
@@ -81,7 +82,7 @@ function BrowseArticles({currentCategory, setCurrentCategory, setViewArticles}: 
             ID: cat.ID.toString()
         });
 
-        const response = await fetch(`http://localhost:5000/api/v1/category?${params.toString()}`, {
+        const response = await fetch(APIBASE + `/api/v1/category?${params.toString()}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -96,7 +97,7 @@ function BrowseArticles({currentCategory, setCurrentCategory, setViewArticles}: 
     }
 
     const logView = async(article: PartialArticle) => {
-        const response = await fetch(`http://localhost:5000/api/v1/article?articleID=${article.ID}`, {
+        const response = await fetch(APIBASE + `/api/v1/article?articleID=${article.ID}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -144,7 +145,7 @@ function BrowseCategories({setViewArticles, setCurrentCategory}: BrowseCategorie
     const [categories, setCategories] = useState<PartialMetaTag[]>([]);
 
     const getCategories = async () => {
-        const response = await fetch('http://localhost:5000/api/v1/categories', {
+        const response = await fetch(APIBASE + '/api/v1/categories', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
