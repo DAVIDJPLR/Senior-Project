@@ -10,6 +10,7 @@ import { renderLeaf, renderElement } from './slate components/Renderers'
 import { BaseEditor } from 'slate'
 import { ReactEditor } from 'slate-react'
 import { HistoryEditor } from 'slate-history'
+import { APIBASE } from '../ApiBase'
 
 
 type CustomText = { 
@@ -53,7 +54,7 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
   useEffect(() => {
     if (articleID >= 0) {
       console.log("Text editor received articleID: ", articleID)
-      const url = `http://localhost:5000/api/v1/article?articleID=${articleID}`
+      const url = APIBASE + `/api/v1/article?articleID=${articleID}`
       console.log("Fetching article from URL: ", url)
       fetch(url, {
         method: 'GET',
@@ -104,7 +105,7 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
       Article_Description: description
     }
 
-    let url = 'http://localhost:5000/api/v1/article'
+    let url = APIBASE + '/api/v1/article'
     // default to POST for creating a new article
     let method = 'POST'
 
@@ -112,7 +113,7 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
     if (articleID >= 0) {
       method = 'PUT'
       articlePayload.ID = articleID
-      url = `http://localhost:5000/api/v1/article?articleID=${articleID}`
+      url = APIBASE + `/api/v1/article?articleID=${articleID}`
     }
 
     if (articleID >= 0) {
@@ -488,7 +489,7 @@ const InsertImageButton = ( {articleID}: InsertImageButtonProps) => {
     formData.append('articleID', articleID.toString())
     console.log(articleID.toString())
     try {
-      fetch(`http://localhost:5000/api/v1/image?articleID=${articleID}`, {
+      fetch(APIBASE + `/api/v1/image?articleID=${articleID}`, {
         method: "POST",
         body: formData,
         credentials: "include"
