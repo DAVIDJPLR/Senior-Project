@@ -74,7 +74,7 @@ function TagDropdown( {articleID, setCurrentTag}: TagDropdownProps) {
         console.log(newTagID)
         console.log(newTagLabel)
         
-        fetch("http://localhost:5000/api/v1/article/tags", {
+        fetch(APIBASE + "/api/v1/article/tags", {
             method: "PUT",
             credentials: "include",
             headers: {
