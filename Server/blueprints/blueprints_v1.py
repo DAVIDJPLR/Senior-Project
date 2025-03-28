@@ -5,6 +5,7 @@ from sqlalchemy import and_, or_, desc, func, case
 from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
 from app import app, db
+from build_dictionary import build_dictionary
 
 from auth import TENANT_ID, CLIENT_ID
 
@@ -320,7 +321,8 @@ class Article(MethodView):
                         article.Tags = [addTag]
                     
                     db.session.commit()
-                    
+                    build_dictionary()
+
                     return {"msg": "Article Added successfully"}, 200
 
                 else:
@@ -374,6 +376,7 @@ class Article(MethodView):
                         db.session.add(eh)
                         
                         db.session.commit()
+                        build_dictionary()
                         return {'msg': 'Article updated successfully'}, 200
                 else:
                     if session['current_user_role'] == "student":
@@ -1067,7 +1070,9 @@ class Categories(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-        
+
+
+## PUT SPELLCHECKING HERE
 @apiv1.route("/articles/search", methods=["OPTIONS", "GET"])
 class Search(MethodView):
     def options(self):
