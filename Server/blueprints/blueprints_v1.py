@@ -23,6 +23,12 @@ apiv1 = Blueprint(
 revoked_tokens = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
 JWKS_URL = f"https://login.microsoftonline.com/{TENANT_ID}/discovery/v2.0/keys"
 
+stopWords = set()
+file = open("stop_words.txt", "r")
+for line in file:
+    stopWords.add(line.strip())
+file.close()
+
 def get_signing_keys():
     response = requests.get(JWKS_URL)
     keys = response.json()['keys']
@@ -1076,14 +1082,25 @@ class Search(MethodView):
         try:
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 searchQuery = request.args.get("searchQuery")
+                smartSearchQuery = [term.lower() for term in searchQuery.split(" ")]
 
-                articles = models.Article.query.filter(
-                    or_(
-                        models.Article.Title.ilike(f"%{searchQuery}%"),
-                        models.Article.Content.ilike(f"%{searchQuery}%"),
-                        models.Article.Article_Description.ilike(f"%{searchQuery}%")
-                    )
-                ).all()
+                for term in searchQuery.split(" "):
+                    if term in stopWords:
+                        smartSearchQuery.remove(term)
+
+                no_dup_articles = set()
+                
+                for term in smartSearchQuery:
+                    articleSearch = models.Article.query.filter(
+                        or_(
+                            models.Article.Title.ilike(f"%{term}%"),
+                            models.Article.Content.ilike(f"%{term}%"),
+                            models.Article.Article_Description.ilike(f"%{term}%")
+                        )
+                    ).all()
+                    no_dup_articles.update(articleSearch)
+
+                articles = list(no_dup_articles)
 
                 returnedArticles = [article.toJSONPartial() for article in articles]
 
@@ -1620,42 +1637,56 @@ class SystemStatsSearch(MethodView):
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 if len(session['current_user_privileges']) > 0:
                     searchQuery = request.args.get("searchQuery")
+                    smartSearchQuery = [term.lower() for term in searchQuery.split(" ")]
+
+                    for term in searchQuery.split(" "):
+                        if term in stopWords:
+                            smartSearchQuery.remove(term)
+
+                    print(smartSearchQuery.__str__())
+
                     tags = request.args.get("tags")
                     if len(tags) > 0:
                         tagNames = tags.split(",")
                     else:
                         tagNames = []
 
-                    if len(searchQuery) > 0:
-                        articlesQuery: list[models.Article] = models.Article.query.filter(
-                            or_(
-                                models.Article.Title.ilike(f"%{searchQuery}%"),
-                                models.Article.Content.ilike(f"%{searchQuery}%"),
-                                models.Article.Article_Description.ilike(f"%{searchQuery}%")
-                            )
-                        ).all()
+                    no_dup_articles = set()
 
-                        tagIds: list[int] = []
-                        if len(tagNames) > 0:
-                            for tag in tagNames:
-                                tagId = models.Tag.query.filter_by(TagName=tag).first().ID
-                                tagIds.append(tagId)
-                        
-                        totalArticles: list[models.Article] = []
+                    for term in smartSearchQuery:
+                        if len(searchQuery) > 0:
+                            articlesQuery: list[models.Article] = models.Article.query.filter(
+                                or_(
+                                    models.Article.Title.ilike(f"%{term}%"),
+                                    models.Article.Content.ilike(f"%{term}%"),
+                                    models.Article.Article_Description.ilike(f"%{term}%")
+                                )
+                            ).all()
 
-                        for x in articlesQuery:
-                            for tag in x.Tags:
-                                if tag.ID in tagIds or len(tagIds) == 0:
-                                    totalArticles.append(x)
-                                    break
+                            tagIds: list[int] = []
+                            if len(tagNames) > 0:
+                                for tag in tagNames:
+                                    tagId = models.Tag.query.filter_by(TagName=tag).first().ID
+                                    tagIds.append(tagId)
+                            
+                            totalArticles: list[models.Article] = []
+
+                            for x in articlesQuery:
+                                for tag in x.Tags:
+                                    if tag.ID in tagIds or len(tagIds) == 0:
+                                        totalArticles.append(x)
+                                        break
+                            no_dup_articles.update(totalArticles)
+                        else:
+                            totalArticles = []
+                            if len(tagNames) > 0:
+                                for tag in tagNames:
+                                    actualTag: list[models.Tag] = models.Tag.query.filter_by(TagName=tag).first()
+                                    totalArticles.extend(actualTag.Articles)
+                            no_dup_articles.update(totalArticles)
                     
-                    else:
-                        totalArticles = []
-                        if len(tagNames) > 0:
-                            for tag in tagNames:
-                                actualTag: list[models.Tag] = models.Tag.query.filter_by(TagName=tag).first()
-                                totalArticles.extend(actualTag.Articles)
-                        
+                    totalArticles = list(no_dup_articles)
+
                     returnableArticles = [article.toJSONPartial() for article in totalArticles]
                     
                     return {'results': returnableArticles}, 200
