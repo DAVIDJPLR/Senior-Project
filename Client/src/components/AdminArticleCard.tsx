@@ -2,6 +2,7 @@ import { Typography, MenuItem, FormControl, Select, InputLabel, SelectChangeEven
 import { PartialArticle } from "../custom_objects/models";
 import { useState, useEffect } from "react";
 import "../global.css";
+import { APIBASE } from "../ApiBase";
 
 interface Props{
     article: PartialArticle,
@@ -24,7 +25,7 @@ function AdminArticleCard({ article, lineNumber, onClick, userPrivileges }: Prop
             ID: article.ID.toString()
         });
 
-        const response = await fetch(`http://localhost:5000/api/v1/article/tag?${params.toString()}`, {
+        const response = await fetch(APIBASE + `/api/v1/article/tag?${params.toString()}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -43,7 +44,7 @@ function AdminArticleCard({ article, lineNumber, onClick, userPrivileges }: Prop
             TagName : potentialTag
         });
 
-        const response = await fetch(`http://localhost:5000/api/v1/article/tag?${params.toString()}`, {
+        const response = await fetch(APIBASE + `/api/v1/article/tag?${params.toString()}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',

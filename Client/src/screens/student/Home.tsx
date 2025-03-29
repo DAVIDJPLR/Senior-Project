@@ -7,6 +7,7 @@ import ArticleModal from "../../components/ArticleModal";
 import { Typography, Modal, Button, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Alert } from "@mui/material";
 import { PartialArticle } from "../../custom_objects/models";
 import { useMediaQuery } from "react-responsive";   
+import { APIBASE } from "../../ApiBase";
 
 interface Props{
     currentScreen: Screen
@@ -58,7 +59,7 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
     };
 
     const defaultArticles = async () => {
-        const response = await fetch('http://localhost:5000/api/v1/articles', {
+        const response = await fetch(APIBASE + '/api/v1/articles', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -79,7 +80,7 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
 
         console.log(`searching with val ${searchVal}`)
 
-        const response = await fetch(`http://localhost:5000/api/v1/articles/search?${params.toString()}`, {
+        const response = await fetch(APIBASE + `/api/v1/articles/search?${params.toString()}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -94,7 +95,7 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
     }
 
     const logView = async(article: PartialArticle) => {
-        const response = await fetch(`http://localhost:5000/api/v1/article?articleID=${article.ID}`, {
+        const response = await fetch(APIBASE + `/api/v1/article?articleID=${article.ID}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -163,7 +164,7 @@ function NoResultFoundModal({ open, setOpen, setAlertVis }: NoResultFoundModalPr
     const isMobile = useMediaQuery({ maxWidth: 767 });
     
     const submitContent = async () => {
-        const response = await fetch('http://localhost:5000/api/v1/nosolution', {
+        const response = await fetch(APIBASE + '/api/v1/nosolution', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

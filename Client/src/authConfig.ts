@@ -17,11 +17,11 @@ export const msalConfig = {
         authority: "https://login.microsoftonline.com/83918960-2218-4cd3-81fe-302a8e771da9",
         redirectUri: window.location.hostname.includes('localhost') 
             ? "http://localhost:5173"   // Localhost for development
-            : "http://10.18.103.22:3000", // Production
+            : "https://computerhelp.gcc.edu", // Production
     },
     cache: {
         cacheLocation: "sessionStorage", // This configures where your cache will be stored
-        storeAuthStateInCookie: false, // Set this to "true" if you are having issues on IE11 or Edge
+        storeAuthStateInCookie: true, // Set this to "true" if you are having issues on IE11 or Edge
     },
     system: {	
         loggerOptions: {	

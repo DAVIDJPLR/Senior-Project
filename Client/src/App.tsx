@@ -2,6 +2,7 @@ import { Screen, StudentScreen, AdminScreen } from "./custom_objects/Screens";
 import { useState, useEffect, StrictMode } from "react";
 
 import { loginRequest } from './authConfig';
+import { APIBASE } from "./ApiBase";
 
 import { AuthenticatedTemplate, UnauthenticatedTemplate, useMsal } from '@azure/msal-react';
 
@@ -26,7 +27,7 @@ function HandleToken({setAuthenticated}: handleTokenProps){
     const { instance, accounts } = useMsal();
 
     const backendLogin = async (token: string) => {
-        const response = await fetch('http://localhost:5000/api/v1/user/login', {
+        const response = await fetch(APIBASE + '/api/v1/user/login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -67,7 +68,7 @@ function App() {
     const [currentScreen, setCurrentScreen] = useState<Screen>(StudentScreen.Home);
 
     const getInfo = async () => {
-        const response = await fetch(`http://localhost:5000/api/v1/user/info`, {
+        const response = await fetch(APIBASE + `/api/v1/user/info`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

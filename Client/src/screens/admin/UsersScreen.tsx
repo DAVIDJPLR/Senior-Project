@@ -10,6 +10,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import { PartialAdminPrivilege, PartialUser } from "../../custom_objects/models";
 import { useMediaQuery } from "react-responsive"; 
+import { APIBASE } from "../../ApiBase";
 
 interface Props{
     currentScreen: Screen
@@ -39,7 +40,7 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
             searchQuery: searchVal
         });
 
-        const response = await fetch(`http://localhost:5000/api/v1/admins/search?${params.toString()}`, {
+        const response = await fetch(APIBASE + `/api/v1/admins/search?${params.toString()}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -54,7 +55,7 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
     }
 
     const loadAdmins = async () => {
-        const response = await fetch('http://localhost:5000/api/v1/admins', {
+        const response = await fetch(APIBASE + '/api/v1/admins', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -69,7 +70,7 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
     }
 
     const loadPrivileges = async () => {
-        const response = await fetch('http://localhost:5000/api/v1/user/info', {
+        const response = await fetch(APIBASE + '/api/v1/user/info', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -219,7 +220,7 @@ function AdminModal({ open, handleClose, selectedAdmin, setRefresh, currentAdmin
     const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 
     const getPrivileges = async() => {
-        const response = await fetch('http://localhost:5000/api/v1/admin/privileges', {
+        const response = await fetch(APIBASE + '/api/v1/admin/privileges', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -244,7 +245,7 @@ function AdminModal({ open, handleClose, selectedAdmin, setRefresh, currentAdmin
     const saveAdmin = async () => {
         const privilegeIDs = adminPrivileges.map(priv => priv.ID);
 
-        const response = await fetch('http://localhost:5000/api/v1/admin', {
+        const response = await fetch(APIBASE + '/api/v1/admin', {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -268,7 +269,7 @@ function AdminModal({ open, handleClose, selectedAdmin, setRefresh, currentAdmin
             ID: selectedAdmin?.ID.toString() || ''
         });
 
-        const response = await fetch(`http://localhost:5000/api/v1/admin?${params.toString()}`, {
+        const response = await fetch(APIBASE + `/api/v1/admin?${params.toString()}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -378,7 +379,7 @@ function UserModal({ handleClose, setRefresh }: userModalProps) {
     const isMobile = useMediaQuery({ maxWidth: 767 });
 
     const getAllUsers = async () => {
-        const response = await fetch('http://localhost:5000/api/v1/users', {
+        const response = await fetch(APIBASE + '/api/v1/users', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -397,7 +398,7 @@ function UserModal({ handleClose, setRefresh }: userModalProps) {
             searchQuery: searchVal
         });
 
-        const response = await fetch(`http://localhost:5000/api/v1/users/search?${params.toString()}`, {
+        const response = await fetch(APIBASE + `/api/v1/users/search?${params.toString()}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -413,7 +414,7 @@ function UserModal({ handleClose, setRefresh }: userModalProps) {
 
     const addUser = async() => {
         console.log(selectedUser)
-        const response = await fetch('http://localhost:5000/api/v1/admin', {
+        const response = await fetch(APIBASE + '/api/v1/admin', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

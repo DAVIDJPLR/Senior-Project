@@ -5,6 +5,7 @@ from sqlalchemy import and_, or_, desc, func, case
 from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
 from app import app, db
+from build_dictionary import build_dictionary
 
 from auth import TENANT_ID, CLIENT_ID
 
@@ -21,6 +22,12 @@ apiv1 = Blueprint(
 
 revoked_tokens = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
 JWKS_URL = f"https://login.microsoftonline.com/{TENANT_ID}/discovery/v2.0/keys"
+
+stopWords = set()
+file = open("stop_words.txt", "r")
+for line in file:
+    stopWords.add(line.strip())
+file.close()
 
 def get_signing_keys():
     response = requests.get(JWKS_URL)
@@ -314,7 +321,8 @@ class Article(MethodView):
                         article.Tags = [addTag]
                     
                     db.session.commit()
-                    
+                    build_dictionary()
+
                     return {"msg": "Article Added successfully"}, 200
 
                 else:
@@ -368,6 +376,7 @@ class Article(MethodView):
                         db.session.add(eh)
                         
                         db.session.commit()
+                        build_dictionary()
                         return {'msg': 'Article updated successfully'}, 200
                 else:
                     if session['current_user_role'] == "student":
@@ -1025,6 +1034,25 @@ class TagNames(MethodView):
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
         
+## returns all meta tags in the database, for UI purposes
+@apiv1.route("/metatags/getall", methods=["OPTIONS", "GET"])
+class MetaTagNames(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        try:
+            if 'current_user_id' in session:
+                metatags = models.MetaTag.query.all()
+                returnMetaTags = [metatag.toJSONPartial() for metatag in metatags]
+                db.session.commit()
+                return {'MetaTags': returnMetaTags}, 200
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+        
 @apiv1.route("/categories", methods=["OPTIONS", "GET"])
 class Categories(MethodView):
     def options(self):
@@ -1042,7 +1070,9 @@ class Categories(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-        
+
+
+## PUT SPELLCHECKING HERE
 @apiv1.route("/articles/search", methods=["OPTIONS", "GET"])
 class Search(MethodView):
     def options(self):
@@ -1052,14 +1082,25 @@ class Search(MethodView):
         try:
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 searchQuery = request.args.get("searchQuery")
+                smartSearchQuery = [term.lower() for term in searchQuery.split(" ")]
 
-                articles = models.Article.query.filter(
-                    or_(
-                        models.Article.Title.ilike(f"%{searchQuery}%"),
-                        models.Article.Content.ilike(f"%{searchQuery}%"),
-                        models.Article.Article_Description.ilike(f"%{searchQuery}%")
-                    )
-                ).all()
+                for term in searchQuery.split(" "):
+                    if term in stopWords:
+                        smartSearchQuery.remove(term)
+
+                no_dup_articles = set()
+                
+                for term in smartSearchQuery:
+                    articleSearch = models.Article.query.filter(
+                        or_(
+                            models.Article.Title.ilike(f"%{term}%"),
+                            models.Article.Content.ilike(f"%{term}%"),
+                            models.Article.Article_Description.ilike(f"%{term}%")
+                        )
+                    ).all()
+                    no_dup_articles.update(articleSearch)
+
+                articles = list(no_dup_articles)
 
                 returnedArticles = [article.toJSONPartial() for article in articles]
 
@@ -1596,42 +1637,56 @@ class SystemStatsSearch(MethodView):
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 if len(session['current_user_privileges']) > 0:
                     searchQuery = request.args.get("searchQuery")
+                    smartSearchQuery = [term.lower() for term in searchQuery.split(" ")]
+
+                    for term in searchQuery.split(" "):
+                        if term in stopWords:
+                            smartSearchQuery.remove(term)
+
+                    print(smartSearchQuery.__str__())
+
                     tags = request.args.get("tags")
                     if len(tags) > 0:
                         tagNames = tags.split(",")
                     else:
                         tagNames = []
 
-                    if len(searchQuery) > 0:
-                        articlesQuery: list[models.Article] = models.Article.query.filter(
-                            or_(
-                                models.Article.Title.ilike(f"%{searchQuery}%"),
-                                models.Article.Content.ilike(f"%{searchQuery}%"),
-                                models.Article.Article_Description.ilike(f"%{searchQuery}%")
-                            )
-                        ).all()
+                    no_dup_articles = set()
 
-                        tagIds: list[int] = []
-                        if len(tagNames) > 0:
-                            for tag in tagNames:
-                                tagId = models.Tag.query.filter_by(TagName=tag).first().ID
-                                tagIds.append(tagId)
-                        
-                        totalArticles: list[models.Article] = []
+                    for term in smartSearchQuery:
+                        if len(searchQuery) > 0:
+                            articlesQuery: list[models.Article] = models.Article.query.filter(
+                                or_(
+                                    models.Article.Title.ilike(f"%{term}%"),
+                                    models.Article.Content.ilike(f"%{term}%"),
+                                    models.Article.Article_Description.ilike(f"%{term}%")
+                                )
+                            ).all()
 
-                        for x in articlesQuery:
-                            for tag in x.Tags:
-                                if tag.ID in tagIds or len(tagIds) == 0:
-                                    totalArticles.append(x)
-                                    break
+                            tagIds: list[int] = []
+                            if len(tagNames) > 0:
+                                for tag in tagNames:
+                                    tagId = models.Tag.query.filter_by(TagName=tag).first().ID
+                                    tagIds.append(tagId)
+                            
+                            totalArticles: list[models.Article] = []
+
+                            for x in articlesQuery:
+                                for tag in x.Tags:
+                                    if tag.ID in tagIds or len(tagIds) == 0:
+                                        totalArticles.append(x)
+                                        break
+                            no_dup_articles.update(totalArticles)
+                        else:
+                            totalArticles = []
+                            if len(tagNames) > 0:
+                                for tag in tagNames:
+                                    actualTag: list[models.Tag] = models.Tag.query.filter_by(TagName=tag).first()
+                                    totalArticles.extend(actualTag.Articles)
+                            no_dup_articles.update(totalArticles)
                     
-                    else:
-                        totalArticles = []
-                        if len(tagNames) > 0:
-                            for tag in tagNames:
-                                actualTag: list[models.Tag] = models.Tag.query.filter_by(TagName=tag).first()
-                                totalArticles.extend(actualTag.Articles)
-                        
+                    totalArticles = list(no_dup_articles)
+
                     returnableArticles = [article.toJSONPartial() for article in totalArticles]
                     
                     return {'results': returnableArticles}, 200
@@ -1644,7 +1699,7 @@ class SystemStatsSearch(MethodView):
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
         
-@apiv1.route("/article/categories", methods=["OPTIONS", "GET", "PUT"])
+@apiv1.route("/article/tags", methods=["OPTIONS", "GET", "PUT"])
 class SystemStatsSearch(MethodView):
     def options(self):
         return '', 200
@@ -1705,7 +1760,70 @@ class SystemStatsSearch(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-        
+
+
+@apiv1.route("/article/categories", methods=["OPTIONS", "GET", "PUT"])
+class SystemStatsSearch(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if len(session['current_user_privileges']) > 0:
+
+                    articleID = request.args.get("ArticleID")
+                    
+                    if int(articleID) >= 0:
+                        article: models.Article = models.Article.query.filter_by(ID=articleID).first()
+
+                        metatags = []
+                        for metatag in article.MetaTags:
+                            metatags.append(metatag)
+                        
+                        returnableMetaTags = [metatag.toJSONPartial() for metatag in metatags]
+                        db.session.commit()
+
+                        return {'metatags': returnableMetaTags}, 200
+                    else:
+                        return {'msg': "Creating Article"}, 200
+
+                else:
+                    return {'msg': 'Unauthorized access'}, 403
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+    def put(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if 3 in session['current_user_privileges']:
+                    metatag_updated = request.json
+
+                    if metatag_updated:
+                        article_id: int = metatag_updated.get("articleID")
+                        metatag_id: int = metatag_updated.get("metatagID")
+                        article = models.Article.query.get(article_id)
+                        if article:
+                            metatag = models.MetaTag.query.get(metatag_id)
+                            article.MetaTags = [metatag]
+                            db.session.commit()
+
+                            return {'msg': 'Article metatag updated successfully.'}, 200
+                        else:
+                            return {'msg': 'No article provided.'}, 400
+                    else:
+                        return {'msg': 'No data provided.'}, 400
+                else:
+                    return {'msg': 'Unauthorized privileges.'}, 403
+            else:
+                return {'msg': 'Unauthorized access.'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+
 @apiv1.route("/image", methods=["OPTIONS", "GET", "PUT", "POST", "DELETE"])
 class ImageUpload(MethodView):
     def options(self):

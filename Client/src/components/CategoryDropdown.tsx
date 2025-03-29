@@ -1,39 +1,39 @@
 import { useEffect, useState } from "react"
 import { FormControl, InputLabel, Select, SelectChangeEvent, MenuItem } from "@mui/material"
-import { PartialTag, Tag } from "../custom_objects/models"
+import { PartialMetaTag, MetaTag } from "../custom_objects/models"
 import { APIBASE } from "../ApiBase"
 
-interface TagDropdownProps {
+interface CategoryDropdownProps {
     articleID: number,
-    setCurrentTag: (x: string) => void
+    setCurrentCategory: (x: string) => void
 }
 
-function TagDropdown( {articleID, setCurrentTag}: TagDropdownProps) {
-    const [tags, setTags] = useState<PartialTag[]>([])
-    const [selectedTagLabel, setSelectedTagLabel] = useState<string>('')
-    const [selectedTagID, setSelectedTagID] = useState<number>(0)
-    const [selectedTag, setSelectedTag] = useState<Tag>()
+function CategoryDropdown( {articleID, setCurrentCategory}: CategoryDropdownProps) {
+    const [categories, setCategories] = useState<PartialMetaTag[]>([])
+    const [selectedCategoryLabel, setSelectedCategoryLabel] = useState<string>('')
+    const [selectedCategoryID, setSelectedCategoryID] = useState<number>(0)
+    const [selectedCategory, setSelectedCategory] = useState<MetaTag>()
 
     useEffect(() => {
-        fetch(APIBASE + `/api/v1/article/tags?ArticleID=${articleID}`, {
+        fetch(APIBASE + `/api/v1/article/categories?ArticleID=${articleID}`, {
             method: "GET",
             credentials: "include"
         })
         .then(response => {
             if(!response.ok) {
-                throw new Error('Failed to fetch article tag')
+                throw new Error('Failed to fetch article meta tag')
             }
             return response.json()
         })
         .then(data => {
-            console.log("Article tag = ", data)
-            if (data && data.tags) {
-                setSelectedTagLabel(data.tags[0].TagName)
-                setSelectedTagID(data.tags[0].ID)
-                setSelectedTag(data.tags[0])
-                console.log(selectedTagLabel)
-                console.log(selectedTagID)
-                console.log(selectedTag)
+            console.log("Article meta tag = ", data)
+            if (data && data.metatags) {
+                setSelectedCategoryLabel(data.metatags[0].TagName)
+                setSelectedCategoryID(data.metatags[0].ID)
+                setSelectedCategory(data.metatags[0])
+                console.log(selectedCategoryLabel)
+                console.log(selectedCategoryID)
+                console.log(selectedCategory)
             }
         })
         .catch(error => {
@@ -42,7 +42,7 @@ function TagDropdown( {articleID, setCurrentTag}: TagDropdownProps) {
     }, [])
 
     useEffect(() => {
-        fetch(APIBASE + '/api/v1/articletag/getall', {
+        fetch(APIBASE + '/api/v1/categories', {
             method: "GET",
             credentials: "include"
         })
@@ -55,8 +55,8 @@ function TagDropdown( {articleID, setCurrentTag}: TagDropdownProps) {
         })
         .then(data => {
             console.log("Setting tags", data) 
-            if (data && data.Tags) {
-                setTags(data.Tags)
+            if (data && data.categories) {
+                setCategories(data.categories)
             }            
         })
         .catch(error => {
@@ -64,17 +64,17 @@ function TagDropdown( {articleID, setCurrentTag}: TagDropdownProps) {
         })
     }, [])
 
-    const tagChanged = (event: SelectChangeEvent<string>) => {
-        const newTagID = parseInt(event.target.value)
-        setSelectedTagID(newTagID)
-        const newTag = tags.find((tag) => tag.ID === newTagID);
-        const newTagLabel = newTag ? newTag.TagName : ""
-        setSelectedTagLabel(newTagLabel)
-        setCurrentTag(newTagLabel)
-        console.log(newTagID)
-        console.log(newTagLabel)
+    const categoryChanged = (event: SelectChangeEvent<string>) => {
+        const newCategoryID = parseInt(event.target.value)
+        setSelectedCategoryID(newCategoryID)
+        const newCategory = categories.find((tag) => tag.ID === newCategoryID);
+        const newCategoryLabel = newCategory ? newCategory.TagName : ""
+        setSelectedCategoryLabel(newCategoryLabel)
+        setCurrentCategory(newCategoryLabel)
+        console.log(newCategoryID)
+        console.log(newCategoryLabel)
         
-        fetch(APIBASE + "/api/v1/article/tags", {
+        fetch(APIBASE + "/api/v1/article/categories", {
             method: "PUT",
             credentials: "include",
             headers: {
@@ -82,7 +82,7 @@ function TagDropdown( {articleID, setCurrentTag}: TagDropdownProps) {
             },
             body: JSON.stringify({
                 articleID: articleID,
-                tagID: newTagID
+                metatagID: newCategoryID
             })
         })
         .then(response => {
@@ -105,11 +105,11 @@ function TagDropdown( {articleID, setCurrentTag}: TagDropdownProps) {
             <Select
                 labelId="tag-dropdown-label"
                 id="tag-dropdown"
-                value={selectedTagID.toString()}
-                onChange={tagChanged}
+                value={selectedCategoryID.toString()}
+                onChange={categoryChanged}
                 label="Tag"
             >
-                {tags.map((tag, index) => (
+                {categories.map((tag, index) => (
                     <MenuItem key={tag.ID} value={tag.ID.toString()}>
                         {tag.TagName}
                     </MenuItem>
@@ -119,4 +119,4 @@ function TagDropdown( {articleID, setCurrentTag}: TagDropdownProps) {
     );
 }
 
-export default TagDropdown;
+export default CategoryDropdown;

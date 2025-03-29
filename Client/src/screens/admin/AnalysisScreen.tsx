@@ -5,6 +5,7 @@ import { PartialArticle, PartialSearch, PartialAdminPrivilege } from "../../cust
 import { useState, useEffect } from "react";
 import { useMediaQuery } from "react-responsive";
 import EditArticleModal from './EditScreen';
+import { APIBASE } from "../../ApiBase";
 
 
 interface Props{
@@ -52,7 +53,7 @@ function AdminAnalysis({ currentScreen, setCurrentScreen }: Props){
             size: lstSize.toString()
         });
 
-        const response = await fetch(`http://localhost:5000/api/v1/articles/indepth?${params.toString()}`, {
+        const response = await fetch(APIBASE + `/api/v1/articles/indepth?${params.toString()}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -69,7 +70,7 @@ function AdminAnalysis({ currentScreen, setCurrentScreen }: Props){
     }
 
     const loadPrivileges = async () => {
-            const response = await fetch('http://localhost:5000/api/v1/user/info', {
+            const response = await fetch(APIBASE + '/api/v1/user/info', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
