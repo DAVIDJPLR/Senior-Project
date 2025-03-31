@@ -1,7 +1,7 @@
 how	6
 to	9
 connect	1
-the	15
+the	16
 gcc	1
 wifi	1
 lorem	2
@@ -68,7 +68,7 @@ id	1
 est	1
 laborum	1
 hopefully	1
-this	7
+this	8
 fixes	1
 it	4
 update	1
@@ -81,10 +81,10 @@ install	1
 new	1
 profit	1
 fix	3
-my	5
+my	4
 broken	1
 laptop	1
-i	5
+i	6
 reboot	2
 that's	1
 just	1
@@ -195,7 +195,7 @@ like	1
 mersive	1
 solstice	1
 system	1
-is	1
+is	2
 laggy	1
 please	1
 send	1
@@ -208,8 +208,10 @@ nothing	1
 here	1
 asdfsdafsad	1
 yay	1
-lost	2
-game	2
-rip	2
-smh	2
-head	2
+lost	3
+game	3
+rip	1
+smh	1
+head	1
+duplicated	2
+why	1
