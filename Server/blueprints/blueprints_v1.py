@@ -8,6 +8,7 @@ from app import app, db
 from build_dictionary import build_dictionary
 
 from auth import TENANT_ID, CLIENT_ID
+from search import tfidf_search
 
 import os, traceback, models, requests, jwt, redis, json
 from typing import Any
@@ -1088,19 +1089,15 @@ class Search(MethodView):
                     if term in stopWords:
                         smartSearchQuery.remove(term)
 
-                no_dup_articles = set()
-                
-                for term in smartSearchQuery:
-                    articleSearch = models.Article.query.filter(
-                        or_(
-                            models.Article.Title.ilike(f"%{term}%"),
-                            models.Article.Content.ilike(f"%{term}%"),
-                            models.Article.Article_Description.ilike(f"%{term}%")
-                        )
-                    ).all()
-                    no_dup_articles.update(articleSearch)
+                search_results = tfidf_search(smartSearchQuery)
 
-                articles = list(no_dup_articles)
+                all_articles: list[models.Article] = models.Article.query.all()
+
+                articles = list()
+                for articleID, importance in search_results:
+                    a = next((article for article in all_articles if article.ID == articleID and importance > 0.0), None)
+                    if a is not None:
+                        articles.append(a)
 
                 returnedArticles = [article.toJSONPartial() for article in articles]
 
@@ -1643,8 +1640,6 @@ class SystemStatsSearch(MethodView):
                         if term in stopWords:
                             smartSearchQuery.remove(term)
 
-                    print(smartSearchQuery.__str__())
-
                     tags = request.args.get("tags")
                     if len(tags) > 0:
                         tagNames = tags.split(",")
@@ -1653,39 +1648,38 @@ class SystemStatsSearch(MethodView):
 
                     no_dup_articles = set()
 
-                    for term in smartSearchQuery:
-                        if len(searchQuery) > 0:
-                            articlesQuery: list[models.Article] = models.Article.query.filter(
-                                or_(
-                                    models.Article.Title.ilike(f"%{term}%"),
-                                    models.Article.Content.ilike(f"%{term}%"),
-                                    models.Article.Article_Description.ilike(f"%{term}%")
-                                )
-                            ).all()
+                    if len(smartSearchQuery) > 0:
+                        search_results = tfidf_search(smartSearchQuery)
 
-                            tagIds: list[int] = []
-                            if len(tagNames) > 0:
-                                for tag in tagNames:
-                                    tagId = models.Tag.query.filter_by(TagName=tag).first().ID
-                                    tagIds.append(tagId)
-                            
-                            totalArticles: list[models.Article] = []
+                        all_articles: list[models.Article] = models.Article.query.all()
 
-                            for x in articlesQuery:
-                                for tag in x.Tags:
-                                    if tag.ID in tagIds or len(tagIds) == 0:
-                                        totalArticles.append(x)
-                                        break
-                            no_dup_articles.update(totalArticles)
-                        else:
-                            totalArticles = []
-                            if len(tagNames) > 0:
-                                for tag in tagNames:
-                                    actualTag: list[models.Tag] = models.Tag.query.filter_by(TagName=tag).first()
-                                    totalArticles.extend(actualTag.Articles)
-                            no_dup_articles.update(totalArticles)
+                        tagIds: list[int] = []
+                        if len(tagNames) > 0:
+                            for tag in tagNames:
+                                tagId = models.Tag.query.filter_by(TagName=tag).first().ID
+                                tagIds.append(tagId)
+                        
+                        taggedArticles: list[models.Article] = []
+
+                        for x in all_articles:
+                            for tag in x.Tags:
+                                if tag.ID in tagIds or len(tagIds) == 0:
+                                    taggedArticles.append(x)
+                                    break
+
+                        articles = list()
+                        for articleID, importance in search_results:
+                            a = next((article for article in all_articles if article.ID == articleID and article in taggedArticles and importance > 0.0), None)
+                            if a is not None:
+                                articles.append(a)
+                    else:
+                        articles = []
+                        if len(tagNames) > 0:
+                            for tag in tagNames:
+                                actualTag: list[models.Tag] = models.Tag.query.filter_by(TagName=tag).first()
+                                articles.extend(actualTag.Articles)
                     
-                    totalArticles = list(no_dup_articles)
+                    totalArticles = list(articles)
 
                     returnableArticles = [article.toJSONPartial() for article in totalArticles]
                     
