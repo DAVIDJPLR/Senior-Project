@@ -1596,6 +1596,102 @@ class SearchesProblems(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
+   
+@apiv1.route("/system/usage", methods=["OPTIONS", "GET"])
+class SystemUsage(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if len(session['current_user_privileges']) > 0:
+                    time1 = datetime.now() - timedelta(hours=24)
+                    time2 = time1 - timedelta(hours=24)
+                    time3 = time2 - timedelta(hours=24)
+                    time4 = time3 - timedelta(hours=24)
+                    time5 = time4 - timedelta(hours=24)
+                    
+                    searches1_count = models.Search.query.filter(
+                        models.Search.SearchTime >= time1
+                    ).with_entities(func.count()).scalar()
+                    viewHistory1_count = models.ViewHistory.query.filter(
+                        models.ViewHistory.View_Time >= time1
+                    ).with_entities(func.count()).scalar()
+                    usageVal1 = (searches1_count*3) + viewHistory1_count
+
+                    searches2_count = models.Search.query.filter(
+                        models.Search.SearchTime >= time2,
+                        models.Search.SearchTime < time1
+                    ).with_entities(func.count()).scalar()
+                    viewHistory2_count = models.ViewHistory.query.filter(
+                        models.ViewHistory.View_Time >= time2,
+                        models.ViewHistory.View_Time < time1
+                    ).with_entities(func.count()).scalar()
+                    usageVal2 = (searches2_count*3) + viewHistory2_count
+
+                    searches3_count = models.Search.query.filter(
+                        models.Search.SearchTime >= time3,
+                        models.Search.SearchTime < time2
+                    ).with_entities(func.count()).scalar()
+                    viewHistory3_count = models.ViewHistory.query.filter(
+                        models.ViewHistory.View_Time >= time3,
+                        models.ViewHistory.View_Time < time2
+                    ).with_entities(func.count()).scalar()
+                    usageVal3 = (searches3_count*3) + viewHistory3_count
+
+                    searches4_count = models.Search.query.filter(
+                        models.Search.SearchTime >= time4,
+                        models.Search.SearchTime < time3
+                    ).with_entities(func.count()).scalar()
+                    viewHistory4_count = models.ViewHistory.query.filter(
+                        models.ViewHistory.View_Time >= time4,
+                        models.ViewHistory.View_Time < time3
+                    ).with_entities(func.count()).scalar()
+                    usageVal4 = (searches4_count*3) + viewHistory4_count
+
+                    searches5_count = models.Search.query.filter(
+                        models.Search.SearchTime >= time5,
+                        models.Search.SearchTime < time4
+                    ).with_entities(func.count()).scalar()
+                    viewHistory5_count = models.ViewHistory.query.filter(
+                        models.ViewHistory.View_Time >= time5,
+                        models.ViewHistory.View_Time < time4
+                    ).with_entities(func.count()).scalar()
+                    usageVal5 = (searches5_count*3) + viewHistory5_count
+                    
+                    return {
+                        "usage_data": [
+                            {
+                                "name": (time5 + timedelta(hours=24)).strftime("%m-%d"),
+                                "value": usageVal5
+                            },
+                            {
+                                "name": (time4 + timedelta(hours=24)).strftime("%m-%d"),
+                                "value": usageVal4
+                            },
+                            {
+                                "name": (time3 + timedelta(hours=24)).strftime("%m-%d"),
+                                "value": usageVal3
+                            },
+                            {
+                                "name": (time2 + timedelta(hours=24)).strftime("%m-%d"),
+                                "value": usageVal2
+                            },
+                            {
+                                "name": (time1 + timedelta(hours=24)).strftime("%m-%d"),
+                                "value": usageVal1
+                            }
+                        ]
+                    }, 200
+                    
+                else:
+                    return {'msg': 'Unauthorized access'}, 403
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
         
 @apiv1.route("/system/stats", methods=["OPTIONS", "GET"])
 class SystemStats(MethodView):
