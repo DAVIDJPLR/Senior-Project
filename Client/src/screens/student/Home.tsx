@@ -42,11 +42,15 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
     const [hasSearched, setHasSearched] = useState(false);
 
     const handleKeyUp = (event: React.KeyboardEvent<HTMLInputElement>) => {
-        if (event.key === "Enter") {
-            console.log(searchVal); 
-            setHasSearched(true);
-            handleSearch()
-        }
+        console.log(searchVal); 
+        setHasSearched(true);
+        handleSearch()
+        
+        // if (event.key === "Enter") {
+        //     console.log(searchVal); 
+        //     setHasSearched(true);
+        //     handleSearch()
+        // }
     };
 
     const handleSearch = () => {

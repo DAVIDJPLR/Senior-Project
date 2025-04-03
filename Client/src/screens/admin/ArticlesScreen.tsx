@@ -125,10 +125,13 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
     }
 
     const handleKeyUp = (event: React.KeyboardEvent<HTMLInputElement>) => {
-        if (event.key === "Enter") {
-            console.log(searchVal); 
-            handleSearch()
-        }
+        console.log(searchVal); 
+        handleSearch()
+        
+        // if (event.key === "Enter") {
+        //     console.log(searchVal); 
+        //     handleSearch()
+        // }
     };
 
     const handleSearch = () => {
