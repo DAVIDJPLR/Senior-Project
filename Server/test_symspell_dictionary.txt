@@ -1,0 +1,7 @@
+connect	10
+wifi	8
+network	5
+internet	7
+router	3
+ethernet	2
+wireless	4
