@@ -11,6 +11,7 @@ from spellcheck import correct_query
 from threading import Thread
 
 from auth import TENANT_ID, CLIENT_ID
+from search import tfidf_search
 
 import os, traceback, models, requests, jwt, redis, json
 from typing import Any
@@ -1094,19 +1095,15 @@ class Search(MethodView):
                     if term in stopWords:
                         smartSearchQuery.remove(term)
 
-                no_dup_articles = set()
-                
-                for term in smartSearchQuery:
-                    articleSearch = models.Article.query.filter(
-                        or_(
-                            models.Article.Title.ilike(f"%{term}%"),
-                            models.Article.Content.ilike(f"%{term}%"),
-                            models.Article.Article_Description.ilike(f"%{term}%")
-                        )
-                    ).all()
-                    no_dup_articles.update(articleSearch)
+                search_results = tfidf_search(smartSearchQuery)
 
-                articles = list(no_dup_articles)
+                all_articles: list[models.Article] = models.Article.query.all()
+
+                articles = list()
+                for articleID, importance in search_results:
+                    a = next((article for article in all_articles if article.ID == articleID and importance > 0.0), None)
+                    if a is not None:
+                        articles.append(a)
 
                 returnedArticles = [article.toJSONPartial() for article in articles]
 
@@ -1605,6 +1602,102 @@ class SearchesProblems(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
+   
+@apiv1.route("/system/usage", methods=["OPTIONS", "GET"])
+class SystemUsage(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if len(session['current_user_privileges']) > 0:
+                    time1 = datetime.now() - timedelta(hours=24)
+                    time2 = time1 - timedelta(hours=24)
+                    time3 = time2 - timedelta(hours=24)
+                    time4 = time3 - timedelta(hours=24)
+                    time5 = time4 - timedelta(hours=24)
+                    
+                    searches1_count = models.Search.query.filter(
+                        models.Search.SearchTime >= time1
+                    ).with_entities(func.count()).scalar()
+                    viewHistory1_count = models.ViewHistory.query.filter(
+                        models.ViewHistory.View_Time >= time1
+                    ).with_entities(func.count()).scalar()
+                    usageVal1 = (searches1_count*3) + viewHistory1_count
+
+                    searches2_count = models.Search.query.filter(
+                        models.Search.SearchTime >= time2,
+                        models.Search.SearchTime < time1
+                    ).with_entities(func.count()).scalar()
+                    viewHistory2_count = models.ViewHistory.query.filter(
+                        models.ViewHistory.View_Time >= time2,
+                        models.ViewHistory.View_Time < time1
+                    ).with_entities(func.count()).scalar()
+                    usageVal2 = (searches2_count*3) + viewHistory2_count
+
+                    searches3_count = models.Search.query.filter(
+                        models.Search.SearchTime >= time3,
+                        models.Search.SearchTime < time2
+                    ).with_entities(func.count()).scalar()
+                    viewHistory3_count = models.ViewHistory.query.filter(
+                        models.ViewHistory.View_Time >= time3,
+                        models.ViewHistory.View_Time < time2
+                    ).with_entities(func.count()).scalar()
+                    usageVal3 = (searches3_count*3) + viewHistory3_count
+
+                    searches4_count = models.Search.query.filter(
+                        models.Search.SearchTime >= time4,
+                        models.Search.SearchTime < time3
+                    ).with_entities(func.count()).scalar()
+                    viewHistory4_count = models.ViewHistory.query.filter(
+                        models.ViewHistory.View_Time >= time4,
+                        models.ViewHistory.View_Time < time3
+                    ).with_entities(func.count()).scalar()
+                    usageVal4 = (searches4_count*3) + viewHistory4_count
+
+                    searches5_count = models.Search.query.filter(
+                        models.Search.SearchTime >= time5,
+                        models.Search.SearchTime < time4
+                    ).with_entities(func.count()).scalar()
+                    viewHistory5_count = models.ViewHistory.query.filter(
+                        models.ViewHistory.View_Time >= time5,
+                        models.ViewHistory.View_Time < time4
+                    ).with_entities(func.count()).scalar()
+                    usageVal5 = (searches5_count*3) + viewHistory5_count
+                    
+                    return {
+                        "usage_data": [
+                            {
+                                "name": (time5 + timedelta(hours=24)).strftime("%m-%d"),
+                                "value": usageVal5
+                            },
+                            {
+                                "name": (time4 + timedelta(hours=24)).strftime("%m-%d"),
+                                "value": usageVal4
+                            },
+                            {
+                                "name": (time3 + timedelta(hours=24)).strftime("%m-%d"),
+                                "value": usageVal3
+                            },
+                            {
+                                "name": (time2 + timedelta(hours=24)).strftime("%m-%d"),
+                                "value": usageVal2
+                            },
+                            {
+                                "name": (time1 + timedelta(hours=24)).strftime("%m-%d"),
+                                "value": usageVal1
+                            }
+                        ]
+                    }, 200
+                    
+                else:
+                    return {'msg': 'Unauthorized access'}, 403
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
         
 @apiv1.route("/system/stats", methods=["OPTIONS", "GET"])
 class SystemStats(MethodView):
@@ -1649,8 +1742,6 @@ class SystemStatsSearch(MethodView):
                         if term in stopWords:
                             smartSearchQuery.remove(term)
 
-                    print(smartSearchQuery.__str__())
-
                     tags = request.args.get("tags")
                     if len(tags) > 0:
                         tagNames = tags.split(",")
@@ -1659,39 +1750,38 @@ class SystemStatsSearch(MethodView):
 
                     no_dup_articles = set()
 
-                    for term in smartSearchQuery:
-                        if len(searchQuery) > 0:
-                            articlesQuery: list[models.Article] = models.Article.query.filter(
-                                or_(
-                                    models.Article.Title.ilike(f"%{term}%"),
-                                    models.Article.Content.ilike(f"%{term}%"),
-                                    models.Article.Article_Description.ilike(f"%{term}%")
-                                )
-                            ).all()
+                    if len(smartSearchQuery) > 0:
+                        search_results = tfidf_search(smartSearchQuery)
 
-                            tagIds: list[int] = []
-                            if len(tagNames) > 0:
-                                for tag in tagNames:
-                                    tagId = models.Tag.query.filter_by(TagName=tag).first().ID
-                                    tagIds.append(tagId)
-                            
-                            totalArticles: list[models.Article] = []
+                        all_articles: list[models.Article] = models.Article.query.all()
 
-                            for x in articlesQuery:
-                                for tag in x.Tags:
-                                    if tag.ID in tagIds or len(tagIds) == 0:
-                                        totalArticles.append(x)
-                                        break
-                            no_dup_articles.update(totalArticles)
-                        else:
-                            totalArticles = []
-                            if len(tagNames) > 0:
-                                for tag in tagNames:
-                                    actualTag: list[models.Tag] = models.Tag.query.filter_by(TagName=tag).first()
-                                    totalArticles.extend(actualTag.Articles)
-                            no_dup_articles.update(totalArticles)
+                        tagIds: list[int] = []
+                        if len(tagNames) > 0:
+                            for tag in tagNames:
+                                tagId = models.Tag.query.filter_by(TagName=tag).first().ID
+                                tagIds.append(tagId)
+                        
+                        taggedArticles: list[models.Article] = []
+
+                        for x in all_articles:
+                            for tag in x.Tags:
+                                if tag.ID in tagIds or len(tagIds) == 0:
+                                    taggedArticles.append(x)
+                                    break
+
+                        articles = list()
+                        for articleID, importance in search_results:
+                            a = next((article for article in all_articles if article.ID == articleID and article in taggedArticles and importance > 0.0), None)
+                            if a is not None:
+                                articles.append(a)
+                    else:
+                        articles = []
+                        if len(tagNames) > 0:
+                            for tag in tagNames:
+                                actualTag: list[models.Tag] = models.Tag.query.filter_by(TagName=tag).first()
+                                articles.extend(actualTag.Articles)
                     
-                    totalArticles = list(no_dup_articles)
+                    totalArticles = list(articles)
 
                     returnableArticles = [article.toJSONPartial() for article in totalArticles]
                     
