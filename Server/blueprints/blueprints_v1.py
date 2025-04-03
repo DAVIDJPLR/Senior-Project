@@ -1078,7 +1078,6 @@ class Categories(MethodView):
             return {'msg': f"Error: {e}"}, 500
 
 
-## PUT SPELLCHECKING HERE
 @apiv1.route("/articles/search", methods=["OPTIONS", "GET"])
 class Search(MethodView):
     def options(self):

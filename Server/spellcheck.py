@@ -7,9 +7,6 @@ def correct_query(query: str) -> str:
     dict_path = "C:\\Senior Project\\Senior-Project\\Server\\custom_dictionary.txt"
 
     sym_spell.load_dictionary(dict_path, 0, 1)
-    print(f"Words loaded: {len(sym_spell.words)}")
-
-    print(f"Original query: {query}")
     
     suggestions = sym_spell.lookup_compound(query.lower(), max_edit_distance=2)
     if suggestions:
