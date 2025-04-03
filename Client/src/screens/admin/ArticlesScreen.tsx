@@ -76,9 +76,9 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
         loadPrivileges()
     }, []);
 
-    useEffect(() => {
-        handleSearch()
-    }, [tags])
+    // useEffect(() => {
+    //     handleSearch()
+    // }, [tags])
 
     const handleChange = (event: SelectChangeEvent<typeof tags>) => {
         const {
@@ -121,7 +121,7 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
         const data = await response.json();
         console.log(data)
 
-        setArticles(data.articles as PartialArticle[])
+        setArticles(data.articlesJSON as PartialArticle[])
     }
 
     const handleKeyUp = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -154,7 +154,7 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
         const data = await response.json();
         console.log(data)
 
-        setArticles(data.articles as PartialArticle[])
+        setArticles(data.articlesJSON as PartialArticle[])
     }
 
     const searchArticles = async () => {
