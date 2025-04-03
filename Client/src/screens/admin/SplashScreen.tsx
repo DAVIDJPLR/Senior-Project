@@ -102,12 +102,7 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
     }
 
     const getProblemArticles = async () => {
-        const params = new URLSearchParams({
-            time: problemArticleDate.toString(),
-            size: lstSize.toString()
-        });
-
-        const response = await fetch(APIBASE + `/api/v1/articles/problems?${params.toString()}`, {
+        const response = await fetch(APIBASE + `/api/v1/article/thumbs_down_dates/`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -115,7 +110,7 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
             credentials: 'include'
         });
 
-        const data = await response.json();
+        const data = await response.json()
 
         setProblemArticles(data.articles as PartialArticle[]);
     }
