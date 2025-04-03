@@ -5,7 +5,10 @@ from sqlalchemy import and_, or_, desc, func, case
 from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
 from app import app, db
-from build_dictionary import build_dictionary
+from build_dictionary import build_custom_dictionary
+from build_embeddings import build_embeddings
+from spellcheck import correct_query
+from threading import Thread
 
 from auth import TENANT_ID, CLIENT_ID
 from search import tfidf_search
@@ -322,7 +325,8 @@ class Article(MethodView):
                         article.Tags = [addTag]
                     
                     db.session.commit()
-                    build_dictionary()
+                    build_custom_dictionary()
+                    Thread(target=build_embeddings()).start()
 
                     return {"msg": "Article Added successfully"}, 200
 
@@ -377,7 +381,8 @@ class Article(MethodView):
                         db.session.add(eh)
                         
                         db.session.commit()
-                        build_dictionary()
+                        build_custom_dictionary()
+                        Thread(target=build_embeddings()).start()
                         return {'msg': 'Article updated successfully'}, 200
                 else:
                     if session['current_user_role'] == "student":
@@ -1073,7 +1078,6 @@ class Categories(MethodView):
             return {'msg': f"Error: {e}"}, 500
 
 
-## PUT SPELLCHECKING HERE
 @apiv1.route("/articles/search", methods=["OPTIONS", "GET"])
 class Search(MethodView):
     def options(self):
@@ -1083,6 +1087,7 @@ class Search(MethodView):
         try:
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 searchQuery = request.args.get("searchQuery")
+                searchQuery = correct_query(searchQuery)
                 smartSearchQuery = [term.lower() for term in searchQuery.split(" ")]
 
                 for term in searchQuery.split(" "):
