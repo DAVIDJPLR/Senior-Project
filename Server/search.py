@@ -26,7 +26,7 @@ def idf(term: str, fullArticles: list[list[str]]) -> float:
                 articleTermFrequency += 1
                 break
 
-    return float(np.log10(len(fullArticles) / articleTermFrequency))
+    return float(np.log10((len(fullArticles) + 1.0) / (articleTermFrequency + 1.0)))
 
 def tfidf(query: list[str], articles: list[list[str]]):
     """TF * IDF per query term"""
