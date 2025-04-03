@@ -59,7 +59,7 @@ def find_match(query: str, min_score = 0.5):
 
     return similarities
 
-def hybrid_search(tfidf_scores: list[tuple], query: str, alpha=0.6, min_score = 0.5, top_n=10) -> list[tuple]:
+def hybrid_search(tfidf_scores: list[tuple], query: str, alpha=0.6, min_score = 0.3, top_n=10) -> list[tuple]:
     '''Combine tf-idf scores with semantic match scores to find matches we could have otherwise missed'''
     tfidf_score_dict = {id: score for id, score in tfidf_scores}
     norm_tfidf_score_dict = normalize_scores(tfidf_score_dict)
@@ -77,7 +77,7 @@ def hybrid_search(tfidf_scores: list[tuple], query: str, alpha=0.6, min_score = 
         if combined_score >= min_score:
             combined[id] = combined_score
     
-    top_matches = sorted(combined.items, key=lambda x: x[1], reverse=True)[:top_n]
+    top_matches = sorted(combined.items(), key=lambda x: x[1], reverse=True)[:top_n]
     print(top_matches)
     return top_matches
 
