@@ -121,20 +121,23 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
         const data = await response.json();
         console.log(data)
 
-        setArticles(data.articles as PartialArticle[])
+        setArticles(data.articlesJSON as PartialArticle[])
     }
 
     const handleKeyUp = (event: React.KeyboardEvent<HTMLInputElement>) => {
-        if (event.key === "Enter") {
-            console.log(searchVal); 
-            handleSearch()
-        }
+        console.log(searchVal); 
+        handleSearch()
+        
+        // if (event.key === "Enter") {
+        //     console.log(searchVal); 
+        //     handleSearch()
+        // }
     };
 
     const handleSearch = () => {
         console.log(`searching with val |${searchVal}| and tags |${tags}|`)
         console.log(`len of tags is ${tags.length}`)
-        if (searchVal === "" && tags.length === 0) {
+        if (searchVal.length === 0 && tags.length === 0) {
             defaultArticles()
             console.log("default")
         } else {
@@ -154,7 +157,7 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
         const data = await response.json();
         console.log(data)
 
-        setArticles(data.articles as PartialArticle[])
+        setArticles(data.articlesJSON as PartialArticle[])
     }
 
     const searchArticles = async () => {

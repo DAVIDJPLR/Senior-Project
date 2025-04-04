@@ -5,8 +5,13 @@ from sqlalchemy import and_, or_, desc, func, case
 from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
 from app import app, db
+from build_dictionary import build_custom_dictionary
+from build_embeddings import build_embeddings
+from spellcheck import correct_query
+from threading import Thread
 
 from auth import TENANT_ID, CLIENT_ID
+from search import tfidf_search
 
 import os, traceback, models, requests, jwt, redis, json
 from typing import Any
@@ -21,6 +26,12 @@ apiv1 = Blueprint(
 
 revoked_tokens = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
 JWKS_URL = f"https://login.microsoftonline.com/{TENANT_ID}/discovery/v2.0/keys"
+
+stopWords = set()
+file = open("stop_words.txt", "r")
+for line in file:
+    stopWords.add(line.strip())
+file.close()
 
 def get_signing_keys():
     response = requests.get(JWKS_URL)
@@ -183,7 +194,7 @@ class Articles(MethodView):
                 articles: list[models.Article] = models.Article.query.all()
                 
                 returnableArticles = [article.toJSONPartial() for article in articles]
-                return {'articles': returnableArticles}, 200
+                return {'articlesJSON': returnableArticles}, 200
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:
@@ -314,7 +325,9 @@ class Article(MethodView):
                         article.Tags = [addTag]
                     
                     db.session.commit()
-                    
+                    build_custom_dictionary()
+                    Thread(target=build_embeddings()).start()
+
                     return {"msg": "Article Added successfully"}, 200
 
                 else:
@@ -368,6 +381,8 @@ class Article(MethodView):
                         db.session.add(eh)
                         
                         db.session.commit()
+                        build_custom_dictionary()
+                        Thread(target=build_embeddings()).start()
                         return {'msg': 'Article updated successfully'}, 200
                 else:
                     if session['current_user_role'] == "student":
@@ -1061,7 +1076,8 @@ class Categories(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-        
+
+
 @apiv1.route("/articles/search", methods=["OPTIONS", "GET"])
 class Search(MethodView):
     def options(self):
@@ -1071,14 +1087,22 @@ class Search(MethodView):
         try:
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 searchQuery = request.args.get("searchQuery")
+                searchQuery = correct_query(searchQuery)
+                smartSearchQuery = [term.lower() for term in searchQuery.split(" ")]
 
-                articles = models.Article.query.filter(
-                    or_(
-                        models.Article.Title.ilike(f"%{searchQuery}%"),
-                        models.Article.Content.ilike(f"%{searchQuery}%"),
-                        models.Article.Article_Description.ilike(f"%{searchQuery}%")
-                    )
-                ).all()
+                for term in searchQuery.split(" "):
+                    if term in stopWords:
+                        smartSearchQuery.remove(term)
+
+                search_results = tfidf_search(smartSearchQuery)
+
+                all_articles: list[models.Article] = models.Article.query.all()
+
+                articles = list()
+                for articleID, importance in search_results:
+                    a = next((article for article in all_articles if article.ID == articleID and importance > 0.0), None)
+                    if a is not None:
+                        articles.append(a)
 
                 returnedArticles = [article.toJSONPartial() for article in articles]
 
@@ -1577,6 +1601,102 @@ class SearchesProblems(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
+   
+@apiv1.route("/system/usage", methods=["OPTIONS", "GET"])
+class SystemUsage(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if len(session['current_user_privileges']) > 0:
+                    time1 = datetime.now() - timedelta(hours=24)
+                    time2 = time1 - timedelta(hours=24)
+                    time3 = time2 - timedelta(hours=24)
+                    time4 = time3 - timedelta(hours=24)
+                    time5 = time4 - timedelta(hours=24)
+                    
+                    searches1_count = models.Search.query.filter(
+                        models.Search.SearchTime >= time1
+                    ).with_entities(func.count()).scalar()
+                    viewHistory1_count = models.ViewHistory.query.filter(
+                        models.ViewHistory.View_Time >= time1
+                    ).with_entities(func.count()).scalar()
+                    usageVal1 = (searches1_count*3) + viewHistory1_count
+
+                    searches2_count = models.Search.query.filter(
+                        models.Search.SearchTime >= time2,
+                        models.Search.SearchTime < time1
+                    ).with_entities(func.count()).scalar()
+                    viewHistory2_count = models.ViewHistory.query.filter(
+                        models.ViewHistory.View_Time >= time2,
+                        models.ViewHistory.View_Time < time1
+                    ).with_entities(func.count()).scalar()
+                    usageVal2 = (searches2_count*3) + viewHistory2_count
+
+                    searches3_count = models.Search.query.filter(
+                        models.Search.SearchTime >= time3,
+                        models.Search.SearchTime < time2
+                    ).with_entities(func.count()).scalar()
+                    viewHistory3_count = models.ViewHistory.query.filter(
+                        models.ViewHistory.View_Time >= time3,
+                        models.ViewHistory.View_Time < time2
+                    ).with_entities(func.count()).scalar()
+                    usageVal3 = (searches3_count*3) + viewHistory3_count
+
+                    searches4_count = models.Search.query.filter(
+                        models.Search.SearchTime >= time4,
+                        models.Search.SearchTime < time3
+                    ).with_entities(func.count()).scalar()
+                    viewHistory4_count = models.ViewHistory.query.filter(
+                        models.ViewHistory.View_Time >= time4,
+                        models.ViewHistory.View_Time < time3
+                    ).with_entities(func.count()).scalar()
+                    usageVal4 = (searches4_count*3) + viewHistory4_count
+
+                    searches5_count = models.Search.query.filter(
+                        models.Search.SearchTime >= time5,
+                        models.Search.SearchTime < time4
+                    ).with_entities(func.count()).scalar()
+                    viewHistory5_count = models.ViewHistory.query.filter(
+                        models.ViewHistory.View_Time >= time5,
+                        models.ViewHistory.View_Time < time4
+                    ).with_entities(func.count()).scalar()
+                    usageVal5 = (searches5_count*3) + viewHistory5_count
+                    
+                    return {
+                        "usage_data": [
+                            {
+                                "name": (time5 + timedelta(hours=24)).strftime("%m-%d"),
+                                "value": usageVal5
+                            },
+                            {
+                                "name": (time4 + timedelta(hours=24)).strftime("%m-%d"),
+                                "value": usageVal4
+                            },
+                            {
+                                "name": (time3 + timedelta(hours=24)).strftime("%m-%d"),
+                                "value": usageVal3
+                            },
+                            {
+                                "name": (time2 + timedelta(hours=24)).strftime("%m-%d"),
+                                "value": usageVal2
+                            },
+                            {
+                                "name": (time1 + timedelta(hours=24)).strftime("%m-%d"),
+                                "value": usageVal1
+                            }
+                        ]
+                    }, 200
+                    
+                else:
+                    return {'msg': 'Unauthorized access'}, 403
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
         
 @apiv1.route("/system/stats", methods=["OPTIONS", "GET"])
 class SystemStats(MethodView):
@@ -1613,44 +1733,58 @@ class SystemStatsSearch(MethodView):
     def get(self):
         try:
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
-                if len(session['current_user_privileges']) > 0:
+                if len(session['current_user_privileges']) >= 0:
                     searchQuery = request.args.get("searchQuery")
+                    smartSearchQuery = [term.lower() for term in searchQuery.split(" ")]
+
+                    for term in searchQuery.split(" "):
+                        if term in stopWords or len(term) == 0:
+                            smartSearchQuery.remove(term)
+
                     tags = request.args.get("tags")
                     if len(tags) > 0:
                         tagNames = tags.split(",")
                     else:
-                        tagNames = []
+                        tagNames = ["Published", "Needs Review", "High Priority", "In Progress", "Archived"]
 
-                    if len(searchQuery) > 0:
-                        articlesQuery: list[models.Article] = models.Article.query.filter(
-                            or_(
-                                models.Article.Title.ilike(f"%{searchQuery}%"),
-                                models.Article.Content.ilike(f"%{searchQuery}%"),
-                                models.Article.Article_Description.ilike(f"%{searchQuery}%")
-                            )
-                        ).all()
+                    print(len(tagNames))
+
+                    if len(smartSearchQuery) > 0:
+                        search_results = tfidf_search(smartSearchQuery)
+
+                        all_articles: list[models.Article] = models.Article.query.all()
 
                         tagIds: list[int] = []
                         if len(tagNames) > 0:
                             for tag in tagNames:
                                 tagId = models.Tag.query.filter_by(TagName=tag).first().ID
                                 tagIds.append(tagId)
+                        else:
+                            tagIds = []
                         
-                        totalArticles: list[models.Article] = []
+                        print(tagIds)
+                        taggedArticles: list[models.Article] = []
 
-                        for x in articlesQuery:
+                        for x in all_articles:
                             for tag in x.Tags:
                                 if tag.ID in tagIds or len(tagIds) == 0:
-                                    totalArticles.append(x)
+                                    taggedArticles.append(x)
                                     break
-                    
+
+                        articles = list()
+                        for articleID, importance in search_results:
+                            a = next((article for article in all_articles if article.ID == articleID and article in taggedArticles and importance > 0.0), None)
+                            if a is not None:
+                                articles.append(a)
                     else:
-                        totalArticles = []
+                        articles = list()
                         if len(tagNames) > 0:
                             for tag in tagNames:
-                                actualTag: list[models.Tag] = models.Tag.query.filter_by(TagName=tag).first()
-                                totalArticles.extend(actualTag.Articles)
-                        
+                                actualTag: models.Tag = models.Tag.query.filter_by(TagName=tag).first()
+                                articles.extend(actualTag.Articles)
+                    
+                    totalArticles = list(articles)
+
                     returnableArticles = [article.toJSONPartial() for article in totalArticles]
                     
                     return {'results': returnableArticles}, 200
@@ -1725,6 +1859,77 @@ class SystemStatsSearch(MethodView):
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
 
+@apiv1.route("/article/thumbs_down_dates/", methods=["OPTIONS", "GET"])
+class ArticleThumbsDownDates(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if len(session['current_user_privileges']) > 0:
+                    
+                    
+                    articles: list[models.Article] = (
+                                                        db.session.query(models.Article)
+                                                        .filter(models.Article.ThumbsDown > 0)  # Only include articles with more than 0 thumbs down
+                                                        .order_by(desc(models.Article.ThumbsDown))  # Sort by ThumbsDown in descending order
+                                                        .limit(10)  # Limit to the top 10 articles
+                                                        .all()  # Execute the query and return the results
+                                                    )
+                        
+                    articles_to_thumbs_down = {}
+                        
+                    for article in articles:
+                        articleID = article.ID
+                        thumbs_down_dates = models.Feedback.query.with_entities(models.Feedback.Submission_Time).filter(
+                            and_(
+                                models.Feedback.ArticleID == articleID,
+                                models.Feedback.Positive == False  # Filtering only thumbs-down feedback
+                            )  
+                            
+                            ).order_by(models.Feedback.Submission_Time.desc()).all()
+
+                        dates = [date[0] for date in thumbs_down_dates]
+
+                        milliDates = []
+
+                        for date in dates:
+                            print(article.ID)
+                            print(date.timestamp())
+                            milliDates.append(date.timestamp())
+
+                        timeNow = datetime.now().timestamp()
+                        weight = 0
+
+                        for date in milliDates:
+                            weight+=(abs(1/timeNow - date))
+
+                        articles_to_thumbs_down[articleID] = weight
+
+                    sorted_dict_desc = dict(sorted(articles_to_thumbs_down.items(), key=lambda item: item[1], reverse=True))
+                    print(sorted_dict_desc)
+                    sorted_article_ids = list(sorted_dict_desc.keys())
+
+                    sorted_articles = []                        
+                    for id in sorted_article_ids:
+                        temp_article = models.Article.query.filter_by(ID=id).first()
+                        sorted_articles.append(temp_article)
+
+                    db.session.commit()
+
+                    returnable_sorted_articles = [article.toJSONPartial() for article in sorted_articles]                        
+
+                    return {'articles': returnable_sorted_articles}, 200
+                    
+
+                else:
+                    return {'msg': 'Unauthorized access'}, 403
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
 
 @apiv1.route("/article/categories", methods=["OPTIONS", "GET", "PUT"])
 class SystemStatsSearch(MethodView):
