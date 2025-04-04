@@ -1733,7 +1733,7 @@ class SystemStatsSearch(MethodView):
     def get(self):
         try:
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
-                if len(session['current_user_privileges']) > 0:
+                if len(session['current_user_privileges']) >= 0:
                     searchQuery = request.args.get("searchQuery")
                     smartSearchQuery = [term.lower() for term in searchQuery.split(" ")]
 

@@ -54,7 +54,7 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
     };
 
     const handleSearch = () => {
-        if (searchVal === ""){
+        if (searchVal.length === 0) {
             defaultArticles()
             console.log("default")
         } else {
@@ -79,12 +79,13 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
 
     const searchArticles = async () => {
         const params = new URLSearchParams({
-            searchQuery: searchVal
+            searchQuery: searchVal,
+            tags: "Published"
         });
 
         console.log(`searching with val ${searchVal}`)
 
-        const response = await fetch(APIBASE + `/api/v1/articles/search?${params.toString()}`, {
+        const response = await fetch(APIBASE + `/api/v1/articles/search/tagandquery?${params.toString()}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
