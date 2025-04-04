@@ -1733,21 +1733,21 @@ class SystemStatsSearch(MethodView):
     def get(self):
         try:
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
-                if len(session['current_user_privileges']) > 0:
+                if len(session['current_user_privileges']) >= 0:
                     searchQuery = request.args.get("searchQuery")
                     smartSearchQuery = [term.lower() for term in searchQuery.split(" ")]
 
                     for term in searchQuery.split(" "):
-                        if term in stopWords:
+                        if term in stopWords or len(term) == 0:
                             smartSearchQuery.remove(term)
 
                     tags = request.args.get("tags")
                     if len(tags) > 0:
                         tagNames = tags.split(",")
                     else:
-                        tagNames = []
+                        tagNames = ["Published", "Needs Review", "High Priority", "In Progress", "Archived"]
 
-                    no_dup_articles = set()
+                    print(len(tagNames))
 
                     if len(smartSearchQuery) > 0:
                         search_results = tfidf_search(smartSearchQuery)
@@ -1759,7 +1759,10 @@ class SystemStatsSearch(MethodView):
                             for tag in tagNames:
                                 tagId = models.Tag.query.filter_by(TagName=tag).first().ID
                                 tagIds.append(tagId)
+                        else:
+                            tagIds = []
                         
+                        print(tagIds)
                         taggedArticles: list[models.Article] = []
 
                         for x in all_articles:
@@ -1774,10 +1777,10 @@ class SystemStatsSearch(MethodView):
                             if a is not None:
                                 articles.append(a)
                     else:
-                        articles = []
+                        articles = list()
                         if len(tagNames) > 0:
                             for tag in tagNames:
-                                actualTag: list[models.Tag] = models.Tag.query.filter_by(TagName=tag).first()
+                                actualTag: models.Tag = models.Tag.query.filter_by(TagName=tag).first()
                                 articles.extend(actualTag.Articles)
                     
                     totalArticles = list(articles)
