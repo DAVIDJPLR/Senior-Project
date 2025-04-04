@@ -96,7 +96,6 @@ there
 when
 where
 why
-how
 all
 any
 both
