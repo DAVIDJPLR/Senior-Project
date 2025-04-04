@@ -76,9 +76,9 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
         loadPrivileges()
     }, []);
 
-    // useEffect(() => {
-    //     handleSearch()
-    // }, [tags])
+    useEffect(() => {
+        handleSearch()
+    }, [tags])
 
     const handleChange = (event: SelectChangeEvent<typeof tags>) => {
         const {
@@ -137,7 +137,7 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
     const handleSearch = () => {
         console.log(`searching with val |${searchVal}| and tags |${tags}|`)
         console.log(`len of tags is ${tags.length}`)
-        if (searchVal === "" && tags.length === 0) {
+        if (searchVal.length === 0 && tags.length === 0) {
             defaultArticles()
             console.log("default")
         } else {
