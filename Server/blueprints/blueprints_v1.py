@@ -1372,37 +1372,6 @@ class ArticlesProblems(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-
-# @apiv1.route("/articles/trending", methods=["OPTIONS", "GET"])
-# class Trending(MethodView):
-#     def options(self):
-#         return '', 200
-#     def get(self): # not currently implemented in the student home page, temporarily putting it as admin only until we implement it
-#         try:
-#             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
-#                 if len(session['current_user_privileges']) > 0:
-#                     articles = db.session.query(
-#                         models.Article,
-#                         func.count(models.ViewHistory.ArticleID).label('view_count')
-#                     ).join(
-#                         models.ViewHistory, models.Article.ID == models.ViewHistory.ArticleID
-#                     ).group_by(
-#                         models.Article.ID
-#                     ).order_by(
-#                         func.count(models.ViewHistory.ArticleID).desc()
-#                     ).all()
-                    
-#                     returnableArticles = [article.toJSONPartial() for article, ranking in articles]
-#                     return {'articles': returnableArticles}, 200
-#                 else:
-#                     return {'msg': 'Not yet implemented for student use'}, 501
-#             else:
-#                 return {'msg': 'Unauthorized access'}, 401
-        
-#         except Exception as e:
-#             print(f"Error: {e}")
-#             traceback.print_exc()
-#             return {'msg': f"Error: {e}"}, 500
           
 @apiv1.route("/articles/backlog", methods=["OPTIONS", "GET"])
 class Backlog(MethodView):
