@@ -59,7 +59,7 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
     };
 
     const defaultArticles = async () => {
-        const response = await fetch(APIBASE + '/api/v1/articles', {
+        const response = await fetch(APIBASE + '/api/v1/articles/trending/', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
