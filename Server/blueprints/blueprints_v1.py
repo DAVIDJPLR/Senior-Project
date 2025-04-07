@@ -1059,7 +1059,7 @@ class MetaTagNames(MethodView):
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
         
-@apiv1.route("/categories", methods=["OPTIONS", "GET"])
+@apiv1.route("/categories", methods=["OPTIONS", "GET", "POST"])
 class Categories(MethodView):
     def options(self):
         return '', 200
@@ -1076,8 +1076,7 @@ class Categories(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-
-
+        
 @apiv1.route("/articles/search", methods=["OPTIONS", "GET"])
 class Search(MethodView):
     def options(self):
