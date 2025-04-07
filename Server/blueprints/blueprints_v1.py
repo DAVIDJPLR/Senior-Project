@@ -895,7 +895,7 @@ class Category(MethodView):
         try:
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 if len(session['current_user_privileges']) > 0:
-                    data = request.json()
+                    data = request.json
                     if data:
                         tagName = data.get("TagName")
                         if len(tagName) > 30:
@@ -905,7 +905,8 @@ class Category(MethodView):
 
                         db.session.add(newCategory)
                         db.session.commit()
-                        return {'Category': newCategory.toJSON()}, 201
+                        print("New category created")
+                        return {'ID': newCategory.ID, 'TagName': newCategory.TagName}, 201
                     else:
                         return {'msg': 'No content submitted'}, 400
                 else:
@@ -1060,7 +1061,7 @@ class MetaTagNames(MethodView):
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
         
-@apiv1.route("/categories", methods=["OPTIONS", "GET"])
+@apiv1.route("/categories", methods=["OPTIONS", "GET", "POST"])
 class Categories(MethodView):
     def options(self):
         return '', 200
@@ -1077,8 +1078,7 @@ class Categories(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-
-
+        
 @apiv1.route("/articles/search", methods=["OPTIONS", "GET"])
 class Search(MethodView):
     def options(self):
@@ -2012,13 +2012,15 @@ class SystemStatsSearch(MethodView):
                     if metatag_updated:
                         article_id: int = metatag_updated.get("articleID")
                         metatag_id: int = metatag_updated.get("metatagID")
+                        print(metatag_id)
                         article = models.Article.query.get(article_id)
                         if article:
                             metatag = models.MetaTag.query.get(metatag_id)
                             article.MetaTags = [metatag]
                             db.session.commit()
 
-                            return {'msg': 'Article metatag updated successfully.'}, 200
+                            return {'msg': 'Article metatag updated successfully.', 
+                                    'metatag id': metatag_id}, 200
                         else:
                             return {'msg': 'No article provided.'}, 400
                     else:
