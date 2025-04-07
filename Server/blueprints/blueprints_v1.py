@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
 from app import app, db
 from build_dictionary import build_custom_dictionary
-from build_embeddings import build_embeddings
+from semantic_embedding import build_embeddings, hybrid_search
 from spellcheck import correct_query
 from threading import Thread
 
@@ -1097,6 +1097,7 @@ class Search(MethodView):
                             smartSearchQuery.remove(term)
 
                     search_results = tfidf_search(smartSearchQuery)
+                    search_results = hybrid_search(search_results, searchQuery)
 
                     all_articles: list[models.Article] = models.Article.query.all()
 
@@ -1730,7 +1731,7 @@ class SystemStatsSearch(MethodView):
 
                     if len(smartSearchQuery) > 0:
                         search_results = tfidf_search(smartSearchQuery)
-
+                        search_results = hybrid_search(search_results, searchQuery)
                         all_articles: list[models.Article] = models.Article.query.all()
 
                         tagIds: list[int] = []
