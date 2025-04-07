@@ -15,10 +15,10 @@ function AdminCard({ user, onClick, width, userPrivileges }: Props){
     return(
         <div className="HaveShadow" style={{width: width, height: "46px", display: "flex", flexDirection: "column", alignItems: "center", border: "2px solid grey", borderRadius: "5px", margin: "10px", backgroundColor: "white"}}>
             <Grid2 container direction="row" justifyContent="center" alignItems="center" sx={{width: "98%"}}>
-                <Grid2 key="LeftSpace" sx={{width: "33%"}}>
+                <Grid2 sx={{width: "33%"}}>
                     <Typography style={{ fontSize: "16px", fontWeight: "600", textAlign: "left", width: "95%", overflow: "hidden"}}>{user.FName} {user.LName}</Typography>
                 </Grid2>
-                <Grid2 key="Email" sx={{width: "34%"}}>
+                <Grid2 sx={{width: "34%"}}>
                     <Typography style={{ fontSize: "12px", textAlign: "center", width: "95%", overflow: "hidden"}}>{user.Email}</Typography>
                 </Grid2>
                 <Grid2 sx={{width: "33%"}}>

@@ -6,6 +6,8 @@ interface Props{
     setCurrentScreen: (screen: Screen) => void,
 }
 
+// Serves as a navigation bar located at the top of all admin screens
+// to allow quick travel between each of them.
 function AdminAppBar ({ currentScreen, setCurrentScreen }: Props){
     const theme = useTheme();
      
@@ -16,19 +18,19 @@ function AdminAppBar ({ currentScreen, setCurrentScreen }: Props){
                     
                     {(currentScreen === AdminScreen.Analysis) ? <Typography sx={{color: 'black'}}>Analysis</Typography> : <Typography onClick={() => {setCurrentScreen(AdminScreen.Analysis);}} sx={{color: 'white', cursor: 'pointer', textDecoration: 'underline'}}>Analysis</Typography>}
                     
-                    <div key={"Divider_1"}>
+                    <div>
                         <Divider orientation="vertical" variant="middle" flexItem sx={{ borderColor: 'black', height: "16px"}}></Divider>
                     </div>
                     
                     {(currentScreen === AdminScreen.Articles) ? <Typography sx={{color: 'black'}}>Articles</Typography> : <Typography onClick={() => {setCurrentScreen(AdminScreen.Articles);}} sx={{color: 'white', cursor: 'pointer', textDecoration: 'underline'}}>Articles</Typography>}
                     
-                    <div key={"Divider_2"}>
+                    <div>
                         <Divider orientation="vertical" variant="middle" flexItem sx={{ borderColor: 'black', height: "16px"}}></Divider>
                     </div>
                     
                     {(currentScreen === AdminScreen.Splash) ? <Typography sx={{color: 'black'}}>Home</Typography> : <Typography onClick={() => {setCurrentScreen(AdminScreen.Splash);}} sx={{color: 'white', cursor: 'pointer', textDecoration: 'underline'}}>Home</Typography>}  
                     
-                    <div key={"Divider_4"}>
+                    <div>
                         <Divider orientation="vertical" variant="middle" flexItem sx={{ borderColor: 'black', height: "16px"}}></Divider>
                     </div>
                     
