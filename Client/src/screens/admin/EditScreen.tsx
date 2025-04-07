@@ -21,7 +21,6 @@ interface Props{
 
 function EditArticleModal({ open, article, onClose }: Props) {
     const articleID = article.ID
-    console.log(articleID)
     return (
         <Dialog fullScreen open={open} onClose={onClose} TransitionComponent={Transition}>
             <AppBar sx={{position: "relative"}}>

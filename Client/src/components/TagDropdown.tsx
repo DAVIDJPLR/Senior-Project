@@ -31,9 +31,6 @@ function TagDropdown( {articleID, setCurrentTag}: TagDropdownProps) {
                 setSelectedTagLabel(data.tags[0].TagName)
                 setSelectedTagID(data.tags[0].ID)
                 setSelectedTag(data.tags[0])
-                console.log(selectedTagLabel)
-                console.log(selectedTagID)
-                console.log(selectedTag)
             }
         })
         .catch(error => {

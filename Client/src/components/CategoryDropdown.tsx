@@ -129,7 +129,7 @@ function CategoryDropdown( {articleID, setCurrentCategory}: CategoryDropdownProp
     return (
         <Box sx={{position: "relative", width: 200}}>
             <FormControl variant="outlined" size="small" sx={{width: 200}}>
-                <InputLabel id="tag-dropdown-label">Tag</InputLabel>
+                <InputLabel id="tag-dropdown-label">Category</InputLabel>
                 <Select
                     labelId="tag-dropdown-label"
                     id="tag-dropdown"
