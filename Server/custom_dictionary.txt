@@ -1,7 +1,7 @@
 how 6
 to 9
 connect 1
-the 16
+the 17
 gcc 1
 wifi 1
 lorem 2
@@ -67,10 +67,10 @@ anim 1
 id 1
 est 1
 laborum 1
-hopefully 1
+hopefully 2
 this 8
 fixes 1
-it 5
+it 6
 update 1
 driver 1
 description 1
@@ -84,7 +84,7 @@ fix 3
 my 4
 broken 1
 laptop 1
-i 7
+i 8
 reboot 2
 that's 1
 just 1
@@ -99,7 +99,7 @@ not 1
 printers 2
 can 2
 and 1
-will 4
+will 5
 betray 1
 you 3
 step 2
@@ -174,7 +174,7 @@ still 1
 be 1
 knows 1
 test 3
-testing 2
+testing 3
 text 2
 paragraph 2
 blank 7
@@ -216,7 +216,7 @@ head 1
 duplicated 2
 why 1
 hello 1
-am 1
+am 2
 creating 1
 an 1
 without 1
@@ -224,3 +224,8 @@ editing 1
 privileges 1
 works 1
 moment 1
+howdy 1
+updating 1
+articles 1
+list 1
+work 1

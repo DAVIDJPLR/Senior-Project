@@ -68,6 +68,7 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
     const handleCloseModal = () => {
         setEditModalOpen(false)
         setSelectedArticle(createEmptyArticle())
+        handleSearch()
     };
     
     useEffect(() => {
@@ -127,11 +128,6 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
     const handleKeyUp = (event: React.KeyboardEvent<HTMLInputElement>) => {
         console.log(searchVal); 
         handleSearch()
-        
-        // if (event.key === "Enter") {
-        //     console.log(searchVal); 
-        //     handleSearch()
-        // }
     };
 
     const handleSearch = () => {
@@ -155,7 +151,6 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
         });
 
         const data = await response.json();
-        console.log(data)
 
         setArticles(data.articlesJSON as PartialArticle[])
     }
@@ -177,13 +172,11 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
         });
 
         const data = await response.json();
-        console.log(data)
 
         setArticles(data.results as PartialArticle[])
     }
 
     if (privilegeIDs[0] === 0) {
-
         return (
             <div>
                 <p>Loading...</p>
