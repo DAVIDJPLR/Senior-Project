@@ -74,7 +74,7 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
         const data = await response.json();
         console.log(data)
 
-        setArticles(data.articlesJSON as PartialArticle[])
+        setArticles(data.articles as PartialArticle[])
     }
 
     const searchArticles = async () => {

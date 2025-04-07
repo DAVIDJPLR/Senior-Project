@@ -384,19 +384,7 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
                             <Typography>Usage over time</Typography>
                             <UsageChart data={usageData}></UsageChart>
                         </div>
-                        {/* <div style={{width: "30%", aspectRatio: "1/1", borderRadius: "50%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", border: "1px solid gray", color: "black", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white"}}>
-                            <Typography sx={{fontSize: "300%", lineHeight: "1", marginBottom: "2px" }}>{articleCount}</Typography>
-                            <Typography sx={{fontSize: "80%", lineHeight: "1", marginBottom: "2px" }}>Articles</Typography>
-                        </div>
-                        <div style={{width: "30%", aspectRatio: "1/1", borderRadius: "50%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", border: "1px solid gray", color: "black", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white"}}>
-                            <Typography sx={{fontSize: "300%", lineHeight: "1", marginBottom: "2px" }}>{userCount}</Typography>
-                            <Typography sx={{fontSize: "80%", lineHeight: "1", marginBottom: "2px" }}>Active users</Typography>
-                        </div>
-
-                        <div style={{width: "30%", aspectRatio: "1/1", borderRadius: "50%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", border: "1px solid gray", color: "black", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white"}}>
-                            <Typography sx={{fontSize: "300%", lineHeight: "1", marginBottom: "2px" }}>{searchCount}</Typography>
-                            <Typography sx={{fontSize: "80%", lineHeight: "1", marginBottom: "2px" }}>Searches</Typography>
-                        </div> */}
+                        {}
                     </div>
                 </div>
                 <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>

@@ -5,6 +5,7 @@ import { withHistory } from 'slate-history'
 import {Button, CircularProgress, IconButton, Toolbar as MuiToolbar, Paper, Snackbar, SnackbarCloseReason, TextField} from '@mui/material'
 import { FormatBold, FormatItalic, FormatUnderlined, InsertPhotoOutlined } from '@mui/icons-material'
 // import { PartialArticle } from '../custom_objects/models'
+import { PartialAdminPrivilege } from "../custom_objects/models";
 import TagDropdown from './TagDropdown'
 import CategoryDropdown from './CategoryDropdown'
 import { renderLeaf, renderElement } from './slate components/Renderers'
@@ -49,10 +50,11 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
   const [loading, setLoading] = useState<boolean>(!!articleID)
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false)
   const [emptyField, setEmptyField] = useState<boolean>(false)
+  const [notPrivileged, setNotPrivileged] = useState<boolean>(false)
 
   const [currentTag, setCurrentTag] = useState("")
   const [currentCategory, setCurrentCategory] = useState("")
-  
+
   // If we were given an articleID then we load that article from the DB
   useEffect(() => {
     if (articleID >= 0) {
@@ -138,6 +140,7 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
       })
       .then(response => {
         if(!response.ok) {
+          setNotPrivileged(true);
           throw new Error ('Failed to save article')
         }
         return response.json()
@@ -150,7 +153,7 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
         console.error("Error saving article: ", error)
       })
     } else {
-
+      // need at minimum create article privilege to access the text editor, no need to check for it
       const payload = {
         "title": title,
         "content": content,
@@ -189,6 +192,7 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
     }
     setSaveSuccess(false)
     setEmptyField(false)
+    setNotPrivileged(false);
   }
 
   const initialValue = value
@@ -304,6 +308,12 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
       autoHideDuration={3000}
       onClose={handleCloseSnackbar}
       message="Article saved!"
+      />
+    <Snackbar
+      open={notPrivileged}
+      autoHideDuration={3000}
+      onClose={handleCloseSnackbar}
+      message="You do not have permission to edit articles."
       />
     <Snackbar
       open={emptyField}
