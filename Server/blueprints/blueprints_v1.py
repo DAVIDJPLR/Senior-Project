@@ -404,12 +404,13 @@ class Users(MethodView):
         try:
             if 'current_user_id' in session and 'current_user_role' in session and 'current_' and 'current_user_privileges' in session:
                 if 5 in session['current_user_privileges']:
-                    users: list[models.User] = models.User.query.all()
+                    all_users: list[models.User] = models.User.query.all()
 
-                    for user in users:
-                        privs: list[AdminPrivileges] = user.AdminPrivileges
-                        if len(privs) > 0:
-                            users.remove(user)
+                    users = []
+                    for user in all_users:
+                        data = user.toJSON()
+                        if not data["AdminPrivileges"]:
+                            users.append(user)
                         
                     returnableUsers = [user.toJSONPartial() for user in users]
                     
@@ -1959,9 +1960,7 @@ class TrendingArticles(MethodView):
 
                 db.session.commit()
 
-                returnable_sorted_articles = [article.toJSONPartial() for article in sorted_articles] 
-
-                print(returnable_sorted_articles)                       
+                returnable_sorted_articles = [article.toJSONPartial() for article in sorted_articles]                      
 
                 return {'articles': returnable_sorted_articles}, 200
             else:
