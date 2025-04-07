@@ -17,8 +17,7 @@ CORS(app, supports_credentials=True, origins=['http://localhost:5173', 'https://
 app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://root:C0dePr0j$@10.18.103.22:3306/helpgccedu"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
-# app.config['UPLOAD_FOLDER'] = 'C:\\helpgccedu\\images'
-app.config['UPLOAD_FOLDER'] = r"C:\Senior Project\Senior-Project\Server\static"
+app.config['UPLOAD_FOLDER'] = os.path.join(scriptdir, 'static')
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg'}
 
 # TODO: Change secret key to something more secure at some point

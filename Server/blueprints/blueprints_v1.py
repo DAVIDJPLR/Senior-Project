@@ -1086,23 +1086,33 @@ class Search(MethodView):
     def get(self):
         try:
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
-                searchQuery = request.args.get("searchQuery")
-                searchQuery = correct_query(searchQuery)
-                smartSearchQuery = [term.lower() for term in searchQuery.split(" ")]
+                searchQuery: str = request.args.get("searchQuery")
 
-                for term in searchQuery.split(" "):
-                    if term in stopWords:
-                        smartSearchQuery.remove(term)
+                if len(searchQuery) > 3:
+                    searchQuery = correct_query(searchQuery)
+                    smartSearchQuery = [term.lower() for term in searchQuery.split(" ")]
 
-                search_results = tfidf_search(smartSearchQuery)
+                    for term in searchQuery.lower().split(" "):
+                        if term in stopWords:
+                            smartSearchQuery.remove(term)
 
-                all_articles: list[models.Article] = models.Article.query.all()
+                    search_results = tfidf_search(smartSearchQuery)
 
-                articles = list()
-                for articleID, importance in search_results:
-                    a = next((article for article in all_articles if article.ID == articleID and importance > 0.0), None)
-                    if a is not None:
-                        articles.append(a)
+                    all_articles: list[models.Article] = models.Article.query.all()
+
+                    articles = list()
+                    for articleID, importance in search_results:
+                        a = next((article for article in all_articles if article.ID == articleID and importance > 0.0), None)
+                        if a is not None:
+                            articles.append(a)
+                else:
+                    articles = models.Article.query.filter(
+                        or_(
+                            models.Article.Title.ilike(f"%{searchQuery}%"),
+                            models.Article.Content.ilike(f"%{searchQuery}%"),
+                            models.Article.Article_Description.ilike(f"%{searchQuery}%")
+                        )
+                    ).all()
 
                 returnedArticles = [article.toJSONPartial() for article in articles]
 
@@ -1911,11 +1921,9 @@ class TrendingArticles(MethodView):
                     
                     
                     articles: list[models.Article] = (
-                                                        db.session.query(models.Article)
-                                                        .all()  # Execute the query and return the results
-                                                    )
-
-                    print(articles)
+                        db.session.query(models.Article)
+                        .all()  # Execute the query and return the results
+                    )
 
                     articles_to_views = {}
                         
@@ -1939,14 +1947,11 @@ class TrendingArticles(MethodView):
                         weight = 0
 
                         for date in milliDates:
-                            print(articleID)
-                            print(date)
                             weight+=(abs(1/((timeNow - date)+date))/timeNow)
 
                         articles_to_views[articleID] = weight
 
                     sorted_dict_desc = dict(sorted(articles_to_views.items(), key=lambda item: item[1], reverse=True))
-                    print(sorted_dict_desc)
                     sorted_article_ids = list(sorted_dict_desc.keys())
 
                     sorted_articles = []                        
