@@ -79,13 +79,12 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
 
     const searchArticles = async () => {
         const params = new URLSearchParams({
-            searchQuery: searchVal,
-            tags: "Published"
+            searchQuery: searchVal
         });
 
         console.log(`searching with val ${searchVal}`)
 
-        const response = await fetch(APIBASE + `/api/v1/articles/search/tagandquery?${params.toString()}`, {
+        const response = await fetch(APIBASE + `/api/v1/articles/search?${params.toString()}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
