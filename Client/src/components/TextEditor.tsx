@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react'
-import { createEditor, Editor, Transforms, Element, Descendant } from 'slate'
+import { createEditor, Editor, Transforms, Element, Descendant, node } from 'slate'
 import { Slate, Editable, withReact, useSlate } from 'slate-react'
 import { withHistory } from 'slate-history'
 import {Button, CircularProgress, IconButton, Toolbar as MuiToolbar, Paper, Snackbar, SnackbarCloseReason, TextField} from '@mui/material'
@@ -35,7 +35,7 @@ interface TextEditorProps {
 }
 
 export const TextEditor = ({articleID}: TextEditorProps) => {
-  const editor = useMemo(() => withHistory(withReact(createEditor())), [])
+  const editor = useMemo(() => withImages(withHistory(withReact(createEditor()))), [])
 
   const [value, setValue] = useState<CustomElement[]>([
     {
@@ -46,7 +46,6 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
 
   const [title, setTitle] = useState("Untitled Article")
   const [description, setDescription] = useState("")
-  console.log(`HEEEEERE IT IS ${articleID}`)
   const [loading, setLoading] = useState<boolean>(!!articleID)
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false)
   const [emptyField, setEmptyField] = useState<boolean>(false)
@@ -58,7 +57,6 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
   // If we were given an articleID then we load that article from the DB
   useEffect(() => {
     if (articleID >= 0) {
-      console.log("Text editor received articleID: ", articleID)
       const url = APIBASE + `/api/v1/article?articleID=${articleID}`
       console.log("Fetching article from URL: ", url)
       fetch(url, {
@@ -69,20 +67,12 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
         if (!response.ok) {
           throw new Error('Failed to fetch article')
         }
-        console.log("returning json")
         return response.json()
       })
       .then(data => {
-        console.log("about to parse")
-        console.log("Fetched data: ", data)
-        console.log("Fetched content: ", data.article.Content)
         if (data.article) {
-          console.log("beginning parse")
           try {
-            // const parsedContent = data.article.Content
-            // setValue(parsedContent)
             setValue(JSON.parse(data.article.Content))
-            console.log("json parsed")
           } catch (e) {
             throw new Error('Error parsing article content')
           }
@@ -110,7 +100,6 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
       Article_Description: description
     }
     for (const field in articlePayload) {
-      console.log(articlePayload[field])
       if (articlePayload[field].length == 0) {
         setEmptyField(true)
         return;
@@ -211,7 +200,6 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
       </Paper>
     )
   }
-  console.log(articleID)
   return (
     <Paper elevation={3} style={{ padding: '16px', maxWidth: '800px', margin: 'auto' }}>
     <TextField
@@ -257,6 +245,23 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
         renderLeaf = {renderLeaf}
         onKeyDown={(event: KeyboardEvent) => {
           if (!event.ctrlKey) {
+            if (event.key === 'Enter') {
+              const { selection } = editor;
+              if (selection) {
+                const [nodeEntry] = Editor.nodes(editor, {
+                  match: n => isCustomElement(n) && n.type === 'image',
+                });
+                if (nodeEntry) {
+                  event.preventDefault()
+                  const paragraphNode = {
+                    type: 'paragraph',
+                    children: [{text: ''}],
+                  }
+                  Transforms.insertNodes(editor, paragraphNode)
+                  return
+                }
+              }
+            }
             return
           }
 
@@ -325,6 +330,23 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
   )
 }
 
+function isCustomElement(element: any): element is CustomElement {
+  return typeof element.type === 'string'
+}
+
+const withImages = (editor: CustomEditor) => {
+  const { isVoid } = editor
+
+  editor.isVoid = (element) => {
+    if (isCustomElement(element) && element.type === 'image') {
+      return true
+    } else 
+    return isVoid(element)
+  }
+
+  return editor
+}
+
 const CustomEditor = {
   isBoldMarkActive(editor: CustomEditor) {
     const marks = Editor.marks(editor) as { bold?: boolean } | null
@@ -342,12 +364,14 @@ const CustomEditor = {
   },
 
   isBlockActive(editor: CustomEditor, block: 'paragraph' | 'image' | 'code') {
-    const [match] = Editor.nodes<CustomElement>(editor, {
+    const [match] = Editor.nodes(editor, {
       match: n => 
         !Editor.isEditor(n) && 
         Element.isElement(n) && 
         'type' in n && 
+        typeof n.type === 'string' &&
         n.type === block,
+      mode: 'highest'
     }) || [null]
     return !!match
   },
@@ -438,56 +462,6 @@ const Toolbar = ({editor, articleID, setCurrentTag, setCurrentCategory}: Toolbar
         >
           <FormatUnderlined/>
         </IconButton>
-        {/* <IconButton
-        size="small"
-          onMouseDown={(event) => {
-            event.preventDefault()
-            CustomEditor.toggleBlock(editor, 'heading-one')
-          }}
-        aria-label="Heading"
-        >
-          <Title />
-        </IconButton>
-        <IconButton
-        size="small"
-          onMouseDown={(event) => {
-            event.preventDefault()
-            CustomEditor.toggleBlock(editor, 'block-quote')
-          }}
-        aria-label="Block Quote"
-        >
-          <FormatQuote/>
-        </IconButton>
-        <IconButton
-          size="small"
-          onMouseDown={(event) => {
-            event.preventDefault()
-            CustomEditor.toggleBlock(editor, 'code')
-          }}
-          aria-label="Code"
-        >
-          <Code />
-        </IconButton>
-        <IconButton
-        size="small"
-          onMouseDown={(event) => {
-            event.preventDefault()
-            CustomEditor.toggleBlock(editor, 'bulleted-list')
-          }}
-        aria-label="Bulleted List"
-        >
-          <FormatListBulleted/>
-        </IconButton>
-        <IconButton
-        size="small"
-          onMouseDown={(event) => {
-            event.preventDefault()
-            CustomEditor.toggleBlock(editor, 'numbered-list')
-          }}
-        aria-label="Numbered List"
-        >
-          <FormatListNumbered/>
-        </IconButton> */}
         <InsertImageButton articleID={articleID}/>
         <div style={{flexGrow: 1}} />
         <TagDropdown articleID={articleID} setCurrentTag={setCurrentTag}/>
@@ -504,7 +478,6 @@ const InsertImageButton = ( {articleID}: InsertImageButtonProps) => {
   const editor = useSlate()
   const ref: any = null
   const fileInputRef = useRef(ref)
-  console.log(articleID)
 
   const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -516,7 +489,6 @@ const InsertImageButton = ( {articleID}: InsertImageButtonProps) => {
     const formData = new FormData()
     formData.append('image', file)
     formData.append('articleID', articleID.toString())
-    console.log(articleID.toString())
     try {
       fetch(APIBASE + `/api/v1/image?articleID=${articleID}`, {
         method: "POST",
@@ -537,19 +509,9 @@ const InsertImageButton = ( {articleID}: InsertImageButtonProps) => {
             url: data.url,
             children: [text]
           }
-          const paragraphNode = {
-            type: 'paragraph',
-            children: [text]
-          }
           const { selection } = editor
           if (selection) {
             Transforms.insertNodes(editor, imageNode)
-            console.log("Current selection after insert", editor.selection)
-
-
-            Transforms.insertNodes(editor, paragraphNode)
-            Transforms.insertNodes(editor, paragraphNode)
-
             const point = Editor.end(editor, Editor.path(editor, selection))
             Transforms.select(editor, Editor.start(editor, point))
           }

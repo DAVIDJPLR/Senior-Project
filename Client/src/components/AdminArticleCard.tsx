@@ -113,6 +113,7 @@ function AdminArticleCard({ article, lineNumber, onClick, userPrivileges }: Prop
                 textAlign: "left",
                 width: "95%",
                 paddingTop: "8px",
+                marginBottom: "8px",
                 overflow: "hidden",
                 display: "-webkit-box",
                 WebkitLineClamp: lineNumberString,
