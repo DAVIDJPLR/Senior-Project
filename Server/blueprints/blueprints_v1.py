@@ -437,18 +437,19 @@ class UserSearch(MethodView):
                 if 5 in session['current_user_privileges']:
                     searchQuery = request.args.get("searchQuery")
 
-                    users: list[models.User] = models.User.query.filter(
+                    searched_users: list[models.User] = models.User.query.filter(
                         or_(
                             models.User.FName.ilike(f"%{searchQuery}%"),
                             models.User.LName.ilike(f"%{searchQuery}%"),
                             models.User.Email.ilike(f"%{searchQuery}%")
                         )
                     ).all()
-                    
-                    for user in users:
-                        privs: list[int] = [priv.ID for priv in user.AdminPrivileges]
-                        if len(privs) > 0:
-                            users.remove(user)
+                
+                    users = []
+                    for user in searched_users:
+                        data = user.toJSON()
+                        if not data["AdminPrivileges"]:
+                            users.append(user)
 
                     returnableUsers = [user.toJSONPartial() for user in users]
                     
