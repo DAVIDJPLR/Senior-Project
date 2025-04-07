@@ -194,44 +194,4 @@ function CategoryCard({ category, onClick }: CategoryCardProps) {
     );
 }
 
-function getTestMetaTags(): PartialMetaTag[]{
-    return [
-        {
-            ID: 1,
-            TagName: "Technology"
-        },
-        {
-            ID: 2,
-            TagName: "Science"
-        },
-        {
-            ID: 3,
-            TagName: "Health"
-        },
-        {
-            ID: 4,
-            TagName: "Education"
-        },
-        {
-            ID: 5,
-            TagName: "Business"
-        },
-        {
-            ID: 6,
-            TagName: "Entertainment"
-        },
-        {
-            ID: 7,
-            TagName: "Sports"
-        },
-        {
-            ID: 8,
-            TagName: "Travel"
-        },
-        {
-            ID: 9,
-            TagName: "How to"
-        }
-    ];
-}
 export default StudentBrowse;

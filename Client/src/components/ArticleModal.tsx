@@ -77,8 +77,8 @@ function ArticleModal({ handleClose, open, article }: Props) {
         }
     }, [article, open])
 
-    var upColor = exists ? (oldValue ? 'green' : 'grey') : 'black'
-    var downColor = exists ? (oldValue ? 'grey' : 'red') : 'black'
+    let upColor = exists ? (oldValue ? 'green' : 'grey') : 'black'
+    let downColor = exists ? (oldValue ? 'grey' : 'red') : 'black'
 
     const handleFeedback = (feedback: 'up' | 'down') => {
         
@@ -165,10 +165,6 @@ function ArticleModal({ handleClose, open, article }: Props) {
                                                         onClick={() => handleFeedback('down')}/>
                             </div>
                         </div>
-                        {/*help<div onClick={copyToClipboard} style={{cursor: 'pointer', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
-                            <Typography sx={{textDecoration: "underline", fontSize: "16px", fontWeight: "400"}}>{articleURL}</Typography>
-                            <ContentCopyOutlinedIcon sx={{fontSize: "25px", fontWeight: "400"}}/>
-                        </div>*/}
                         </div>
                     </>
                 ) : (

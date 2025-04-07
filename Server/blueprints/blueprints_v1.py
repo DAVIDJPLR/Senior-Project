@@ -1356,12 +1356,6 @@ class ArticlesProblems(MethodView):
                             time_int = float(time)
                             time_datetime = datetime.fromtimestamp(time_int)
                             size = request.args.get("size")
-                            size_int = 10
-                            if size:
-                                try:
-                                    size_int = int(size)
-                                except ValueError:
-                                    return {'msg': 'Incorrect size argument. size should be an int'}, 400
                             
                             articles: list[models.Article] = (
                                                         db.session.query(models.Article)
