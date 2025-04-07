@@ -4,4 +4,5 @@ werkzeug>=2
 requests>=2,<3
 identity>=0.5.1,<0.6
 python-dotenv<0.22
-symspellpy
+symspellpy>=6.9
+sentence_transformers>=4.0.1
