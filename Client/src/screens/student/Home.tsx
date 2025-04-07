@@ -42,15 +42,19 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
     const [hasSearched, setHasSearched] = useState(false);
 
     const handleKeyUp = (event: React.KeyboardEvent<HTMLInputElement>) => {
-        if (event.key === "Enter") {
-            console.log(searchVal); 
-            setHasSearched(true);
-            handleSearch()
-        }
+        console.log(searchVal); 
+        setHasSearched(true);
+        handleSearch()
+        
+        // if (event.key === "Enter") {
+        //     console.log(searchVal); 
+        //     setHasSearched(true);
+        //     handleSearch()
+        // }
     };
 
     const handleSearch = () => {
-        if (searchVal === ""){
+        if (searchVal.length === 0) {
             defaultArticles()
             console.log("default")
         } else {
@@ -59,7 +63,7 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
     };
 
     const defaultArticles = async () => {
-        const response = await fetch(APIBASE + '/api/v1/articles', {
+        const response = await fetch(APIBASE + '/api/v1/articles/trending/', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -70,17 +74,18 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
         const data = await response.json();
         console.log(data)
 
-        setArticles(data.articles as PartialArticle[])
+        setArticles(data.articlesJSON as PartialArticle[])
     }
 
     const searchArticles = async () => {
         const params = new URLSearchParams({
-            searchQuery: searchVal
+            searchQuery: searchVal,
+            tags: "Published"
         });
 
         console.log(`searching with val ${searchVal}`)
 
-        const response = await fetch(APIBASE + `/api/v1/articles/search?${params.toString()}`, {
+        const response = await fetch(APIBASE + `/api/v1/articles/search/tagandquery?${params.toString()}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
