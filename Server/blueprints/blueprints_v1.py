@@ -1917,57 +1917,58 @@ class TrendingArticles(MethodView):
     def get(self):
         try:
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
-                if len(session['current_user_privileges']) >= 0:
+                articles: list[models.Article] = (
+                    db.session.query(models.Article)
+                    .all()  # Execute the query and return the results
+                )
+
+                articles_to_views = {}
                     
-                    
-                    articles: list[models.Article] = (
-                        db.session.query(models.Article)
-                        .all()  # Execute the query and return the results
-                    )
+                for article in articles:
+                    articleID = article.ID
+                    view_dates = models.ViewHistory.query.with_entities(
+                        models.ViewHistory.View_Time
+                    ).filter(
+                        models.ViewHistory.ArticleID == articleID
+                    ).order_by(
+                        models.ViewHistory.View_Time.desc()
+                    ).all()
 
-                    articles_to_views = {}
-                        
-                    for article in articles:
-                        articleID = article.ID
-                        view_dates = models.ViewHistory.query.with_entities(models.ViewHistory.View_Time).filter(models.ViewHistory.ArticleID == articleID).order_by(models.ViewHistory.View_Time.desc()).all()
+                    # print(articleID)
+                    #print(view_dates)
 
-                        #print(articleID)
-                        #print(view_dates)
+                    dates = [date[0] for date in view_dates]
 
-                        dates = [date[0] for date in view_dates]
+                    milliDates = []
 
-                        milliDates = []
+                    for date in dates:
+                        #print(article.ID)
+                        #print(date.timestamp())
+                        milliDates.append(date.timestamp())
 
-                        for date in dates:
-                            #print(article.ID)
-                            #print(date.timestamp())
-                            milliDates.append(date.timestamp())
+                    timeNow = datetime.now().timestamp()
+                    weight = 0
 
-                        timeNow = datetime.now().timestamp()
-                        weight = 0
+                    for date in milliDates:
+                        weight+=(abs(1/((timeNow - date)+date))/timeNow)
 
-                        for date in milliDates:
-                            weight+=(abs(1/((timeNow - date)+date))/timeNow)
+                    articles_to_views[articleID] = weight
 
-                        articles_to_views[articleID] = weight
+                sorted_dict_desc = dict(sorted(articles_to_views.items(), key=lambda item: item[1], reverse=True))
+                sorted_article_ids = list(sorted_dict_desc.keys())
 
-                    sorted_dict_desc = dict(sorted(articles_to_views.items(), key=lambda item: item[1], reverse=True))
-                    sorted_article_ids = list(sorted_dict_desc.keys())
+                sorted_articles = []                        
+                for id in sorted_article_ids:
+                    temp_article = models.Article.query.filter_by(ID=id).first()
+                    sorted_articles.append(temp_article)
 
-                    sorted_articles = []                        
-                    for id in sorted_article_ids:
-                        temp_article = models.Article.query.filter_by(ID=id).first()
-                        sorted_articles.append(temp_article)
+                db.session.commit()
 
-                    db.session.commit()
+                returnable_sorted_articles = [article.toJSONPartial() for article in sorted_articles] 
 
-                    returnable_sorted_articles = [article.toJSONPartial() for article in sorted_articles]                        
+                print(returnable_sorted_articles)                       
 
-                    return {'articles': returnable_sorted_articles}, 200
-                    
-
-                else:
-                    return {'msg': 'Unauthorized access'}, 403
+                return {'articles': returnable_sorted_articles}, 200
             else:
                 return {'msg': 'Unauthorized access'}, 401
         except Exception as e:

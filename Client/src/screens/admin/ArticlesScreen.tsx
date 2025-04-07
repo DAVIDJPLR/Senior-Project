@@ -250,7 +250,7 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
                         />
                     ))}
                     
-                    {privilegeIDs.includes(3) && (
+                    {(privilegeIDs.includes(1) || privilegeIDs.includes(3)) && (
                         <EditArticleModal
                         open={editModalOpen}
                         article={selectedArticle}
