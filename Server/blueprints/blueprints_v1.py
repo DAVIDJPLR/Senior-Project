@@ -1374,37 +1374,6 @@ class ArticlesProblems(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-
-@apiv1.route("/articles/trending", methods=["OPTIONS", "GET"])
-class Trending(MethodView):
-    def options(self):
-        return '', 200
-    def get(self): # not currently implemented in the student home page, temporarily putting it as admin only until we implement it
-        try:
-            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
-                if len(session['current_user_privileges']) > 0:
-                    articles = db.session.query(
-                        models.Article,
-                        func.count(models.ViewHistory.ArticleID).label('view_count')
-                    ).join(
-                        models.ViewHistory, models.Article.ID == models.ViewHistory.ArticleID
-                    ).group_by(
-                        models.Article.ID
-                    ).order_by(
-                        func.count(models.ViewHistory.ArticleID).desc()
-                    ).all()
-                    
-                    returnableArticles = [article.toJSONPartial() for article, ranking in articles]
-                    return {'articles': returnableArticles}, 200
-                else:
-                    return {'msg': 'Not yet implemented for student use'}, 501
-            else:
-                return {'msg': 'Unauthorized access'}, 401
-        
-        except Exception as e:
-            print(f"Error: {e}")
-            traceback.print_exc()
-            return {'msg': f"Error: {e}"}, 500
           
 @apiv1.route("/articles/backlog", methods=["OPTIONS", "GET"])
 class Backlog(MethodView):
@@ -1907,6 +1876,76 @@ class ArticleThumbsDownDates(MethodView):
                         articles_to_thumbs_down[articleID] = weight
 
                     sorted_dict_desc = dict(sorted(articles_to_thumbs_down.items(), key=lambda item: item[1], reverse=True))
+                    print(sorted_dict_desc)
+                    sorted_article_ids = list(sorted_dict_desc.keys())
+
+                    sorted_articles = []                        
+                    for id in sorted_article_ids:
+                        temp_article = models.Article.query.filter_by(ID=id).first()
+                        sorted_articles.append(temp_article)
+
+                    db.session.commit()
+
+                    returnable_sorted_articles = [article.toJSONPartial() for article in sorted_articles]                        
+
+                    return {'articles': returnable_sorted_articles}, 200
+                    
+
+                else:
+                    return {'msg': 'Unauthorized access'}, 403
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
+        
+@apiv1.route("/articles/trending/", methods=["OPTIONS", "GET"])
+class TrendingArticles(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                if len(session['current_user_privileges']) >= 0:
+                    
+                    
+                    articles: list[models.Article] = (
+                                                        db.session.query(models.Article)
+                                                        .all()  # Execute the query and return the results
+                                                    )
+
+                    print(articles)
+
+                    articles_to_views = {}
+                        
+                    for article in articles:
+                        articleID = article.ID
+                        view_dates = models.ViewHistory.query.with_entities(models.ViewHistory.View_Time).filter(models.ViewHistory.ArticleID == articleID).order_by(models.ViewHistory.View_Time.desc()).all()
+
+                        #print(articleID)
+                        #print(view_dates)
+
+                        dates = [date[0] for date in view_dates]
+
+                        milliDates = []
+
+                        for date in dates:
+                            #print(article.ID)
+                            #print(date.timestamp())
+                            milliDates.append(date.timestamp())
+
+                        timeNow = datetime.now().timestamp()
+                        weight = 0
+
+                        for date in milliDates:
+                            print(articleID)
+                            print(date)
+                            weight+=(abs(1/((timeNow - date)+date))/timeNow)
+
+                        articles_to_views[articleID] = weight
+
+                    sorted_dict_desc = dict(sorted(articles_to_views.items(), key=lambda item: item[1], reverse=True))
                     print(sorted_dict_desc)
                     sorted_article_ids = list(sorted_dict_desc.keys())
 
