@@ -41,7 +41,7 @@ consequat 1
 duis 1
 aute 1
 irure 1
-in 6
+in 7
 reprehenderit 1
 voluptate 1
 velit 1
@@ -70,7 +70,7 @@ laborum 1
 hopefully 1
 this 8
 fixes 1
-it 4
+it 5
 update 1
 driver 1
 description 1
@@ -84,7 +84,7 @@ fix 3
 my 4
 broken 1
 laptop 1
-i 6
+i 7
 reboot 2
 that's 1
 just 1
@@ -99,7 +99,7 @@ not 1
 printers 2
 can 2
 and 1
-will 3
+will 4
 betray 1
 you 3
 step 2
@@ -111,9 +111,9 @@ that 1
 have 2
 credit 1
 left 1
-if 2
+if 3
 you're 3
-a 9
+a 10
 stem 1
 student 2
 plenty 1
@@ -144,10 +144,10 @@ first 2
 using 1
 college 1
 redundant 1
-article 5
-we 1
+article 6
+we 2
 shouldn't 1
-see 2
+see 3
 one 3
 elsewhere 1
 it's 1
@@ -174,7 +174,7 @@ still 1
 be 1
 knows 1
 test 3
-testing 1
+testing 2
 text 2
 paragraph 2
 blank 7
@@ -215,3 +215,12 @@ smh 1
 head 1
 duplicated 2
 why 1
+hello 1
+am 1
+creating 1
+an 1
+without 1
+editing 1
+privileges 1
+works 1
+moment 1
