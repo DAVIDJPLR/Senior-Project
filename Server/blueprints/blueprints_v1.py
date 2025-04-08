@@ -295,11 +295,11 @@ class Article(MethodView):
                     content: str = data.get('content')
                     desc: str = data.get('desc')
                     tag: str = data.get('tag')
+                    metatag: str = data.get('metatag')
                     image: str = data.get('image')
                     
                     if not image:
                         image = ""
-                    
 
                     if len(title) > 100:
                         return {'msg': 'Article title length exceeds database limit of 100 characters.'}, 400
@@ -309,8 +309,9 @@ class Article(MethodView):
                         return {'msg': 'Article description length exceeds database limit of 500 characters.'}, 400
                     if len(image) > 100:
                         return {'msg': 'Article image path length exceeds database limit of 100 characters.'}, 400
-        
+
                     addTag: models.Tag = models.Tag.query.filter_by(TagName=tag).first()
+                    addMetaTag: models.MetaTag = models.MetaTag.query.filter_by(TagName=metatag).first()
         
                     if len(image) > 0:
                         article: models.Article = models.Article(Title=title, Content=json.dumps(content),
@@ -323,6 +324,8 @@ class Article(MethodView):
                     db.session.add(article)
                     if addTag:
                         article.Tags = [addTag]
+                    if addMetaTag:
+                        article.MetaTags = [addMetaTag]
                     
                     db.session.commit()
                     build_custom_dictionary()
@@ -353,6 +356,8 @@ class Article(MethodView):
                         title: str = article_updated.get('Title')
                         content: str = article_updated.get('Content')
                         desc: str = article_updated.get('Article_Description')
+                        tag: str = article_updated.get('Tag')
+                        metatag: str = article_updated.get('MetaTag')
                         image: str = article_updated.get('Image')
 
                         if title:
@@ -375,6 +380,14 @@ class Article(MethodView):
                         article.Content = json.dumps(content)
                         article.Article_Description = desc
                         article.Image = image
+                        
+                        updateTag: models.Tag = models.Tag.query.filter_by(TagName=tag).first()
+                        updateMetaTag: models.MetaTag = models.MetaTag.query.filter_by(TagName=metatag).first()
+
+                        if updateTag:
+                            article.Tags = [updateTag]
+                        if updateMetaTag:
+                            article.MetaTags = [updateMetaTag]
 
                         time = datetime.now()
                         eh = models.EditHistory(ArticleID=id, UserID=userID, Edit_Time=time)
