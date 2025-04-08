@@ -1,4 +1,4 @@
-import { TableContainer, Typography, Table, TableHead, TableRow, TableCell, TableBody, useTheme } from "@mui/material";
+import { TableContainer, Typography, Table, TableHead, TableRow, TableCell, TableBody, useTheme, Paper, Box, SxProps } from "@mui/material";
 import AdminAppBar from "../../components/AdminAppBar";
 import { PartialArticle, PartialSearch, PartialAdminPrivilege } from "../../custom_objects/models";
 import { useState, useEffect } from "react";
@@ -7,6 +7,7 @@ import { useMediaQuery } from "react-responsive";
 import EditArticleModal from './EditScreen';
 import { APIBASE } from "../../ApiBase";
 import UsageChart from "../../components/UsageChart";
+import { Theme } from "@emotion/react";
 
 interface DataPoint {
     name: string;
@@ -195,215 +196,348 @@ function AdminHome({ currentScreen, setCurrentScreen }: Props){
         getStats()
     }, [statsDate])
 
-    if (!isMobile){
-        return(
-            <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center"}}>
+    // if (!isMobile){
+    //     return(
+    //         <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center"}}>
                 
-                <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
-                    <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
-                </div>
+    //             <div style={{width: "100%"}}>
+    //                 <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
+    //             </div>
 
-                <div style={{height: "95%", width: "100%", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: theme.palette.secondary.main}}>
-                    <div style={{height: "100%", width: "50%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"}}>
-                        <div style={{width: "100%", flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-evenly"}}>
-                            <fieldset style={{ height: "98%", width: "98%", display: 'flex', flexDirection: "column", alignItems: 'center', justifyContent: "space-evenly", borderRadius: '4px', overflowY: "auto", overflowX: "hidden", border: "1px solid grey", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white" }}>
-                                <legend style={{marginLeft: "10px"}}>
-                                    <Typography onClick={() => {setCurrentScreen(AdminScreen.Analysis)}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline'}}>Article Analytics</Typography>
-                                </legend>
-                                <div style={{ width: "90%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", overflow: "auto" }}>
-                                    <TableContainer sx={{border: 1, borderWidth: 1, borderRadius: "4px", borderColor: "gray", height: "100%", width: "100%", marginBottom: "1%"}}>
-                                        <Table stickyHeader size="small">
-                                            <TableHead>
-                                                <TableRow>
-                                                    <TableCell>
-                                                        <Typography sx={{fontSize: "14px"}}>Name (Article)</Typography>
-                                                    </TableCell>
-                                                    <TableCell>   
-                                                        <Typography sx={{fontSize: "14px"}}>Thumbs Up</Typography>
-                                                    </TableCell>
-                                                </TableRow>
-                                            </TableHead>
-                                            <TableBody>
-                                                {goodArticles.map((article, index) => (
-                                                    <TableRow key={index}>
-                                                        <TableCell>
-                                                            <Typography sx={{fontSize: "12px"}}>{article.Title}</Typography>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <Typography sx={{fontSize: "12px"}}>{goodRatings[index]}</Typography>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </TableContainer>
-                                </div>
-                            </fieldset>
-                        </div>
-                        <div style={{width: "100%", height:"50%",  display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-evenly", marginBottom: "1%"}}>
-                            <div style={{height: "98%", width: "98%", display: 'flex', flexDirection: "column", alignItems: 'center', justifyContent: "space-evenly", borderRadius: '4px', overflowY: "auto", overflowX: "hidden", border: "1px solid grey", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white" }}>
-                                <Typography>Usage over time</Typography>
-                                <UsageChart data={usageData}></UsageChart>
-                            </div>
-                            {/* <div style={{width: "30%", aspectRatio: "1/1", borderRadius: "50%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", border: "1px solid gray", color: "black", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white"}}>
-                                <Typography sx={{fontSize: "300%", lineHeight: "1", marginBottom: "2px" }}>{articleCount}</Typography>
-                                <Typography sx={{fontSize: "80%", lineHeight: "1", marginBottom: "2px" }}>Articles</Typography>
-                            </div>
-                            <div style={{width: "30%", aspectRatio: "1/1", borderRadius: "50%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", border: "1px solid gray", color: "black", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white"}}>
-                                <Typography sx={{fontSize: "300%", lineHeight: "1", marginBottom: "2px" }}>{userCount}</Typography>
-                                <Typography sx={{fontSize: "80%", lineHeight: "1", marginBottom: "2px" }}>Active users</Typography>
-                            </div>
+    //             <div style={{height: "95%", width: "100%", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: theme.palette.secondary.main}}>
+    //                 <div style={{height: "100%", width: "50%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"}}>
+    //                     <div style={{width: "100%", flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-evenly"}}>
+    //                         <fieldset style={{ height: "98%", width: "98%", display: 'flex', flexDirection: "column", alignItems: 'center', justifyContent: "space-evenly", borderRadius: '4px', overflowY: "auto", overflowX: "hidden", border: "1px solid grey", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white" }}>
+    //                             <legend style={{marginLeft: "10px"}}>
+    //                                 <Typography onClick={() => {setCurrentScreen(AdminScreen.Analysis)}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline'}}>Article Analytics</Typography>
+    //                             </legend>
+    //                             <div style={{ width: "90%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", overflow: "auto" }}>
+    //                                 <TableContainer sx={{border: 1, borderWidth: 1, borderRadius: "4px", borderColor: "gray", height: "100%", width: "100%", marginBottom: "1%"}}>
+    //                                     <Table stickyHeader size="small">
+    //                                         <TableHead>
+    //                                             <TableRow>
+    //                                                 <TableCell>
+    //                                                     <Typography sx={{fontSize: "14px"}}>Name (Article)</Typography>
+    //                                                 </TableCell>
+    //                                                 <TableCell>   
+    //                                                     <Typography sx={{fontSize: "14px"}}>Thumbs Up</Typography>
+    //                                                 </TableCell>
+    //                                             </TableRow>
+    //                                         </TableHead>
+    //                                         <TableBody>
+    //                                             {goodArticles.map((article, index) => (
+    //                                                 <TableRow key={index}>
+    //                                                     <TableCell>
+    //                                                         <Typography sx={{fontSize: "12px"}}>{article.Title}</Typography>
+    //                                                     </TableCell>
+    //                                                     <TableCell>
+    //                                                         <Typography sx={{fontSize: "12px"}}>{goodRatings[index]}</Typography>
+    //                                                     </TableCell>
+    //                                                 </TableRow>
+    //                                             ))}
+    //                                         </TableBody>
+    //                                     </Table>
+    //                                 </TableContainer>
+    //                             </div>
+    //                         </fieldset>
+    //                     </div>
+    //                     <div style={{width: "100%", height:"50%",  display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-evenly", marginBottom: "1%"}}>
+    //                         <div style={{height: "98%", width: "98%", display: 'flex', flexDirection: "column", alignItems: 'center', justifyContent: "space-evenly", borderRadius: '4px', overflowY: "auto", overflowX: "hidden", border: "1px solid grey", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white" }}>
+    //                             <Typography>Usage over time</Typography>
+    //                             <UsageChart data={usageData}></UsageChart>
+    //                         </div>
+    //                         {/* <div style={{width: "30%", aspectRatio: "1/1", borderRadius: "50%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", border: "1px solid gray", color: "black", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white"}}>
+    //                             <Typography sx={{fontSize: "300%", lineHeight: "1", marginBottom: "2px" }}>{articleCount}</Typography>
+    //                             <Typography sx={{fontSize: "80%", lineHeight: "1", marginBottom: "2px" }}>Articles</Typography>
+    //                         </div>
+    //                         <div style={{width: "30%", aspectRatio: "1/1", borderRadius: "50%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", border: "1px solid gray", color: "black", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white"}}>
+    //                             <Typography sx={{fontSize: "300%", lineHeight: "1", marginBottom: "2px" }}>{userCount}</Typography>
+    //                             <Typography sx={{fontSize: "80%", lineHeight: "1", marginBottom: "2px" }}>Active users</Typography>
+    //                         </div>
 
-                            <div style={{width: "30%", aspectRatio: "1/1", borderRadius: "50%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", border: "1px solid gray", color: "black", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white"}}>
-                                <Typography sx={{fontSize: "300%", lineHeight: "1", marginBottom: "2px" }}>{searchCount}</Typography>
-                                <Typography sx={{fontSize: "80%", lineHeight: "1", marginBottom: "2px" }}>Searches</Typography>
-                            </div> */}
-                        </div>
-                    </div>
-                    <div style={{height: "100%", width: "50%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"}}>
-                        <div style={{height: "50%", width: "100%", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center"}}>
-                            <fieldset style={{ height: "98%", width: "98%", display: 'flex', flexDirection: "column", alignItems: 'center', justifyContent: 'center', borderRadius: '4px', overflowY: "auto", overflowX: "hidden", border: "1px solid grey", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white" }}>
-                                <legend style={{marginLeft: "10px"}}>
-                                    <Typography onClick={() => {setCurrentScreen(AdminScreen.Analysis)}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline'}}>Problem Searches</Typography>
-                                </legend>
-                                <div style={{ width: "90%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", overflow: "auto" }}>
-                                    {problemSearches.map((search, index) => (
-                                        <div key={index} style={{ width: "90%", height: "32px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px solid black", borderRadius: "8px" }}>
-                                            <Typography 
-                                                sx={{ fontSize: "16px", color: 'black', cursor: 'pointer' }}
-                                            >{search.SearchQuery}</Typography>
-                                        </div>
+    //                         <div style={{width: "30%", aspectRatio: "1/1", borderRadius: "50%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", border: "1px solid gray", color: "black", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white"}}>
+    //                             <Typography sx={{fontSize: "300%", lineHeight: "1", marginBottom: "2px" }}>{searchCount}</Typography>
+    //                             <Typography sx={{fontSize: "80%", lineHeight: "1", marginBottom: "2px" }}>Searches</Typography>
+    //                         </div> */}
+    //                     </div>
+    //                 </div>
+    //                 <div style={{height: "100%", width: "50%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"}}>
+    //                     <div style={{height: "50%", width: "100%", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center"}}>
+    //                         <fieldset style={{ height: "98%", width: "98%", display: 'flex', flexDirection: "column", alignItems: 'center', justifyContent: 'center', borderRadius: '4px', overflowY: "auto", overflowX: "hidden", border: "1px solid grey", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white" }}>
+    //                             <legend style={{marginLeft: "10px"}}>
+    //                                 <Typography onClick={() => {setCurrentScreen(AdminScreen.Analysis)}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline'}}>Problem Searches</Typography>
+    //                             </legend>
+    //                             <div style={{ width: "90%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", overflow: "auto" }}>
+    //                                 {problemSearches.map((search, index) => (
+    //                                     <div key={index} style={{ width: "90%", height: "32px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px solid black", borderRadius: "8px" }}>
+    //                                         <Typography 
+    //                                             sx={{ fontSize: "16px", color: 'black', cursor: 'pointer' }}
+    //                                         >{search.SearchQuery}</Typography>
+    //                                     </div>
+    //                                 ))}
+    //                             </div>
+    //                         </fieldset>
+    //                     </div>
+    //                     <div style={{height: "50%", width: "100%", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center"}}>
+    //                         <fieldset style={{ height: "98%", width: "98%", display: 'flex', flexDirection: "column",alignItems: 'center', justifyContent: 'center', borderRadius: '4px', overflowY: "auto", overflowX: "hidden", border: "1px solid grey", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white" }}>
+    //                             <legend style={{marginLeft: "10px"}}>
+    //                                 <Typography onClick={() => {setCurrentScreen(AdminScreen.Analysis)}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline'}}>Problem Articles</Typography>
+    //                             </legend>
+    //                             <div style={{ width: "90%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", overflow: "auto" }}>
+    //                                 {problemArticles.map((article, index) => (
+    //                                     <div key={index} style={{ width: "90%", height: "32px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px solid black", borderRadius: "8px" }}>
+    //                                         <Typography 
+    //                                             onClick={() => {handleEditArticle(article)}}
+    //                                             sx={{ fontSize: "16px", color: privilegeIDs.includes(3)?'secondary.main':"black" , cursor: privilegeIDs.includes(3)?'pointer':"auto" , textDecoration: privilegeIDs.includes(3)?'underline':"none" }}
+    //                                             >{article.Title}</Typography>
+    //                                     </div>
+    //                                 ))}
+    //                             </div>
+    //                         </fieldset>
+    //                     </div>
+    //                 </div>
+    //             </div>
+    //             {privilegeIDs.includes(3) && (
+    //                 <EditArticleModal
+    //                     open={editModalOpen}
+    //                     article={selectedArticle}
+    //                     onClose={handleCloseModal}
+    //                 />
+    //             )}
+    //         </div>
+    //     );
+    // } else {
+    //     return(
+    //         <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center"}}>
+    //             <div style={{height: "100%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", backgroundColor: theme.palette.secondary.main, overflow: "auto"}}>
+                    
+    //                 <div style={{height: "25%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-evenly", marginTop: "5px"}}>
+    //                     <fieldset style={{ height: "98%", width: "98%", display: 'flex', flexDirection: "column", alignItems: 'center', justifyContent: "space-evenly", borderRadius: '4px', overflowY: "auto", overflowX: "hidden", border: "1px solid grey", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white" }}>
+    //                         <legend style={{marginLeft: "10px"}}>
+    //                             <Typography onClick={() => {setCurrentScreen(AdminScreen.Analysis)}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline'}}>Article Analytics</Typography>
+    //                         </legend>
+    //                         <div style={{ width: "90%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", overflow: "auto" }}>
+    //                             <TableContainer sx={{border: 1, borderWidth: 1, borderRadius: "4px", borderColor: "gray", height: "100%", width: "100%", marginBottom: "1%"}}>
+    //                                 <Table stickyHeader size="small">
+    //                                     <TableHead>
+    //                                         <TableRow>
+    //                                             <TableCell>
+    //                                                 <Typography sx={{fontSize: "14px"}}>Name (Article)</Typography>
+    //                                             </TableCell>
+    //                                             <TableCell>   
+    //                                                 <Typography sx={{fontSize: "14px"}}>Thumbs Up</Typography>
+    //                                             </TableCell>
+    //                                         </TableRow>
+    //                                     </TableHead>
+    //                                     <TableBody>
+    //                                         {goodArticles.map((article, index) => (
+    //                                             <TableRow key={index}>
+    //                                                 <TableCell>
+    //                                                     <Typography sx={{fontSize: "12px"}}>{article.Title}</Typography>
+    //                                                 </TableCell>
+    //                                                 <TableCell>
+    //                                                     <Typography sx={{fontSize: "12px"}}>{goodRatings[index]}</Typography>
+    //                                                 </TableCell>
+    //                                             </TableRow>
+    //                                         ))}
+    //                                     </TableBody>
+    //                                 </Table>
+    //                             </TableContainer>
+    //                         </div>
+    //                     </fieldset>
+    //                 </div>                    
+                    
+    //                 <div style={{height: "25%", width: "100%", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center"}}>
+    //                     <fieldset style={{ height: "98%", width: "98%", display: 'flex', flexDirection: "column", alignItems: 'center', justifyContent: 'center', borderRadius: '4px', overflowY: "auto", overflowX: "hidden", border: "1px solid grey", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white" }}>
+    //                         <legend style={{marginLeft: "10px"}}>
+    //                             <Typography onClick={() => {setCurrentScreen(AdminScreen.Analysis)}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline'}}>Problem Searches</Typography>
+    //                         </legend>
+    //                         <div style={{ width: "90%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", overflow: "auto" }}>
+    //                             {problemSearches.map((search, index) => (
+    //                                 <div key={index} style={{ width: "90%", height: "32px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px solid black", borderRadius: "8px" }}>
+    //                                     <Typography sx={{ fontSize: "16px", color: 'black', cursor: 'pointer' }}>{search.SearchQuery}</Typography>
+    //                                 </div>
+    //                             ))}
+    //                         </div>
+    //                     </fieldset>
+    //                 </div>
+
+    //                 <div style={{height: "25%", width: "100%", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center"}}>
+    //                     <fieldset style={{ height: "98%", width: "98%", display: 'flex', flexDirection: "column",alignItems: 'center', justifyContent: 'center', borderRadius: '4px', overflowY: "auto", overflowX: "hidden", border: "1px solid grey", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white" }}>
+    //                         <legend style={{marginLeft: "10px"}}>
+    //                             <Typography onClick={() => {setCurrentScreen(AdminScreen.Analysis)}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline'}}>Problem Articles</Typography>
+    //                         </legend>
+    //                         <div style={{ width: "90%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", overflow: "auto" }}>
+    //                             {problemArticles.map((article, index) => (
+    //                                 <div key={index} style={{ width: "90%", height: "32px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px solid black", borderRadius: "8px" }}>
+    //                                     <Typography 
+    //                                         onClick={() => {handleEditArticle(article)}}
+    //                                         sx={{ fontSize: "16px", color: privilegeIDs.includes(3)?'secondary.main':"black" , cursor: privilegeIDs.includes(3)?'pointer':"auto" , textDecoration: privilegeIDs.includes(3)?'underline':"none" }}
+    //                                     >{article.Title}</Typography>
+    //                                 </div>
+    //                             ))}
+    //                         </div>
+    //                     </fieldset>
+    //                 </div>
+                    
+    //                 <div style={{height: "25%", width: "100%", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-evenly", marginBottom: "1%"}}>
+    //                     <div style={{height: "98%", width: "98%", display: 'flex', flexDirection: "column", alignItems: 'center', justifyContent: "space-evenly", borderRadius: '4px', border: "1px solid grey", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white" }}>
+    //                         <Typography>Usage over time</Typography>
+    //                         <UsageChart data={usageData}></UsageChart>
+    //                     </div>
+    //                     {}
+    //                 </div>
+    //             </div>
+    //             <div style={{width: "100%"}}>
+    //                 <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
+    //             </div>
+
+    //             {privilegeIDs.includes(3) && (
+    //                 <EditArticleModal
+    //                     open={editModalOpen}
+    //                     article={selectedArticle}
+    //                     onClose={handleCloseModal}
+    //                 />
+    //             )}
+
+    //         </div>
+    //     );
+    //}
+    return (
+        <Box sx={{ width: "100vw", height: "100vh", display: "flex", flexDirection: "column" }}>
+            <Box sx={{ width: "100%" }}>
+                <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
+            </Box>
+
+            <Box sx={{ flexGrow: 1, display: "flex", backgroundColor: theme.palette.secondary.main, gap: 2, p: 2 }}>
+                <Box sx={{ width: "50%", display: "flex", flexDirection: "column", gap: 2 }}>
+                    <PanelCard 
+                        title="Article Analytics"
+                        onTitleClick={() => setCurrentScreen(AdminScreen.Analysis)}
+                        sx={{flexBasis: "48%", minHeight: 0, p: 1}}
+                    >
+                        <TableContainer component={Paper}>
+                            <Table stickyHeader size="small">
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell>Name (Article)</TableCell>
+                                        <TableCell>Thumbs Up</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {goodArticles.map((article, index) => (
+                                        <TableRow key={index}>
+                                            <TableCell>{article.Title}</TableCell>
+                                            <TableCell>{goodRatings[index]}</TableCell>
+                                        </TableRow>
                                     ))}
-                                </div>
-                            </fieldset>
-                        </div>
-                        <div style={{height: "50%", width: "100%", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center"}}>
-                            <fieldset style={{ height: "98%", width: "98%", display: 'flex', flexDirection: "column",alignItems: 'center', justifyContent: 'center', borderRadius: '4px', overflowY: "auto", overflowX: "hidden", border: "1px solid grey", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white" }}>
-                                <legend style={{marginLeft: "10px"}}>
-                                    <Typography onClick={() => {setCurrentScreen(AdminScreen.Analysis)}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline'}}>Problem Articles</Typography>
-                                </legend>
-                                <div style={{ width: "90%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", overflow: "auto" }}>
-                                    {problemArticles.map((article, index) => (
-                                        <div key={index} style={{ width: "90%", height: "32px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px solid black", borderRadius: "8px" }}>
-                                            <Typography 
-                                                onClick={() => {handleEditArticle(article)}}
-                                                sx={{ fontSize: "16px", color: privilegeIDs.includes(3)?'secondary.main':"black" , cursor: privilegeIDs.includes(3)?'pointer':"auto" , textDecoration: privilegeIDs.includes(3)?'underline':"none" }}
-                                                >{article.Title}</Typography>
-                                        </div>
-                                    ))}
-                                </div>
-                            </fieldset>
-                        </div>
-                    </div>
-                </div>
-                {privilegeIDs.includes(3) && (
-                    <EditArticleModal
-                        open={editModalOpen}
-                        article={selectedArticle}
-                        onClose={handleCloseModal}
-                    />
-                )}
-            </div>
-        );
-    } else {
-        return(
-            <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center"}}>
-                <div style={{height: "100%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", backgroundColor: theme.palette.secondary.main, overflow: "auto"}}>
-                    
-                    <div style={{height: "25%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-evenly", marginTop: "5px"}}>
-                        <fieldset style={{ height: "98%", width: "98%", display: 'flex', flexDirection: "column", alignItems: 'center', justifyContent: "space-evenly", borderRadius: '4px', overflowY: "auto", overflowX: "hidden", border: "1px solid grey", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white" }}>
-                            <legend style={{marginLeft: "10px"}}>
-                                <Typography onClick={() => {setCurrentScreen(AdminScreen.Analysis)}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline'}}>Article Analytics</Typography>
-                            </legend>
-                            <div style={{ width: "90%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", overflow: "auto" }}>
-                                <TableContainer sx={{border: 1, borderWidth: 1, borderRadius: "4px", borderColor: "gray", height: "100%", width: "100%", marginBottom: "1%"}}>
-                                    <Table stickyHeader size="small">
-                                        <TableHead>
-                                            <TableRow>
-                                                <TableCell>
-                                                    <Typography sx={{fontSize: "14px"}}>Name (Article)</Typography>
-                                                </TableCell>
-                                                <TableCell>   
-                                                    <Typography sx={{fontSize: "14px"}}>Thumbs Up</Typography>
-                                                </TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            {goodArticles.map((article, index) => (
-                                                <TableRow key={index}>
-                                                    <TableCell>
-                                                        <Typography sx={{fontSize: "12px"}}>{article.Title}</Typography>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Typography sx={{fontSize: "12px"}}>{goodRatings[index]}</Typography>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
-                            </div>
-                        </fieldset>
-                    </div>                    
-                    
-                    <div style={{height: "25%", width: "100%", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center"}}>
-                        <fieldset style={{ height: "98%", width: "98%", display: 'flex', flexDirection: "column", alignItems: 'center', justifyContent: 'center', borderRadius: '4px', overflowY: "auto", overflowX: "hidden", border: "1px solid grey", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white" }}>
-                            <legend style={{marginLeft: "10px"}}>
-                                <Typography onClick={() => {setCurrentScreen(AdminScreen.Analysis)}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline'}}>Problem Searches</Typography>
-                            </legend>
-                            <div style={{ width: "90%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", overflow: "auto" }}>
-                                {problemSearches.map((search, index) => (
-                                    <div key={index} style={{ width: "90%", height: "32px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px solid black", borderRadius: "8px" }}>
-                                        <Typography sx={{ fontSize: "16px", color: 'black', cursor: 'pointer' }}>{search.SearchQuery}</Typography>
-                                    </div>
-                                ))}
-                            </div>
-                        </fieldset>
-                    </div>
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </PanelCard>
 
-                    <div style={{height: "25%", width: "100%", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center"}}>
-                        <fieldset style={{ height: "98%", width: "98%", display: 'flex', flexDirection: "column",alignItems: 'center', justifyContent: 'center', borderRadius: '4px', overflowY: "auto", overflowX: "hidden", border: "1px solid grey", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white" }}>
-                            <legend style={{marginLeft: "10px"}}>
-                                <Typography onClick={() => {setCurrentScreen(AdminScreen.Analysis)}} sx={{color: 'secondary.main', cursor: 'pointer', textDecoration: 'underline'}}>Problem Articles</Typography>
-                            </legend>
-                            <div style={{ width: "90%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", overflow: "auto" }}>
-                                {problemArticles.map((article, index) => (
-                                    <div key={index} style={{ width: "90%", height: "32px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px solid black", borderRadius: "8px" }}>
-                                        <Typography 
-                                            onClick={() => {handleEditArticle(article)}}
-                                            sx={{ fontSize: "16px", color: privilegeIDs.includes(3)?'secondary.main':"black" , cursor: privilegeIDs.includes(3)?'pointer':"auto" , textDecoration: privilegeIDs.includes(3)?'underline':"none" }}
-                                        >{article.Title}</Typography>
-                                    </div>
-                                ))}
-                            </div>
-                        </fieldset>
-                    </div>
-                    
-                    <div style={{height: "25%", width: "100%", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-evenly", marginBottom: "1%"}}>
-                        <div style={{height: "98%", width: "98%", display: 'flex', flexDirection: "column", alignItems: 'center', justifyContent: "space-evenly", borderRadius: '4px', border: "1px solid grey", boxShadow: "0px 0px 5px 0px black", backgroundColor: "white" }}>
-                            <Typography>Usage over time</Typography>
-                            <UsageChart data={usageData}></UsageChart>
-                        </div>
-                        {}
-                    </div>
-                </div>
-                <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
-                    <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
-                </div>
+                    <PanelCard title="Usage Over Time" sx={{flexBasis: "48%", minHeight: 0, p: 1}}>
+                        <UsageChart data={usageData} />
+                    </PanelCard>
+                </Box>
 
-                {privilegeIDs.includes(3) && (
-                    <EditArticleModal
-                        open={editModalOpen}
-                        article={selectedArticle}
-                        onClose={handleCloseModal}
-                    />
-                )}
+                <Box sx={{ width: "50%", display: "flex", flexDirection: "column", gap: 2 }}>
+                  <PanelCard
+                    title="Recent Searches with No Solution"
+                    onTitleClick={() => setCurrentScreen(AdminScreen.Analysis)}
+                    sx={{flexBasis: "48%", p: 1}}
+                  >
+                    {problemSearches.map((search, index) => (
+                      <Box key={index} sx={{ my: 0.5, p: 1, border: "1px solid", borderColor: "grey.400", borderRadius: 1 }}>
+                        <Typography>{search.SearchQuery}</Typography>
+                      </Box>
+                    ))}
+                  </PanelCard>
 
-            </div>
-        );
-    }
+                  <PanelCard
+                    title="Recently Downvoted Articles"
+                    onTitleClick={() => setCurrentScreen(AdminScreen.Analysis)}
+                    sx={{flexBasis: "48%", p: 1}}
+                  >
+                    {problemArticles.map((article, index) => (
+                        <Box key={index} sx={{ my: 0.5, p: 1, border: "1px solid", borderColor: "grey.400", borderRadius: 1 }}>
+                            <Typography
+                                onClick={() => privilegeIDs.includes(3) && handleEditArticle(article)}
+                                sx={{
+                                    fontSize: "16px",
+                                    color: privilegeIDs.includes(3) ? 'secondary.main' : "text.primary",
+                                    cursor: privilegeIDs.includes(3) ? 'pointer' : "default",
+                                    textDecoration: privilegeIDs.includes(3) ? 'underline' : "none"
+                                }}
+                            >
+                              {article.Title}
+                            </Typography>
+                        </Box>
+                    ))}
+                  </PanelCard>
+                </Box>
+            </Box>
+            {privilegeIDs.includes(3) && (
+                <EditArticleModal
+                    open={editModalOpen}
+                    article={selectedArticle}
+                    onClose={handleCloseModal}
+                />
+            )}
+        </Box>
+    )
 }
 
+interface PanelCardProps {
+    title: string
+    children: React.ReactNode
+    onTitleClick?: () => void
+    sx?: SxProps<Theme>
+}
+const PanelCard = ({title, children, onTitleClick, sx}: PanelCardProps) => {
+    const clickable = !!onTitleClick
+
+    return (
+    <Paper elevation={2} sx={{
+        borderRadius: 2,
+        p: 2,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        overflow: "hidden",
+        ...sx
+    }}>
+        <Box
+            sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                mb: 1,
+                pb: 0.5,
+                borderBottom: "1px solid",
+                borderColor: "divider"
+            }}
+        >
+            <Typography
+                variant="subtitle1"
+                sx={{ 
+                    fontWeight: 600,
+                    fontSize: "1rem",
+                    color: "text.primary",
+                    cursor: onTitleClick ? 'pointer' : 'default',
+                    "&:hover": clickable ? {color: "secondary.main", textDecoration: "underline"} : {},
+                    transition: "color 0.2s ease",
+                }}
+                onClick={onTitleClick}
+            >
+                {title}
+            </Typography>
+        </Box>
+        <Box sx={{flexGrow: 1, overflow: "auto"}}>
+            {children}
+        </Box>
+    </Paper>
+)}
 function createEmptyArticle(): PartialArticle {
     return {
         ID: -1,
