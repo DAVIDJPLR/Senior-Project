@@ -174,7 +174,7 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
                     animate="visible"
                     style={{width: "100%", display: "contents"}}
                 >
-                {articles.map(article => (
+                {articles?.map(article => (
                     <motion.div
                         key={article.ID}
                         variants={itemVariants}
