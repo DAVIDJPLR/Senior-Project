@@ -6,6 +6,7 @@ import ArticleModal from "../../components/ArticleModal";
 import { PartialArticle } from "../../custom_objects/models"
 import { useMediaQuery } from "react-responsive";  
 import { APIBASE } from "../../ApiBase";
+import { Box, Typography } from "@mui/material"
 
 interface Props{
     currentScreen: Screen
@@ -54,42 +55,60 @@ function StudentRecent({ currentScreen, setCurrentScreen }: Props){
         getRecentArticles();
     }, []);
 
-    return(
-        <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center"}}>
-            {!isMobile && (
-                <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
-                    <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></StudentAppBar>
-                </div>
-            )}
-
-            <div style={{height: "95%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
-                <div style={{width: "100%", height: "2%"}}></div>
-                <div style={{height: "8%", width: "100%",   display: "flex", flexDirection: "column", alignItems: "center"}}>
-                    <h1>Recently Viewed</h1>
-                </div>
-                <div style={{height: "87%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "hidden"}}>
-                    {articles?.map((article) => {
-                        return <ArticleCard onClick={() => {
-                            setCurrentArticle(article);
-                            setOpenArticleModal(true)
-                            logView(article)
-                        }} article={article} lineNumber={3} key={article.ID}/>;
-                    })}
-                </div>
-            </div>
-
-            {isMobile && (
-                <div style={{height: "6%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
-                    <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></StudentAppBar>
-                </div>
-            )}
-
-            <ArticleModal handleClose={() => {
-                setOpenArticleModal(false);
-                setCurrentArticle(null);
-                }} open={openArticleModal} article={currentArticle}></ArticleModal>
-        </div>
-    )
+    return (
+        <Box sx={{ width: "100vw", height: "100vh", display: "flex", flexDirection: "column" }}>
+          {!isMobile && (
+            <Box sx={{ width: "100%" }}>
+              <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
+            </Box>
+          )}
+    
+          <Box
+            sx={{
+              flexGrow: 1,
+              px: 2,
+              py: 3,
+              overflowY: "auto",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center"
+            }}
+          >
+            <Typography variant="h5" sx={{ fontWeight: 600, mb: 2 }}>
+              Recently Viewed
+            </Typography>
+    
+            {articles.map(article => (
+              <Box key={article.ID} sx={{ width: "100%", display: "flex", justifyContent: "center", mb: 1 }}>
+                <ArticleCard
+                  article={article}
+                  lineNumber={3}
+                  onClick={() => {
+                    setCurrentArticle(article);
+                    setOpenArticleModal(true);
+                    logView(article);
+                  }}
+                />
+              </Box>
+            ))}
+          </Box>
+          {isMobile && (
+            <Box sx={{ width: "100%" }}>
+              <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
+            </Box>
+          )}
+    
+          {/* Modal */}
+          <ArticleModal
+            open={openArticleModal}
+            article={currentArticle}
+            handleClose={() => {
+              setOpenArticleModal(false);
+              setCurrentArticle(null);
+            }}
+          />
+        </Box>
+      )
 }
 
 export default StudentRecent;

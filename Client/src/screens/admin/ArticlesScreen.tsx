@@ -187,9 +187,17 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
     if (privilegeIDs[0] !== 0) {
 
         return(
-            <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center", overflow: "hidden"}}>
+            <div style={{
+                width: "100vw",
+                height: "100vh",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                overflow: "hidden"
+            }}>
+
                 {!isMobile && (
-                    <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                    <div style={{width: "100%"}}>
                         <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
                     </div>
                 )}
@@ -254,7 +262,7 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
                     
                 </div>
                 {isMobile && (
-                    <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                    <div style={{width: "100%"}}>
                         <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
                     </div>
                 )}
