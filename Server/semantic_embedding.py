@@ -70,8 +70,8 @@ def hybrid_search(tfidf_scores: list[tuple], query: str, alpha=0.6, min_score = 
     combined = {}
     all_ids = set(norm_tfidf_score_dict) | set(norm_semantic_score_dict)
     for id in all_ids:
-        tfidf_score = norm_tfidf_score_dict.get(id)
-        semantic_score = norm_semantic_score_dict.get(id)
+        tfidf_score = norm_tfidf_score_dict.get(id, 0.0)
+        semantic_score = norm_semantic_score_dict.get(id, 0.0)
         combined_score = alpha * tfidf_score + (1-alpha) * semantic_score
 
         if combined_score >= min_score:
