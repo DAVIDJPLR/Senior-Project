@@ -41,7 +41,7 @@ consequat 1
 duis 1
 aute 1
 irure 1
-in 8
+in 9
 reprehenderit 1
 voluptate 1
 velit 1
@@ -67,9 +67,9 @@ anim 1
 id 1
 est 1
 laborum 1
-we 3
+we 4
 did 2
-it 7
+it 8
 update 1
 driver 1
 description 1
@@ -83,7 +83,7 @@ fix 3
 my 4
 broken 1
 laptop 1
-i 8
+i 9
 reboot 2
 that's 1
 just 1
@@ -112,12 +112,12 @@ credit 1
 left 1
 if 3
 you're 3
-a 13
+a 14
 stem 1
 student 2
 plenty 1
 humanities 1
-out 1
+out 2
 of 5
 luck 2
 grammarian 1
@@ -147,7 +147,7 @@ college 1
 redundant 1
 article 7
 shouldn't 1
-see 3
+see 4
 one 3
 elsewhere 1
 it's 1
@@ -205,7 +205,7 @@ very 1
 helpful 1
 there's 1
 nothing 1
-here 1
+here 2
 asdfsdafsad 1
 yay 1
 lost 3
@@ -223,7 +223,7 @@ without 1
 editing 1
 privileges 1
 works 1
-moment 1
+moment 2
 howdy 1
 updating 1
 articles 1
@@ -234,3 +234,12 @@ brand 1
 didn't 1
 exist 1
 before 1
+yo 1
+man 1
+whaddup 1
+dog 1
+think 1
+i've 1
+solved 1
+but 1
+we'll 1

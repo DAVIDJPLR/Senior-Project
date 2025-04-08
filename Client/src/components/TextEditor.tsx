@@ -106,6 +106,13 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
       }
     }
 
+    if (currentTag !== "") {
+      articlePayload.tag = currentTag
+    }
+    if (currentCategory !== "") {
+      articlePayload.metatag = currentCategory
+    }
+
     let url = APIBASE + '/api/v1/article'
     // default to POST for creating a new article
     let method = 'POST'
@@ -143,11 +150,17 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
       })
     } else {
       // need at minimum create article privilege to access the text editor, no need to check for it
-      const payload = {
-        "title": title,
-        "content": content,
-        "desc": description,
-        "tag": currentTag
+      const payload: any = {
+        title: title,
+        content: content,
+        desc: description
+      }
+
+      if (currentTag !== "") {
+        payload.tag = currentTag
+      }
+      if (currentCategory !== "") {
+        payload.metatag = currentCategory
       }
 
       fetch(url, {
