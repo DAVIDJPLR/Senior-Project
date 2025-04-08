@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
 from app import app, db
 from build_dictionary import build_custom_dictionary
-from build_embeddings import build_embeddings
+from semantic_embedding import build_embeddings, hybrid_search
 from spellcheck import correct_query
 from threading import Thread
 
@@ -295,11 +295,11 @@ class Article(MethodView):
                     content: str = data.get('content')
                     desc: str = data.get('desc')
                     tag: str = data.get('tag')
+                    metatag: str = data.get('metatag')
                     image: str = data.get('image')
                     
                     if not image:
                         image = ""
-                    
 
                     if len(title) > 100:
                         return {'msg': 'Article title length exceeds database limit of 100 characters.'}, 400
@@ -309,8 +309,9 @@ class Article(MethodView):
                         return {'msg': 'Article description length exceeds database limit of 500 characters.'}, 400
                     if len(image) > 100:
                         return {'msg': 'Article image path length exceeds database limit of 100 characters.'}, 400
-        
+
                     addTag: models.Tag = models.Tag.query.filter_by(TagName=tag).first()
+                    addMetaTag: models.MetaTag = models.MetaTag.query.filter_by(TagName=metatag).first()
         
                     if len(image) > 0:
                         article: models.Article = models.Article(Title=title, Content=json.dumps(content),
@@ -323,6 +324,8 @@ class Article(MethodView):
                     db.session.add(article)
                     if addTag:
                         article.Tags = [addTag]
+                    if addMetaTag:
+                        article.MetaTags = [addMetaTag]
                     
                     db.session.commit()
                     build_custom_dictionary()
@@ -353,6 +356,8 @@ class Article(MethodView):
                         title: str = article_updated.get('Title')
                         content: str = article_updated.get('Content')
                         desc: str = article_updated.get('Article_Description')
+                        tag: str = article_updated.get('Tag')
+                        metatag: str = article_updated.get('MetaTag')
                         image: str = article_updated.get('Image')
 
                         if title:
@@ -375,6 +380,14 @@ class Article(MethodView):
                         article.Content = json.dumps(content)
                         article.Article_Description = desc
                         article.Image = image
+                        
+                        updateTag: models.Tag = models.Tag.query.filter_by(TagName=tag).first()
+                        updateMetaTag: models.MetaTag = models.MetaTag.query.filter_by(TagName=metatag).first()
+
+                        if updateTag:
+                            article.Tags = [updateTag]
+                        if updateMetaTag:
+                            article.MetaTags = [updateMetaTag]
 
                         time = datetime.now()
                         eh = models.EditHistory(ArticleID=id, UserID=userID, Edit_Time=time)
@@ -404,12 +417,13 @@ class Users(MethodView):
         try:
             if 'current_user_id' in session and 'current_user_role' in session and 'current_' and 'current_user_privileges' in session:
                 if 5 in session['current_user_privileges']:
-                    users: list[models.User] = models.User.query.all()
+                    all_users: list[models.User] = models.User.query.all()
 
-                    for user in users:
-                        privs: list[AdminPrivileges] = user.AdminPrivileges
-                        if len(privs) > 0:
-                            users.remove(user)
+                    users = []
+                    for user in all_users:
+                        data = user.toJSON()
+                        if not data["AdminPrivileges"]:
+                            users.append(user)
                         
                     returnableUsers = [user.toJSONPartial() for user in users]
                     
@@ -436,18 +450,19 @@ class UserSearch(MethodView):
                 if 5 in session['current_user_privileges']:
                     searchQuery = request.args.get("searchQuery")
 
-                    users: list[models.User] = models.User.query.filter(
+                    searched_users: list[models.User] = models.User.query.filter(
                         or_(
                             models.User.FName.ilike(f"%{searchQuery}%"),
                             models.User.LName.ilike(f"%{searchQuery}%"),
                             models.User.Email.ilike(f"%{searchQuery}%")
                         )
                     ).all()
-                    
-                    for user in users:
-                        privs: list[int] = [priv.ID for priv in user.AdminPrivileges]
-                        if len(privs) > 0:
-                            users.remove(user)
+                
+                    users = []
+                    for user in searched_users:
+                        data = user.toJSON()
+                        if not data["AdminPrivileges"]:
+                            users.append(user)
 
                     returnableUsers = [user.toJSONPartial() for user in users]
                     
@@ -894,7 +909,7 @@ class Category(MethodView):
         try:
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 if len(session['current_user_privileges']) > 0:
-                    data = request.json()
+                    data = request.json
                     if data:
                         tagName = data.get("TagName")
                         if len(tagName) > 30:
@@ -904,7 +919,8 @@ class Category(MethodView):
 
                         db.session.add(newCategory)
                         db.session.commit()
-                        return {'Category': newCategory.toJSON()}, 201
+                        print("New category created")
+                        return {'ID': newCategory.ID, 'TagName': newCategory.TagName}, 201
                     else:
                         return {'msg': 'No content submitted'}, 400
                 else:
@@ -1059,7 +1075,7 @@ class MetaTagNames(MethodView):
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
         
-@apiv1.route("/categories", methods=["OPTIONS", "GET"])
+@apiv1.route("/categories", methods=["OPTIONS", "GET", "POST"])
 class Categories(MethodView):
     def options(self):
         return '', 200
@@ -1076,8 +1092,7 @@ class Categories(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-
-
+        
 @apiv1.route("/articles/search", methods=["OPTIONS", "GET"])
 class Search(MethodView):
     def options(self):
@@ -1086,23 +1101,34 @@ class Search(MethodView):
     def get(self):
         try:
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
-                searchQuery = request.args.get("searchQuery")
-                searchQuery = correct_query(searchQuery)
-                smartSearchQuery = [term.lower() for term in searchQuery.split(" ")]
+                searchQuery: str = request.args.get("searchQuery")
 
-                for term in searchQuery.split(" "):
-                    if term in stopWords:
-                        smartSearchQuery.remove(term)
+                if len(searchQuery) > 3:
+                    searchQuery = correct_query(searchQuery)
+                    smartSearchQuery = [term.lower() for term in searchQuery.split(" ")]
 
-                search_results = tfidf_search(smartSearchQuery)
+                    for term in searchQuery.lower().split(" "):
+                        if term in stopWords:
+                            smartSearchQuery.remove(term)
 
-                all_articles: list[models.Article] = models.Article.query.all()
+                    search_results = tfidf_search(smartSearchQuery)
+                    search_results = hybrid_search(search_results, searchQuery)
 
-                articles = list()
-                for articleID, importance in search_results:
-                    a = next((article for article in all_articles if article.ID == articleID and importance > 0.0), None)
-                    if a is not None:
-                        articles.append(a)
+                    all_articles: list[models.Article] = models.Article.query.all()
+
+                    articles = list()
+                    for articleID, importance in search_results:
+                        a = next((article for article in all_articles if article.ID == articleID and importance > 0.0), None)
+                        if a is not None:
+                            articles.append(a)
+                else:
+                    articles = models.Article.query.filter(
+                        or_(
+                            models.Article.Title.ilike(f"%{searchQuery}%"),
+                            models.Article.Content.ilike(f"%{searchQuery}%"),
+                            models.Article.Article_Description.ilike(f"%{searchQuery}%")
+                        )
+                    ).all()
 
                 returnedArticles = [article.toJSONPartial() for article in articles]
 
@@ -1345,12 +1371,6 @@ class ArticlesProblems(MethodView):
                             time_int = float(time)
                             time_datetime = datetime.fromtimestamp(time_int)
                             size = request.args.get("size")
-                            size_int = 10
-                            if size:
-                                try:
-                                    size_int = int(size)
-                                except ValueError:
-                                    return {'msg': 'Incorrect size argument. size should be an int'}, 400
                             
                             articles: list[models.Article] = (
                                                         db.session.query(models.Article)
@@ -1370,37 +1390,6 @@ class ArticlesProblems(MethodView):
                     return {'msg': 'Unauthorized access'}, 403
             else:
                 return {'msg': 'Unauthorized access'}, 401
-        except Exception as e:
-            print(f"Error: {e}")
-            traceback.print_exc()
-            return {'msg': f"Error: {e}"}, 500
-
-@apiv1.route("/articles/trending", methods=["OPTIONS", "GET"])
-class Trending(MethodView):
-    def options(self):
-        return '', 200
-    def get(self): # not currently implemented in the student home page, temporarily putting it as admin only until we implement it
-        try:
-            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
-                if len(session['current_user_privileges']) > 0:
-                    articles = db.session.query(
-                        models.Article,
-                        func.count(models.ViewHistory.ArticleID).label('view_count')
-                    ).join(
-                        models.ViewHistory, models.Article.ID == models.ViewHistory.ArticleID
-                    ).group_by(
-                        models.Article.ID
-                    ).order_by(
-                        func.count(models.ViewHistory.ArticleID).desc()
-                    ).all()
-                    
-                    returnableArticles = [article.toJSONPartial() for article, ranking in articles]
-                    return {'articles': returnableArticles}, 200
-                else:
-                    return {'msg': 'Not yet implemented for student use'}, 501
-            else:
-                return {'msg': 'Unauthorized access'}, 401
-        
         except Exception as e:
             print(f"Error: {e}")
             traceback.print_exc()
@@ -1751,7 +1740,7 @@ class SystemStatsSearch(MethodView):
 
                     if len(smartSearchQuery) > 0:
                         search_results = tfidf_search(smartSearchQuery)
-
+                        search_results = hybrid_search(search_results, searchQuery)
                         all_articles: list[models.Article] = models.Article.query.all()
 
                         tagIds: list[int] = []
@@ -1930,6 +1919,70 @@ class ArticleThumbsDownDates(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
+        
+@apiv1.route("/articles/trending/", methods=["OPTIONS", "GET"])
+class TrendingArticles(MethodView):
+    def options(self):
+        return '', 200
+    def get(self):
+        try:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
+                articles: list[models.Article] = (
+                    db.session.query(models.Article)
+                    .all()  # Execute the query and return the results
+                )
+
+                articles_to_views = {}
+                    
+                for article in articles:
+                    articleID = article.ID
+                    view_dates = models.ViewHistory.query.with_entities(
+                        models.ViewHistory.View_Time
+                    ).filter(
+                        models.ViewHistory.ArticleID == articleID
+                    ).order_by(
+                        models.ViewHistory.View_Time.desc()
+                    ).all()
+
+                    # print(articleID)
+                    #print(view_dates)
+
+                    dates = [date[0] for date in view_dates]
+
+                    milliDates = []
+
+                    for date in dates:
+                        #print(article.ID)
+                        #print(date.timestamp())
+                        milliDates.append(date.timestamp())
+
+                    timeNow = datetime.now().timestamp()
+                    weight = 0
+
+                    for date in milliDates:
+                        weight+=(abs(1/((timeNow - date)+date))/timeNow)
+
+                    articles_to_views[articleID] = weight
+
+                sorted_dict_desc = dict(sorted(articles_to_views.items(), key=lambda item: item[1], reverse=True))
+                sorted_article_ids = list(sorted_dict_desc.keys())
+
+                sorted_articles = []                        
+                for id in sorted_article_ids:
+                    temp_article = models.Article.query.filter_by(ID=id).first()
+                    sorted_articles.append(temp_article)
+
+                db.session.commit()
+
+                returnable_sorted_articles = [article.toJSONPartial() for article in sorted_articles]                      
+
+                return {'articles': returnable_sorted_articles}, 200
+            else:
+                return {'msg': 'Unauthorized access'}, 401
+        except Exception as e:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            return {'msg': f"Error: {e}"}, 500
 
 @apiv1.route("/article/categories", methods=["OPTIONS", "GET", "PUT"])
 class SystemStatsSearch(MethodView):
@@ -1973,13 +2026,15 @@ class SystemStatsSearch(MethodView):
                     if metatag_updated:
                         article_id: int = metatag_updated.get("articleID")
                         metatag_id: int = metatag_updated.get("metatagID")
+                        print(metatag_id)
                         article = models.Article.query.get(article_id)
                         if article:
                             metatag = models.MetaTag.query.get(metatag_id)
                             article.MetaTags = [metatag]
                             db.session.commit()
 
-                            return {'msg': 'Article metatag updated successfully.'}, 200
+                            return {'msg': 'Article metatag updated successfully.', 
+                                    'metatag id': metatag_id}, 200
                         else:
                             return {'msg': 'No article provided.'}, 400
                     else:

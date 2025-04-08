@@ -4,10 +4,12 @@ import { Screen } from "../../custom_objects/Screens";
 import { useState, useEffect } from "react";
 import ArticleCard from "../../components/ArticleCard";
 import ArticleModal from "../../components/ArticleModal";
-import { Typography, Modal, Button, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Alert } from "@mui/material";
+import { Typography, Modal, Button, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Alert, Box, Snackbar } from "@mui/material";
 import { PartialArticle } from "../../custom_objects/models";
 import { useMediaQuery } from "react-responsive";   
 import { APIBASE } from "../../ApiBase";
+import { Article } from "@mui/icons-material";
+import { motion } from "framer-motion";
 
 interface Props{
     currentScreen: Screen
@@ -16,7 +18,7 @@ interface Props{
 
 function StudentHome({ currentScreen, setCurrentScreen }: Props){
 
-    const [searchVal, setsearchVal] = useState("");
+    const [searchVal, setSearchVal] = useState("");
 
     const [alertVis, setAlertVis] = useState(false);
 
@@ -63,7 +65,7 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
     };
 
     const defaultArticles = async () => {
-        const response = await fetch(APIBASE + '/api/v1/articles', {
+        const response = await fetch(APIBASE + '/api/v1/articles/trending/', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -74,18 +76,17 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
         const data = await response.json();
         console.log(data)
 
-        setArticles(data.articlesJSON as PartialArticle[])
+        setArticles(data.articles as PartialArticle[])
     }
 
     const searchArticles = async () => {
         const params = new URLSearchParams({
-            searchQuery: searchVal,
-            tags: "Published"
+            searchQuery: searchVal
         });
 
         console.log(`searching with val ${searchVal}`)
 
-        const response = await fetch(APIBASE + `/api/v1/articles/search/tagandquery?${params.toString()}`, {
+        const response = await fetch(APIBASE + `/api/v1/articles/search?${params.toString()}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -110,49 +111,159 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
 
         console.log("Article view logged.")
     }
+    return (
+        <Box sx={{
+            width: "100vw",
+            height: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden"
+        }}>
+            <Snackbar
+                open={alertVis}
+                anchorOrigin={{vertical: "top", horizontal: "center"}}
+                autoHideDuration={3000}
+                onClose={() => setAlertVis(false)}
+            >
+                <Alert severity="success" onClose={() => setAlertVis(false)} sx={{fontSize: "1rem", px: 2}}>
+                    Issue Submitted
+                </Alert>
+            </Snackbar>
 
-    return(
-        <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center", overflow: "hidden"}}>
-            {alertVis && (
-                <Alert severity="success" onClose={() => {setAlertVis(false)}} style={{position: 'fixed', top: "20px", zIndex: 1300, fontSize: '1.5rem', padding: '20px'}}>Issue Submitted</Alert>
-            )}
             {!isMobile && (
-                <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
-                    <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></StudentAppBar>
-                </div>
+                <Box sx={{width: "100%"}}>
+                    <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}/>
+                </Box>
             )}
 
-            <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "5%", marginTop: "5%"}}>
-                <SearchBar setSearchVal={setsearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={"medium"}></SearchBar>
-            </div>
+            <Box sx={{ px: 2, pt: 3, pb: 1, display: "flex", justifyContent: "center"}}>
+                <SearchBar
+                    setSearchVal={setSearchVal}
+                    searchVal={searchVal}
+                    handleKeyUp={handleKeyUp}
+                    size="medium"
+                />
+            </Box>
 
-            <div style={{height: "85%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto"}}>
-                {articles?.map((article) => {
-                    return <ArticleCard onClick={() => {
-                        setCurrentArticle(article);
-                        setOpenArticleModal(true);
-                        logView(article);
-                    }} article={article} lineNumber={3} key={article.ID}/>;
-                })}
-            </div> 
-
+            <Box sx={{
+                flexGrow: 1,
+                px: 2,
+                overflowY: "auto",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center"
+            }}>
+                <Box
+                    sx={{
+                        flexGrow: 1,
+                        position: "relative",
+                        width: "100%",
+                        overflowY: "auto",
+                        px: 2,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center" 
+                    }}
+                >
+                <Typography variant="h5" sx={{pt: 2, alignContent: "center", mb: 1, fontWeight: 600}}>
+                    {hasSearched ? "Search Results" : "Trending Articles"}
+                </Typography>
+                <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                    style={{width: "100%", display: "contents"}}
+                >
+                {articles.map(article => (
+                    <motion.div
+                        key={article.ID}
+                        variants={itemVariants}
+                        initial="hidden"
+                        animate="visible"
+                        transition={{ duration: 0.4}}
+                        style={{ width: "100%", display: "flex", justifyContent: "center"}}
+                    >
+                        <ArticleCard
+                            key={article.ID}
+                            article={article}
+                            lineNumber={3}
+                            onClick={() => {
+                                setCurrentArticle(article)
+                                setOpenArticleModal(true)
+                                logView(article)
+                            }}
+                        />
+                    </motion.div>
+                    ))}
+                    </motion.div>
+                <Box
+                    sx={{
+                        position: "absolute",
+                        bottom: 0,
+                        width: "100%",
+                        height: 40,
+                        pointerEvents: "none",
+                        background: "linear-gradient(to bottom, rgba(255,255,255,0), rgba(255, 255, 255, 1)"
+                    }}
+                />
+                </Box>
+                {hasSearched && (
+                    <Box sx={{mt: 4}}>
+                        <Typography
+                            onClick={() => setOpenNoResultFoundModal(true)}
+                            sx={{
+                                color: 'text.secondary',
+                                cursor: 'pointer',
+                                textDecoration: 'underline',
+                                fontSize: '16px',
+                                fontWeight: '500',
+                                textAlign: 'center',
+                                px: 2,
+                                py: 1,
+                                borderRadius: 1,
+                                backgroundColor: 'rgba(255,255,255,0.6)',
+                                backdropFilter: 'blur(4px)',
+                                '&:hover': {
+                                  backgroundColor: 'rgba(255,255,255,0.8)'
+                                }
+                            }}
+                        >
+                            I didn't find a solution
+                        </Typography>
+                    </Box>
+                )}
+            </Box>
             {isMobile && (
-                <div style={{height: "6%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
-                    <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></StudentAppBar>
-                </div>
+                <Box sx={{width: "100%"}}>
+                    <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}/>
+                </Box>
             )}
-
-            {hasSearched && <Typography onClick={() => {
-                setOpenNoResultFoundModal(true);
-            }} sx={{color: 'text.secondary', cursor: 'pointer', textDecoration: 'underline', fontSize: '18px', fontWeight: '600', position: 'fixed', bottom: 60, ackdropFilter: 'blur(5px)', backgroundColor: 'rgba(255, 255, 255, 0.7)', padding: '10px', borderRadius: '8px'}}>I didn't find a solution</Typography>}
-       
-            <NoResultFoundModal open={openNoResultFoundModal} setOpen={setOpenNoResultFoundModal} setAlertVis={setAlertVis}/>
-            <ArticleModal handleClose={() => {
-                setOpenArticleModal(false);
-                setCurrentArticle(null);
-                }} open={openArticleModal} article={currentArticle}></ArticleModal>
-        </div>
+            <NoResultFoundModal open={openNoResultFoundModal} setOpen={setOpenNoResultFoundModal} setAlertVis={setAlertVis} />
+                <ArticleModal
+                    open={openArticleModal}
+                    handleClose={() => {
+                        setOpenArticleModal(false);
+                        setCurrentArticle(null);
+                    }}
+                    article={currentArticle}
+                />
+        </Box>
     )
+}
+
+const containerVariants = {
+    hidden: { opacity: 1},
+    visible: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.05
+        }
+    }
+};
+
+const itemVariants = {
+    hidden: {opacity: 0, y: 10},
+    visible: {opacity: 1, y: 0}
 }
 
 interface NoResultFoundModalProps{

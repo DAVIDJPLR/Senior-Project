@@ -1,6 +1,5 @@
-import models
 import numpy as np
-import models, app, json
+import models, app
 from build_dictionary import tokenize, extract_text_from_slate
 
 def tf(term: str, fullArticle: list[str]) -> float:

@@ -56,7 +56,7 @@ function HandleToken({setAuthenticated}: handleTokenProps){
     }, [])
 
     return(
-        <></>
+        null
     );
 }
 

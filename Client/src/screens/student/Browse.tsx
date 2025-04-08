@@ -4,7 +4,8 @@ import { Screen } from "../../custom_objects/Screens";
 import { useState, useEffect } from "react";
 import ArticleCard from "../../components/ArticleCard";
 import ArticleModal from "../../components/ArticleModal";
-import { Typography, Button } from '@mui/material';
+import { Typography, Button, Box } from '@mui/material';
+import { ArrowBack } from "@mui/icons-material";
 import { useMediaQuery } from "react-responsive"; 
 import { APIBASE } from "../../ApiBase";
 
@@ -20,43 +21,36 @@ function StudentBrowse({ currentScreen, setCurrentScreen }: Props){
 
     const isMobile = useMediaQuery({ maxWidth: 767 });
 
-    if (viewArticles){
-        return(
-            <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center"}}>
-                {!isMobile && (
-                    <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
-                        <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></StudentAppBar>
-                    </div>
-                )}
-                
-                <BrowseArticles currentCategory={currentCategory} setCurrentCategory={setCurrentCategory} setViewArticles={setViewArticles}></BrowseArticles>
-                
-                {isMobile && (
-                <div style={{height: "6%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
-                    <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></StudentAppBar>
-                </div>
-                )}
-            </div>
-        )
-    } else {
-        return(
-            <div style={{width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center"}}>
-                {!isMobile && (
-                    <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
-                        <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></StudentAppBar>
-                    </div>
-                )}
-                
-                <BrowseCategories setViewArticles={setViewArticles} setCurrentCategory={setCurrentCategory}></BrowseCategories>
-                
-                {isMobile && (
-                <div style={{height: "6%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
-                    <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></StudentAppBar>
-                </div>
-                )}
-            </div>
-        )
-    }
+    return (
+        <Box sx={{ width: "100vw", height: "100vh", display: "flex", flexDirection: "column" }}>
+          {!isMobile && (
+            <Box sx={{ width: "100%" }}>
+              <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
+            </Box>
+          )}
+    
+          <Box sx={{ flexGrow: 1, px: 2, py: 3, overflowY: "auto" }}>
+            {viewArticles && currentCategory ? (
+              <BrowseArticles
+                currentCategory={currentCategory}
+                setCurrentCategory={setCurrentCategory}
+                setViewArticles={setViewArticles}
+              />
+            ) : (
+              <BrowseCategories
+                setCurrentCategory={setCurrentCategory}
+                setViewArticles={setViewArticles}
+              />
+            )}
+          </Box>
+    
+          {isMobile && (
+            <Box sx={{ width: "100%" }}>
+              <StudentAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
+            </Box>
+          )}
+        </Box>
+      )
 }
 
 interface BrowseArticlesProps{
@@ -97,7 +91,7 @@ function BrowseArticles({currentCategory, setCurrentCategory, setViewArticles}: 
     }
 
     const logView = async(article: PartialArticle) => {
-        const response = await fetch(APIBASE + `/api/v1/article?articleID=${article.ID}`, {
+        await fetch(APIBASE + `/api/v1/article?articleID=${article.ID}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -109,30 +103,46 @@ function BrowseArticles({currentCategory, setCurrentCategory, setViewArticles}: 
     }
 
     return(
-        <div style={{width: "100%", height: "95%", display: "flex", flexDirection: "column", alignItems: "center"}}>
-            <div style={{width: "100%", height: "5%", display: "flex", flexDirection: "row", alignItems: "center", marginBottom: "10px", paddingTop: "5%"}}>
-                <Button onClick={() => {
-                    setCurrentCategory(null);
-                    setViewArticles(false);
-                }}
-                    variant="text" sx={{fontSize: "20px", fontWeight: "700"}}>{"< Categories"}</Button>
-            </div>
-            <div style={{width: "100%", height: "95%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto"}}>
-                {articles?.map((article) => {
-                    return <ArticleCard onClick={() => {
-                        setCurrentArticle(article);
-                        setOpenArticleModal(true)
-                        logView(article)
-                    }} article={article} lineNumber={3} key={article.ID}/>;
-                })}
-            </div>
-            <ArticleModal handleClose={() => {
-                setOpenArticleModal(false);
-                setCurrentArticle(null);
-                }} open={openArticleModal} article={currentArticle}>
-            </ArticleModal>
-        </div>
-    );
+        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <Box sx={{ width: "100%", mb: 2 }}>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => {
+            setCurrentCategory(null);
+            setViewArticles(false);
+          }}
+          sx={{ fontWeight: 600, fontSize: "1rem" }}
+        >
+          Categories
+        </Button>
+      </Box>
+
+      <Box sx={{ width: "100%", display: "flex", flexDirection: "column", gap: 2 }}>
+        {articles.map((article) => (
+          <Box key={article.ID} sx={{ display: "flex", justifyContent: "center" }}>
+            <ArticleCard
+              article={article}
+              lineNumber={3}
+              onClick={() => {
+                setCurrentArticle(article);
+                setOpenArticleModal(true);
+                logView(article);
+              }}
+            />
+          </Box>
+        ))}
+      </Box>
+
+      <ArticleModal
+        open={openArticleModal}
+        article={currentArticle}
+        handleClose={() => {
+          setOpenArticleModal(false);
+          setCurrentArticle(null);
+        }}
+      />
+    </Box>
+  )
 }
 
 interface BrowseCategoriesProps{
@@ -168,15 +178,13 @@ function BrowseCategories({setViewArticles, setCurrentCategory}: BrowseCategorie
         setViewArticles(true)
     }
 
-    return(
-        <div style={{width: "100%", height: "95%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto", paddingTop: "5%", paddingBottom: "5%"}}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', width: '90%' }}>
-                {categories.map((category) => (
-                    <CategoryCard key={category.ID} category={category} onClick={() => {handleClick(category)}}/>
-                ))}
-            </div>
-        </div>
-    );
+    return (
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
+          {categories.map((category) => (
+            <CategoryCard key={category.ID} category={category} onClick={() => handleClick(category)} />
+          ))}
+        </Box>
+      )
 }
 
 interface CategoryCardProps{
@@ -185,53 +193,29 @@ interface CategoryCardProps{
 }
 
 function CategoryCard({ category, onClick }: CategoryCardProps) {
-    console.log(category.TagName)
     return (
-        <div onClick={onClick}
-            style={{ cursor: "pointer", width: '100%', height: "80px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", border: "1px solid grey", borderRadius: "20px", boxShadow: "0px 0px 10px 0px Gainsboro" }}>
-            <Typography variant="h6">{category.TagName}</Typography>
-        </div>
-    );
+        <Box
+          onClick={onClick}
+          sx={{
+            cursor: "pointer",
+            height: 80,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            border: "1px solid",
+            borderColor: "black",
+            borderRadius: 2,
+            boxShadow: 1,
+            transition: "all 0.2s ease",
+            "&:hover": {
+              boxShadow: 3,
+              backgroundColor: "grey.50",
+            },
+          }}
+        >
+          <Typography variant="h6">{category.TagName}</Typography>
+        </Box>
+      )
 }
 
-function getTestMetaTags(): PartialMetaTag[]{
-    return [
-        {
-            ID: 1,
-            TagName: "Technology"
-        },
-        {
-            ID: 2,
-            TagName: "Science"
-        },
-        {
-            ID: 3,
-            TagName: "Health"
-        },
-        {
-            ID: 4,
-            TagName: "Education"
-        },
-        {
-            ID: 5,
-            TagName: "Business"
-        },
-        {
-            ID: 6,
-            TagName: "Entertainment"
-        },
-        {
-            ID: 7,
-            TagName: "Sports"
-        },
-        {
-            ID: 8,
-            TagName: "Travel"
-        },
-        {
-            ID: 9,
-            TagName: "How to"
-        }
-    ];
-}
 export default StudentBrowse;

@@ -23,6 +23,6 @@ export const SignInRedirect = () => {
   }, [])
 
   return (
-    <></>
+    null
   );
 };

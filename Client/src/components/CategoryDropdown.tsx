@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { FormControl, InputLabel, Select, SelectChangeEvent, MenuItem } from "@mui/material"
+import { FormControl, InputLabel, Select, SelectChangeEvent, MenuItem, Box, CircularProgress } from "@mui/material"
 import { PartialMetaTag, MetaTag } from "../custom_objects/models"
 import { APIBASE } from "../ApiBase"
 
@@ -10,9 +10,9 @@ interface CategoryDropdownProps {
 
 function CategoryDropdown( {articleID, setCurrentCategory}: CategoryDropdownProps) {
     const [categories, setCategories] = useState<PartialMetaTag[]>([])
-    const [selectedCategoryLabel, setSelectedCategoryLabel] = useState<string>('')
     const [selectedCategoryID, setSelectedCategoryID] = useState<number>(0)
-    const [selectedCategory, setSelectedCategory] = useState<MetaTag>()
+    const [loading, setLoading] = useState<boolean>(false)
+    const CREATE_NEW_CATEGORY_ID = -1;
 
     useEffect(() => {
         fetch(APIBASE + `/api/v1/article/categories?ArticleID=${articleID}`, {
@@ -26,14 +26,8 @@ function CategoryDropdown( {articleID, setCurrentCategory}: CategoryDropdownProp
             return response.json()
         })
         .then(data => {
-            console.log("Article meta tag = ", data)
             if (data && data.metatags) {
-                setSelectedCategoryLabel(data.metatags[0].TagName)
                 setSelectedCategoryID(data.metatags[0].ID)
-                setSelectedCategory(data.metatags[0])
-                console.log(selectedCategoryLabel)
-                console.log(selectedCategoryID)
-                console.log(selectedCategory)
             }
         })
         .catch(error => {
@@ -50,7 +44,6 @@ function CategoryDropdown( {articleID, setCurrentCategory}: CategoryDropdownProp
             if (!response.ok) {
                 throw new Error('Failed to fetch tags')
             }
-            console.log("Returning Tags")
             return response.json()
         })
         .then(data => {
@@ -64,58 +57,110 @@ function CategoryDropdown( {articleID, setCurrentCategory}: CategoryDropdownProp
         })
     }, [])
 
-    const categoryChanged = (event: SelectChangeEvent<string>) => {
-        const newCategoryID = parseInt(event.target.value)
-        setSelectedCategoryID(newCategoryID)
-        const newCategory = categories.find((tag) => tag.ID === newCategoryID);
-        const newCategoryLabel = newCategory ? newCategory.TagName : ""
-        setSelectedCategoryLabel(newCategoryLabel)
-        setCurrentCategory(newCategoryLabel)
-        console.log(newCategoryID)
-        console.log(newCategoryLabel)
+    const categoryChanged = async (event: SelectChangeEvent<string>) => {
         
-        fetch(APIBASE + "/api/v1/article/categories", {
-            method: "PUT",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                articleID: articleID,
-                metatagID: newCategoryID
-            })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Failed to update article tag")
+        const value = event.target.value
+        let newCategoryID = parseInt(value)
+        setLoading(true)
+        try {
+            if (newCategoryID === CREATE_NEW_CATEGORY_ID) {
+                const newCategoryName = prompt("Enter a new category name: ")
+                if (!newCategoryName) {
+                    setLoading(false)
+                    return
+                }
+                const response = await fetch (APIBASE + "/api/v1/category", {
+                    method: "POST",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        TagName: newCategoryName
+                    })
+                })
+
+                if (!response.ok) throw new Error("Failed to create category.")
+
+                const created = await response.json()
+                newCategoryID = created.ID;
+                setCategories(prev => [...prev, created])
+                setSelectedCategoryID(newCategoryID)
+                setCurrentCategory(created.TagName)
+            } else {
+                const newCategory = categories.find((tag) => tag.ID === newCategoryID);
+                const newCategoryLabel = newCategory ? newCategory.TagName : ""
+            
+                setSelectedCategoryID(newCategoryID)
+                setCurrentCategory(newCategoryLabel)
+              
             }
-            return response.json()
-        })
-        .then(data => {
-            console.log("Article tag updated: ", data)
-        })
-        .catch(error => {
-            console.error("Error updating tag: ", error)
-        })
+
+            const putResponse = await fetch(APIBASE + "/api/v1/article/categories", {
+                method: "PUT",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    articleID: articleID,
+                    metatagID: newCategoryID
+                })
+            });
+
+            if (!putResponse.ok) {
+                throw new Error("Failed to update article tag");
+           }
+
+            const updated = await putResponse.json();
+            console.log("Article tag updated: ", updated);
+        } catch (error) {
+            console.log("Error handling category change: ", error)
+        } finally {
+            setLoading(false)
+        }
     }
 
+    let createText = "+ Create new category"
+
+    if (selectedCategoryID === undefined) {
+        return null;
+    }
     return (
-        <FormControl variant="outlined" size="small" sx={{width: 200}}>
-            <InputLabel id="tag-dropdown-label">Tag</InputLabel>
-            <Select
-                labelId="tag-dropdown-label"
-                id="tag-dropdown"
-                value={selectedCategoryID.toString()}
-                onChange={categoryChanged}
-                label="Tag"
+        <Box sx={{position: "relative", width: 200}}>
+            <FormControl variant="outlined" size="small" sx={{width: 200}}>
+                <InputLabel id="tag-dropdown-label">Category</InputLabel>
+                <Select
+                    labelId="tag-dropdown-label"
+                    id="tag-dropdown"
+                    value={selectedCategoryID.toString()}
+                    onChange={categoryChanged}
+                    label="Category"
+                    disabled={loading}
             >
-                {categories.map((tag, index) => (
+                {categories.map((tag) => (
                     <MenuItem key={tag.ID} value={tag.ID.toString()}>
                         {tag.TagName}
                     </MenuItem>
                 ))}
-            </Select>
-        </FormControl>
+                <MenuItem value={CREATE_NEW_CATEGORY_ID}>{createText}</MenuItem>
+              </Select>
+            </FormControl>
+
+            {loading && (
+                <CircularProgress
+                    size={24}
+                    sx={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        marginTop: "-12px",
+                        marginBottom: "-12px",
+                        zIndex: 1,
+                    }}
+                />
+            )}
+        </Box>
     );
 }
 

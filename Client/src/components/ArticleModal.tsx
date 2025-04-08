@@ -19,85 +19,98 @@ interface getFeedbackProps {
     articleID: number
 }
 
-function getFeedback({articleID}: getFeedbackProps): {exists: boolean; positive?: boolean} {
-    fetch(APIBASE + `/api/v1/feedback?articleID=${articleID}`, {
+async function getFeedback({ articleID }: getFeedbackProps): Promise<{ exists: boolean; positive?: boolean }> {
+    try {
+      const response = await fetch(APIBASE + `/api/v1/feedback?articleID=${articleID}`, {
         method: "GET",
         credentials: "include",
         headers: {
-          "Content-Type": "application/json"
-        }
-      })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error("Feedback retrieval failed")
-          }
-          return response.json()
-        })
-        .then(data => {
-          console.log("Feedback data:", data)
-          if (data.exists) {
-            return {exists: true, positive: data.positive}
-          } else {
-            return {exists: false}
-          }
-        })
-        .catch(error => {
-          console.error("Error getting feedback:", error)
-          return {exists: false}
-        })
-    return {exists: false}
-}
+          "Content-Type": "application/json",
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error("Feedback retrieval failed");
+      }
+  
+      const data = await response.json();
+      console.log("Feedback data:", data);
+  
+      if (data.exists) {
+        return { exists: true, positive: data.positive };
+      } else {
+        return { exists: false };
+      }
+    } catch (error) {
+      console.error("Error getting feedback:", error);
+      return { exists: false };
+    }
+  }
+  
 
 function ArticleModal({ handleClose, open, article }: Props) {
 
     const [exists, setExists] = useState(false)
     const [oldValue, setOldValue] = useState<boolean | null>(null)
 
+    const [downColor, setDownColor] = useState<'red' | 'grey'>('grey')
+    const [upColor, setUpColor] = useState<'green' | 'grey'>('grey')
+
     const articleURL: string = "URL_" + article?.Title;
 
     const editor = useMemo(() => withReact(createEditor()), []);
 
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(articleURL).then(() => {
-            alert('Article URL copied to clipboard!');
-        }).catch(err => {
-            console.error('Failed to copy: ', err);
-        });
-    };
+    const initFeedback = async (articleID: number) => {
+        const potentialFeedback = await getFeedback({articleID: articleID})
+        console.log('potentialFeedback: ', potentialFeedback);
+        if (potentialFeedback.exists) {
+            if (potentialFeedback.positive) {
+                console.log("WHAAAAAAAAAT");
+                setUpColor('green');
+                setDownColor('grey');
+            } else {
+                setUpColor('grey');
+                setDownColor('red');
+            }
+        } else {
+            setUpColor('grey');
+            setDownColor('grey');
+        }
+    }
 
     useEffect(() => {
         if (article && open) {
-            const potentiallyFeedback = getFeedback({articleID: article.ID})
-            if (potentiallyFeedback.exists) {
-                setExists(true)
-                setOldValue(potentiallyFeedback.positive ?? null)
-            } else {
-                setExists(false)
-            }
+            initFeedback(article.ID)
         }
-    }, [article, open])
+    }, [open])
 
-    var upColor = exists ? (oldValue ? 'green' : 'grey') : 'black'
-    var downColor = exists ? (oldValue ? 'grey' : 'red') : 'black'
 
     const handleFeedback = (feedback: 'up' | 'down') => {
         
         if (!article) return;
-        
-        upColor = exists ? (oldValue ? 'green' : 'grey') : 'black'
-        downColor = exists ? (oldValue ? 'grey' : 'red') : 'black'
-        
-        if (!exists) {
-            setExists(true)
-            setOldValue(feedback === 'up')
+
+        if (feedback === 'up') {
+            setUpColor('green')
+            setDownColor('grey')
         } else {
-            if (oldValue !== (feedback === 'up')) {
-                setOldValue(feedback === 'up')
-            }
+            setUpColor('grey')
+            setDownColor('red')
         }
+        
+        // setUpColor(!exists ? 'grey' : (oldValue ? 'green' : 'grey'));
+        // setDownColor(!exists ? 'grey' : (oldValue ? 'grey' : 'red'));
+        
+        // if (!exists) {
+        //     setExists(true)
+        //     setOldValue(feedback === 'up')
+        // } else {
+        //     if (oldValue !== (feedback === 'up')) {
+        //         setOldValue(feedback === 'up')
+        //     }
+        // }
 
         const payload = {
-            Positive: feedback === 'up',
+            Positive: (feedback === 'up'),
             ArticleID: article.ID
         };
     
@@ -127,7 +140,11 @@ function ArticleModal({ handleClose, open, article }: Props) {
     return(
         <Modal 
             open={open}
-            onClose={handleClose}
+            onClose={() => {
+                setUpColor('grey');
+                setDownColor('grey');
+                handleClose();
+            }}
             aria-labelledby="modal-modal-title"
             aria-describedby="modal-modal-description"
             sx={{display: 'flex', alignItems: 'center', justifyContent: 'center', height: "100%", width: "100%"}}
@@ -165,10 +182,6 @@ function ArticleModal({ handleClose, open, article }: Props) {
                                                         onClick={() => handleFeedback('down')}/>
                             </div>
                         </div>
-                        {/*help<div onClick={copyToClipboard} style={{cursor: 'pointer', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
-                            <Typography sx={{textDecoration: "underline", fontSize: "16px", fontWeight: "400"}}>{articleURL}</Typography>
-                            <ContentCopyOutlinedIcon sx={{fontSize: "25px", fontWeight: "400"}}/>
-                        </div>*/}
                         </div>
                     </>
                 ) : (
