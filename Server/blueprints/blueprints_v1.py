@@ -2063,6 +2063,7 @@ class ImageUpload(MethodView):
             article: models.Article = models.Article.query.get(articleID)
             filename = secure_filename(os.path.basename(file.filename))
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            print(filepath)
             file.save(filepath)
             article.Image = filepath
             db.session.commit()
