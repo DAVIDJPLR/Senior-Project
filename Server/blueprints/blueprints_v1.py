@@ -1605,53 +1605,35 @@ class SystemUsage(MethodView):
                     time4 = time3 - timedelta(hours=24)
                     time5 = time4 - timedelta(hours=24)
                     
-                    searches1_count = models.Search.query.filter(
-                        models.Search.SearchTime >= time1
-                    ).with_entities(func.count()).scalar()
+                    
                     viewHistory1_count = models.ViewHistory.query.filter(
                         models.ViewHistory.View_Time >= time1
                     ).with_entities(func.count()).scalar()
-                    usageVal1 = (searches1_count*3) + viewHistory1_count
+                    usageVal1 = viewHistory1_count
 
-                    searches2_count = models.Search.query.filter(
-                        models.Search.SearchTime >= time2,
-                        models.Search.SearchTime < time1
-                    ).with_entities(func.count()).scalar()
                     viewHistory2_count = models.ViewHistory.query.filter(
                         models.ViewHistory.View_Time >= time2,
                         models.ViewHistory.View_Time < time1
                     ).with_entities(func.count()).scalar()
-                    usageVal2 = (searches2_count*3) + viewHistory2_count
+                    usageVal2 = viewHistory2_count
 
-                    searches3_count = models.Search.query.filter(
-                        models.Search.SearchTime >= time3,
-                        models.Search.SearchTime < time2
-                    ).with_entities(func.count()).scalar()
                     viewHistory3_count = models.ViewHistory.query.filter(
                         models.ViewHistory.View_Time >= time3,
                         models.ViewHistory.View_Time < time2
                     ).with_entities(func.count()).scalar()
-                    usageVal3 = (searches3_count*3) + viewHistory3_count
+                    usageVal3 = viewHistory3_count
 
-                    searches4_count = models.Search.query.filter(
-                        models.Search.SearchTime >= time4,
-                        models.Search.SearchTime < time3
-                    ).with_entities(func.count()).scalar()
                     viewHistory4_count = models.ViewHistory.query.filter(
                         models.ViewHistory.View_Time >= time4,
                         models.ViewHistory.View_Time < time3
                     ).with_entities(func.count()).scalar()
-                    usageVal4 = (searches4_count*3) + viewHistory4_count
+                    usageVal4 = viewHistory4_count
 
-                    searches5_count = models.Search.query.filter(
-                        models.Search.SearchTime >= time5,
-                        models.Search.SearchTime < time4
-                    ).with_entities(func.count()).scalar()
                     viewHistory5_count = models.ViewHistory.query.filter(
                         models.ViewHistory.View_Time >= time5,
                         models.ViewHistory.View_Time < time4
                     ).with_entities(func.count()).scalar()
-                    usageVal5 = (searches5_count*3) + viewHistory5_count
+                    usageVal5 = viewHistory5_count
                     
                     return {
                         "usage_data": [
