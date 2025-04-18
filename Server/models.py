@@ -75,8 +75,8 @@ class Article(db.Model):
     Content = db.Column(db.Unicode, nullable=True)
     Article_Description = db.Column(db.Unicode, nullable=True)
     Image = db.Column(db.Unicode, nullable=True)
-    NumThumbsUp = db.Column(db.Integer, default=0)
-    NumThumbsDown = db.Column(db.Integer, default=0)
+    ThumbsUp = db.Column(db.Integer, default=0)
+    ThumbsDown = db.Column(db.Integer, default=0)
 
     Views = db.relationship('ViewHistory', back_populates='Article', lazy='select')
     Edits = db.relationship('EditHistory', back_populates='Article', lazy='select')
@@ -94,8 +94,8 @@ class Article(db.Model):
             'Content': self.Content,
             'Article_Description': self.Article_Description,
             'Image': self.Image,
-            'NumThumbsUp': self.NumThumbsUp,
-            'NumThumbsDown': self.NumThumbsDown
+            'ThumbsUp': self.ThumbsUp,
+            'ThumbsDown': self.ThumbsDown
         } 
     def toJSON(self):
         return {
@@ -104,8 +104,8 @@ class Article(db.Model):
             'Content': self.Content,
             'Article_Description': self.Article_Description,
             'Image': self.Image,
-            'NumThumbsUp': self.NumThumbsUp,
-            'NumThumbsDown': self.NumThumbsDown,
+            'ThumbsUp': self.ThumbsUp,
+            'ThumbsDown': self.ThumbsDown,
             'Views': [view.toJSONPartial() for view in self.Views],
             'Edits': [edit.toJSONPartial() for edit in self.Edits],
             'Tags': [tag.toJSONPartial() for tag in self.Tags],
