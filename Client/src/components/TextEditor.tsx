@@ -97,20 +97,15 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
     const articlePayload: any = {
       Title: title,
       Content: content,
-      Article_Description: description
+      Article_Description: description,
+      Tag: currentTag,
+      MetaTag: currentCategory
     }
     for (const field in articlePayload) {
       if (articlePayload[field].length == 0) {
         setEmptyField(true)
         return;
       }
-    }
-
-    if (currentTag !== "") {
-      articlePayload.tag = currentTag
-    }
-    if (currentCategory !== "") {
-      articlePayload.metatag = currentCategory
     }
 
     let url = APIBASE + '/api/v1/article'
@@ -153,14 +148,9 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
       const payload: any = {
         title: title,
         content: content,
-        desc: description
-      }
-
-      if (currentTag !== "") {
-        payload.tag = currentTag
-      }
-      if (currentCategory !== "") {
-        payload.metatag = currentCategory
+        desc: description,
+        tag: currentTag,
+        metatag: currentCategory
       }
 
       fetch(url, {
