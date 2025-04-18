@@ -1929,6 +1929,8 @@ class TrendingArticles(MethodView):
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 articles: list[models.Article] = (
                     db.session.query(models.Article)
+                    .join(models.Article.Tags)
+                    .filter(models.Tag.TagName == 'Published')
                     .all()  # Execute the query and return the results
                 )
 
