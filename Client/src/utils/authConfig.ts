@@ -25,27 +25,24 @@ export const msalConfig = {
     },
     system: {	
         loggerOptions: {	
-            loggerCallback: (level: any, message: any, containsPii: any) => {	
-                if (containsPii) {		
-                    return;		
-                }		
-                switch (level) {
-                    case LogLevel.Error:
-                        console.error(message);
-                        return;
-                    case LogLevel.Info:
-                        console.info(message);
-                        return;
-                    case LogLevel.Verbose:
-                        console.debug(message);
-                        return;
-                    case LogLevel.Warning:
-                        console.warn(message);
-                        return;
-                    default:
-                        return;
-                }	
-            }	
+            loggerCallback: (level: LogLevel, message: string, containsPii: boolean): void => {
+                if (containsPii) return;
+            
+                const logMethods: Record<LogLevel, (msg: string) => void> = {
+                    [LogLevel.Error]: console.error,
+                    [LogLevel.Info]: console.info,
+                    [LogLevel.Verbose]: console.debug,
+                    [LogLevel.Warning]: console.warn,
+                    [LogLevel.Trace]: function (msg: string): void {
+                        throw new Error("Function not implemented.");
+                    }
+                };
+            
+                const log = logMethods[level];
+                if (log) {
+                    log(message);
+                }
+            }
         }	
     }
 };

@@ -104,10 +104,8 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
         });
 
         const data = await response.json();
-        console.log(data)
 
         setAllTags(data.Tags.map((tag: PartialTag) => tag.TagName))
-        console.log(allTags)
     }
 
     const getArticles = async () => {
@@ -120,7 +118,6 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
         });
 
         const data = await response.json();
-        console.log(data)
 
         setArticles(data.articlesJSON as PartialArticle[])
     }
@@ -278,8 +275,8 @@ function createEmptyArticle(): PartialArticle {
         Content: "",
         Article_Description: "",
         Image: "",
-        ThumbsUp: 0,
-        ThumbsDown: 0
+        NumThumbsUp: 0,
+        NumThumbsDown: 0
     };
 }
 
