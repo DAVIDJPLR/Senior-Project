@@ -1113,8 +1113,9 @@ class Search(MethodView):
 
                     search_results = tfidf_search(smartSearchQuery)
                     search_results = hybrid_search(search_results, searchQuery)
-
-                    all_articles: list[models.Article] = models.Article.query.all()
+                    
+                    publishedTag: models.Tag = models.Tag.query.filter_by(TagName="Published").first()
+                    all_articles: list[models.Article] = models.Article.query.filter(models.Article.Tags.any(models.Tag.ID == publishedTag.ID)).all()
 
                     articles = list()
                     for articleID, importance in search_results:
@@ -1122,11 +1123,15 @@ class Search(MethodView):
                         if a is not None:
                             articles.append(a)
                 else:
+                    publishedTag: models.Tag = models.Tag.query.filter_by(TagName="Published").first()
                     articles = models.Article.query.filter(
-                        or_(
-                            models.Article.Title.ilike(f"%{searchQuery}%"),
-                            models.Article.Content.ilike(f"%{searchQuery}%"),
-                            models.Article.Article_Description.ilike(f"%{searchQuery}%")
+                        and_(
+                            or_(
+                                models.Article.Title.ilike(f"%{searchQuery}%"),
+                                models.Article.Content.ilike(f"%{searchQuery}%"),
+                                models.Article.Article_Description.ilike(f"%{searchQuery}%")
+                            ),
+                            models.Article.Tags.any(models.Tag.ID == publishedTag.ID)
                         )
                     ).all()
 

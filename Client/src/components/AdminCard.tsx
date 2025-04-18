@@ -19,7 +19,7 @@ function AdminCard({ user, onClick, width, userPrivileges }: Props){
                     <Typography style={{ fontSize: "16px", fontWeight: "600", textAlign: "left", width: "95%", overflow: "hidden"}}>{user.FName} {user.LName}</Typography>
                 </Grid2>
                 <Grid2 sx={{width: "34%"}}>
-                    <Typography style={{ fontSize: "12px", textAlign: "center", width: "95%", overflow: "hidden"}}>{user.Email}</Typography>
+                    <Typography style={{ fontSize: "12px", textAlign: "center", width: "95%", overflow: "hidden"}}>{user.Email.toUpperCase()}</Typography>
                 </Grid2>
                 <Grid2 sx={{width: "33%"}}>
                     {userPrivileges.includes(5) &&(
