@@ -1247,8 +1247,8 @@ class ArticlesInDepth(MethodView):
                                     return {'msg': 'Incorrect size argument. size should be an int'}, 400
                             
                             articles: list[models.Article] = models.Article.query.all()
-                            thumbs_up_counts = [article.NumThumbsUp for article in articles]
-                            thumbs_down_counts = [article.NumThumbsDown for article in articles]
+                            thumbs_up_counts = [article.ThumbsUp for article in articles]
+                            thumbs_down_counts = [article.ThumbsDown for article in articles]
 
                             returnable_articles = [article.toJSONPartial() for article in articles]
                             
@@ -1383,8 +1383,8 @@ class ArticlesProblems(MethodView):
                             
                             articles: list[models.Article] = (
                                                         db.session.query(models.Article)
-                                                        .filter(models.Article.NumThumbsDown > 0)  # Only include articles with more than 0 thumbs down
-                                                        .order_by(desc(models.Article.NumThumbsDown))  # Sort by ThumbsDown in descending order
+                                                        .filter(models.Article.ThumbsDown > 0)  # Only include articles with more than 0 thumbs down
+                                                        .order_by(desc(models.Article.ThumbsDown))  # Sort by ThumbsDown in descending order
                                                         .limit(10)  # Limit to the top 10 articles
                                                         .all()  # Execute the query and return the results
                                                     )
@@ -1506,11 +1506,11 @@ class Feedback(MethodView):
 
                     if oldFeedback:
                         if positive == True and oldFeedback.Positive == False:
-                            article.NumThumbsUp = (article.NumThumbsUp + 1) if article.NumThumbsUp else 1
-                            article.NumThumbsDown = (article.NumThumbsDown - 1) if article.NumThumbsDown else 0
+                            article.ThumbsUp = (article.ThumbsUp + 1) if article.ThumbsUp else 1
+                            article.ThumbsDown = (article.ThumbsDown - 1) if article.ThumbsDown else 0
                         elif positive == False and oldFeedback.Positive == True:
-                            article.NumThumbsUp = (article.NumThumbsUp - 1) if article.NumThumbsUp else 0
-                            article.NumThumbsDown = (article.NumThumbsDown + 1) if article.NumThumbsDown else 1
+                            article.ThumbsUp = (article.ThumbsUp - 1) if article.ThumbsUp else 0
+                            article.ThumbsDown = (article.ThumbsDown + 1) if article.ThumbsDown else 1
                         else:
                             return {'msg': 'No update made in request'}, 400
                         
@@ -1521,15 +1521,15 @@ class Feedback(MethodView):
                         return {'Feedback': oldFeedback.toJSON()}, 201
 
                     if positive == True:
-                        if article.NumThumbsUp:
-                            article.NumThumbsUp = article.NumThumbsUp + 1
+                        if article.ThumbsUp:
+                            article.ThumbsUp = article.ThumbsUp + 1
                         else:
-                            article.NumThumbsUp = 1
+                            article.ThumbsUp = 1
                     else:
-                        if article.NumThumbsDown:
-                            article.NumThumbsDown = article.NumThumbsDown + 1
+                        if article.ThumbsDown:
+                            article.ThumbsDown = article.ThumbsDown + 1
                         else:
-                            article.NumThumbsDown = 1
+                            article.ThumbsDown = 1
                     
                     newFeedback: models.Feedback = models.Feedback(Submission_Time=submission_time, Positive=positive, UserID=userID, ArticleID=articleID)
                     db.session.add(newFeedback)
@@ -1851,8 +1851,8 @@ class ArticleThumbsDownDates(MethodView):
                     
                     articles: list[models.Article] = (
                                                         db.session.query(models.Article)
-                                                        .filter(models.Article.NumThumbsDown > 0)  # Only include articles with more than 0 thumbs down
-                                                        .order_by(desc(models.Article.NumThumbsDown))  # Sort by ThumbsDown in descending order
+                                                        .filter(models.Article.ThumbsDown > 0)  # Only include articles with more than 0 thumbs down
+                                                        .order_by(desc(models.Article.ThumbsDown))  # Sort by ThumbsDown in descending order
                                                         .limit(10)  # Limit to the top 10 articles
                                                         .all()  # Execute the query and return the results
                                                     )
