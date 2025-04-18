@@ -324,6 +324,8 @@ class Article(MethodView):
                     db.session.add(article)
                     if addTag:
                         article.Tags = [addTag]
+                    else:
+                        return {'msg', 'Article cannot be created without a tag attribute'}, 400
                     if addMetaTag:
                         article.MetaTags = [addMetaTag]
                     
@@ -386,6 +388,8 @@ class Article(MethodView):
 
                         if updateTag:
                             article.Tags = [updateTag]
+                        else:
+                            return {'msg': 'Article must be tagged'}, 400
                         if updateMetaTag:
                             article.MetaTags = [updateMetaTag]
 
