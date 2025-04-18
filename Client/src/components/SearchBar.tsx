@@ -19,10 +19,10 @@ function SearchBar({setSearchVal, searchVal, handleKeyUp, size}: Props){
             input: {
                 startAdornment: 
                     <InputAdornment position="start">
-                        <SearchIcon></SearchIcon>
+                        <SearchIcon/>
                     </InputAdornment>
             }
-        }}></TextField>
+        }}/>
     );
 }
 

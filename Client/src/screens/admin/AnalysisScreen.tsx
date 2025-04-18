@@ -166,8 +166,8 @@ function createEmptyArticle(): PartialArticle {
         Content: "",
         Article_Description: "",
         Image: "",
-        ThumbsUp: 0,
-        ThumbsDown: 0
+        NumThumbsUp: 0,
+        NumThumbsDown: 0
     };
 }
 

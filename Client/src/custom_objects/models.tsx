@@ -24,8 +24,8 @@ export interface PartialArticle{
     Content: string,
     Article_Description: string,
     Image: string,
-    ThumbsUp: number,
-    ThumbsDown: number
+    NumThumbsUp: number,
+    NumThumbsDown: number
 }
 export interface Article extends PartialArticle{
     Views: ViewHistory[],

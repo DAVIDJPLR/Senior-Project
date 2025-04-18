@@ -10,7 +10,7 @@ interface Props{
 function ArticleCard({ article, lineNumber, onClick }: Props){
     const lineNumberString: string = lineNumber.toString();
     const height: number = (18*1.5) + ((lineNumber)*(16*1.5)) + 15;
-    const heightString: string = height.toString() + "px";
+    const heightString: string = `${height.toString()}px`;
     return (
         <div onClick={onClick}
             style={{width: "85%", height: heightString, display: "flex", flexDirection: "column", alignItems: "center", border: "1px solid grey", borderRadius: "20px", margin: "10px", boxShadow: "0px 0px 10px 0px Gainsboro"}}

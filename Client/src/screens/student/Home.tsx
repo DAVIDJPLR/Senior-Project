@@ -44,21 +44,13 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
     const [hasSearched, setHasSearched] = useState(false);
 
     const handleKeyUp = (event: React.KeyboardEvent<HTMLInputElement>) => {
-        console.log(searchVal); 
         setHasSearched(true);
         handleSearch()
-        
-        // if (event.key === "Enter") {
-        //     console.log(searchVal); 
-        //     setHasSearched(true);
-        //     handleSearch()
-        // }
     };
 
     const handleSearch = () => {
         if (searchVal.length === 0) {
             defaultArticles()
-            console.log("default")
         } else {
             searchArticles()
         }
@@ -74,7 +66,6 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
         });
 
         const data = await response.json();
-        console.log(data)
 
         setArticles(data.articles as PartialArticle[])
     }
@@ -83,8 +74,6 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
         const params = new URLSearchParams({
             searchQuery: searchVal
         });
-
-        console.log(`searching with val ${searchVal}`)
 
         const response = await fetch(APIBASE + `/api/v1/articles/search?${params.toString()}`, {
             method: 'GET',
@@ -95,7 +84,6 @@ function StudentHome({ currentScreen, setCurrentScreen }: Props){
         });
 
         const data = await response.json();
-        console.log(data)
 
         setArticles(data.results as PartialArticle[])
     }

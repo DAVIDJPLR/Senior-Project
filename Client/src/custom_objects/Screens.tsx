@@ -16,11 +16,11 @@ export enum StudentScreen{
 export type Screen = AdminScreen | StudentScreen;
 
 export function screenToString(screen: Screen): string {
-    if (screen in AdminScreen) {
-      return AdminScreen[screen as AdminScreen];
-    }
-    if (screen in StudentScreen) {
-      return StudentScreen[screen as StudentScreen];
-    }
-    throw new Error("Invalid screen value");
+  if (Object.values(AdminScreen).includes(screen as AdminScreen)) {
+    return AdminScreen[screen as AdminScreen];
   }
+  if (Object.values(StudentScreen).includes(screen as StudentScreen)) {
+    return StudentScreen[screen as StudentScreen];
+  }
+  throw new Error("Invalid screen value");
+}

@@ -31,7 +31,6 @@ function StudentRecent({ currentScreen, setCurrentScreen }: Props){
             });
 
             const data = await response.json();
-            console.log(data)
 
             setArticles(data.articles as PartialArticle[])
         } catch (error) {

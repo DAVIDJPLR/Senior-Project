@@ -17,7 +17,7 @@ interface Props{
     setCurrentScreen: (screen: Screen) => void,
 }
 
-function AdminUsers({ currentScreen, setCurrentScreen }: Props){
+function UsersScreen({ currentScreen, setCurrentScreen }: Props){
 
     const [searchVal, setSearchVal] = useState("");
     const [openAdminModal, setOpenAdminModal] = useState(false)
@@ -49,7 +49,6 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
         });
 
         const data = await response.json();
-        console.log(`data: ${data}`)
 
         setAdmins(data.admins as PartialUser[])
     }
@@ -124,8 +123,7 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
     const open = Boolean(anchorEl);
     const id = open ? 'simple-popover' : undefined;
 
-    while (privilegeIDs[0] === 0) {
-
+    if (privilegeIDs[0] === 0) {
         return (
             <div>
                 <p>Loading...</p>
@@ -133,8 +131,7 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
         );
     }
 
-    while (privilegeIDs[0] !== 0) {
-
+    if (privilegeIDs[0] !== 0) {
         return (
             
             <div style={{ width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -501,4 +498,4 @@ function ConfirmSubmissionDialog({ open, onClose, onConfirm, userName }: confirm
     );
 }
 
-export default AdminUsers;
+export default UsersScreen;
