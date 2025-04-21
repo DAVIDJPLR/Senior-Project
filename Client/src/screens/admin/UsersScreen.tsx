@@ -137,7 +137,7 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
 
         return (
             
-            <div style={{ width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div style={{ width: "100vw", maxHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center" }}>
                 {!isMobile && (
                     <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
                         <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
@@ -160,7 +160,7 @@ function AdminUsers({ currentScreen, setCurrentScreen }: Props){
                             </Button>
                         )}
                     </div>
-                    <Typography style={{ fontSize: "24px", fontWeight: "600" }}>Current Administrators</Typography>
+                    <Typography style={{ fontSize: "24px", fontWeight: "600", marginTop: '8px' }}>Current Administrators</Typography>
                     {admins?.map((admin) => <AdminCard user={admin} key={admin.ID} width={isMobile ? "90%" : "60%"} userPrivileges={privilegeIDs}
                         onClick={() => {
                             if (privilegeIDs.includes(5)) {
@@ -448,7 +448,7 @@ function UserModal({ handleClose, setRefresh }: userModalProps) {
 
     if (isMobile){
         return (
-            <div style={{width: "90vw", height: "50vh", paddingTop: '16px', backgroundColor: 'white', borderRadius: '8px', display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+            <div style={{width: "90vw", maxHeight: "90vh", paddingTop: '16px', backgroundColor: 'white', borderRadius: '8px', display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                 <SearchBar setSearchVal={setSearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={'small'}/>
                 <div style={{width: "100%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto"}}>
                     {users?.map((user) => <UserCard user={user} key={user.ID} onClick={() => {
@@ -460,9 +460,9 @@ function UserModal({ handleClose, setRefresh }: userModalProps) {
         );
     } else {
         return (
-            <div style={{width: "40vw", height: "50vh", paddingTop: '16px', backgroundColor: 'white', borderRadius: '8px', display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+            <div style={{width: "40vw", maxHeight: "90vh", paddingTop: '16px', gap: '12px', backgroundColor: 'white', borderRadius: '8px', display: "flex", flexDirection: "column", alignItems: "center"}}>
                 <SearchBar setSearchVal={setSearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={'small'}/>
-                <div style={{width: "100%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto"}}>
+                <div style={{width: "100%", flex: 1, display: "flex", flexDirection: "column", alignItems: "center", overflowY: "auto"}}>
                     {users?.map((user) => <UserCard user={user} key={user.ID} onClick={() => {
                         setSelectedUser(user);
                         handleClose();
