@@ -2027,9 +2027,8 @@ class ImageUpload(MethodView):
             articleID = request.form.get("articleID")
             article: models.Article = models.Article.query.get(articleID)
             filename = secure_filename(os.path.basename(file.filename))
-            ## filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            filepath = f"/static/{filename}"
-
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            
             image = Image.open(file)
             image = image.convert("RGB")
             image.thumbnail((1200, 1200))

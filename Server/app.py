@@ -8,7 +8,6 @@ from flask_sqlalchemy import SQLAlchemy
 from auth import DB_LOGIN, SECRET_KEY
 
 scriptdir = os.path.abspath(os.path.dirname(__file__))
-static_path = os.path.join(scriptdir, 'static')
 app = Flask(__name__)
 
 # The supports_credentials argument ensures that cookies get passed back 
@@ -19,8 +18,7 @@ CORS(app, supports_credentials=True, origins=['http://localhost:5173', 'https://
 app.config['SQLALCHEMY_DATABASE_URI'] = DB_LOGIN
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
-app.config['UPLOAD_FOLDER'] = static_path
-os.makedirs(static_path, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'Server', 'static')
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'webp'}
 app.config['MAX_CONTENT_SIZE'] = 5 * 1024 * 1024 # 5 MB
 
