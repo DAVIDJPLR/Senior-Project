@@ -31,10 +31,11 @@ type CustomElement = {
 type CustomEditor = BaseEditor & ReactEditor & HistoryEditor
 
 interface TextEditorProps {
-  articleID: number
+  articleID: number;
+  setUpdateArticles: (x: boolean) => void;
 }
 
-export const TextEditor = ({articleID}: TextEditorProps) => {
+export const TextEditor = ({articleID, setUpdateArticles}: TextEditorProps) => {
   const editor = useMemo(() => withImages(withHistory(withReact(createEditor()))), [])
 
   const [value, setValue] = useState<CustomElement[]>([
@@ -134,6 +135,7 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
           setNotPrivileged(true);
           throw new Error ('Failed to save article')
         }
+        setUpdateArticles(true);
         return response.json()
       })
       .then(data => {
