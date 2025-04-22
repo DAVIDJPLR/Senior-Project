@@ -134,7 +134,7 @@ function UsersScreen({ currentScreen, setCurrentScreen }: Props){
     if (privilegeIDs[0] !== 0) {
         return (
             
-            <div style={{ width: "100vw", maxHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", backgroundColor: theme.palette.secondary.main }}>
+            <div style={{ width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center", backgroundColor: theme.palette.secondary.main }}>
                 {!isMobile && (
                     <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
                         <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
