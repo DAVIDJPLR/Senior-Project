@@ -269,7 +269,7 @@ class Article(MethodView):
                         articleTagName = article.Tags[0].TagName
                         articleCategoryName = article.MetaTags[0].TagName
 
-                        if len(session['current_user_privileges']) > 0:
+                        if len(session['current_user_privileges']) == 0:
                             userID = session.get('current_user_id')
                             time = datetime.now()
                             vh = models.ViewHistory(ArticleID=id, UserID=userID,
