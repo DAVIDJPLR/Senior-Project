@@ -9,6 +9,7 @@ from build_dictionary import build_custom_dictionary
 from semantic_embedding import build_embeddings, hybrid_search
 from spellcheck import correct_query
 from threading import Thread
+from PIL import Image
 
 from auth import TENANT_ID, CLIENT_ID
 from search import tfidf_search
@@ -2004,6 +2005,10 @@ class SystemStatsSearch(MethodView):
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
 
+
+def allowed_extension(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
 @apiv1.route("/image", methods=["OPTIONS", "GET", "PUT", "POST", "DELETE"])
 class ImageUpload(MethodView):
     def options(self):
@@ -2015,12 +2020,22 @@ class ImageUpload(MethodView):
             file = request.files['image']
             if file.filename == '':
                 return {'msg': 'No file selected'}, 400
+            
+            if not allowed_extension(file.filename):
+                return {'msg': 'Unsupported file type'}, 400
+            
             articleID = request.form.get("articleID")
             article: models.Article = models.Article.query.get(articleID)
             filename = secure_filename(os.path.basename(file.filename))
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            print(filepath)
-            file.save(filepath)
+            ## filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            filepath = f"/static/{filename}"
+
+            image = Image.open(file)
+            image = image.convert("RGB")
+            image.thumbnail((1200, 1200))
+            image.save(filepath, format="JPEG", optimize=True, quality=85)
+            
+            ## file.save(filepath)
             article.Image = filepath
             db.session.commit()
             image_url = url_for('uploaded_file', filename=filename, _external=True)
