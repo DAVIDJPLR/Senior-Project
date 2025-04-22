@@ -2034,10 +2034,10 @@ class ImageUpload(MethodView):
             image.thumbnail((1200, 1200))
             image.save(filepath, format="JPEG", optimize=True, quality=85)
             
-            ## file.save(filepath)
             article.Image = filepath
             db.session.commit()
-            image_url = url_for('uploaded_file', filename=filename, _external=True)
+            ## image_url = url_for('uploaded_file', filename=filename, _external=True)
+            image_url = f"/static/{filename}"
             return {'msg': 'Image saved successfully', 'url': image_url}, 200
         except Exception as e:
             traceback.print_exc()
