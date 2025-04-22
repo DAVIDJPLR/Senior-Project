@@ -72,11 +72,7 @@ function BrowseArticles({currentCategory, setCurrentCategory, setViewArticles}: 
     }, [])
 
     const getArticles = async (cat: PartialMetaTag) => {
-        const params = new URLSearchParams({
-            ID: cat.ID.toString()
-        });
-
-        const response = await fetch(APIBASE + `/api/v1/category?${params.toString()}`, {
+        const response = await fetch(APIBASE + `/api/v1/categories/articles?category=${cat.TagName}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -87,7 +83,7 @@ function BrowseArticles({currentCategory, setCurrentCategory, setViewArticles}: 
         const data = await response.json();
         console.log(data)
         
-        setArticles((data.category as MetaTag).Articles)
+        setArticles(data.articles as PartialArticle[])
     }
 
     const logView = async(article: PartialArticle) => {
