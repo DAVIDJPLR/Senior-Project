@@ -100,19 +100,15 @@ export const TextEditor = ({articleID, setUpdateArticles}: TextEditorProps) => {
     const articlePayload: any = {
       Title: title,
       Content: content,
-      Article_Description: description
+      Article_Description: description,
+      Tag: currentTag,
+      MetaTag: currentCategory
     }
     for (const field in articlePayload) {
       if (articlePayload[field].length == 0) {
         setEmptyField(true)
         return;
       }
-    }
-    if (currentTag !== "") {
-      articlePayload.Tag = currentTag
-    }
-    if (currentCategory !== "") {
-      articlePayload.MetaTag = currentCategory
     }
 
     let url = APIBASE + '/api/v1/article'
