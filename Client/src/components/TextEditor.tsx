@@ -79,6 +79,8 @@ export const TextEditor = ({articleID, setUpdateArticles}: TextEditorProps) => {
           }
           setTitle(data.article.Title || "Untitled Article")
           setDescription(data.article.Article_Description || "")
+          setCurrentTag(data.articleTagName || "")
+          setCurrentCategory(data.articleCategoryName || "")
         }
       })
       .catch(error => {
@@ -98,15 +100,19 @@ export const TextEditor = ({articleID, setUpdateArticles}: TextEditorProps) => {
     const articlePayload: any = {
       Title: title,
       Content: content,
-      Article_Description: description,
-      Tag: currentTag,
-      MetaTag: currentCategory
+      Article_Description: description
     }
     for (const field in articlePayload) {
       if (articlePayload[field].length == 0) {
         setEmptyField(true)
         return;
       }
+    }
+    if (currentTag !== "") {
+      articlePayload.Tag = currentTag
+    }
+    if (currentCategory !== "") {
+      articlePayload.MetaTag = currentCategory
     }
 
     let url = APIBASE + '/api/v1/article'

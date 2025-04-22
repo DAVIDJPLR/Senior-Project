@@ -49,7 +49,7 @@ certificate 1
 click 9
 or 85
 trust 1
-now 5
+now 4
 you're 15
 connected 6
 if 56
@@ -114,7 +114,7 @@ start 6
 menu 5
 search 3
 check 8
-updates 6
+updates 7
 automatically 7
 install 8
 any 7
@@ -239,7 +239,7 @@ john's 1
 take 6
 minutes 4
 activate 3
-after 9
+after 8
 campusdevices 1
 gamenet 1
 special 1
@@ -376,7 +376,7 @@ application 2
 field 1
 usual 1
 authenticated 2
-should 5
+should 4
 show 2
 green 1
 checkmark 1
@@ -788,7 +788,7 @@ permissions 3
 microphones 1
 mic 3
 doesn't 2
-work 6
+work 5
 zoom 5
 teams 3
 muted 1
@@ -1029,7 +1029,7 @@ text 3
 paragraph 3
 shsfhs 1
 testing 2
-tag 3
+tag 4
 i 2
 hope 1
 fingers 1
@@ -1042,4 +1042,5 @@ ask 1
 kent 1
 l 1
 required 1
-fine 1
+featuring 1
+dynamic 1
