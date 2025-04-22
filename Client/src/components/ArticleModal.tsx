@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { Modal, Typography }  from '@mui/material';
 import ThumbDownAltOutlinedIcon from '@mui/icons-material/ThumbDownAltOutlined';
 import ThumbUpAltOutlinedIcon from '@mui/icons-material/ThumbUpAltOutlined';
-import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
 import { PartialArticle } from '../custom_objects/models';
 import { createEditor } from 'slate';
 import { Slate, Editable, withReact } from 'slate-react'
@@ -96,18 +95,6 @@ function ArticleModal({ handleClose, open, article }: Props) {
             setUpColor('grey')
             setDownColor('red')
         }
-        
-        // setUpColor(!exists ? 'grey' : (oldValue ? 'green' : 'grey'));
-        // setDownColor(!exists ? 'grey' : (oldValue ? 'grey' : 'red'));
-        
-        // if (!exists) {
-        //     setExists(true)
-        //     setOldValue(feedback === 'up')
-        // } else {
-        //     if (oldValue !== (feedback === 'up')) {
-        //         setOldValue(feedback === 'up')
-        //     }
-        // }
 
         const payload = {
             Positive: (feedback === 'up'),

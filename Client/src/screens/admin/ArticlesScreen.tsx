@@ -29,9 +29,10 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
     },
     };
 
-    const [editModalOpen, setEditModalOpen] = useState(false)
-    const [selectedArticle, setSelectedArticle] = useState<PartialArticle>(createEmptyArticle())
-    const [articles, setArticles] = useState<PartialArticle[]>([])
+    const [updateArticles, setUpdateArticles] = useState(false);
+    const [editModalOpen, setEditModalOpen] = useState(false);
+    const [selectedArticle, setSelectedArticle] = useState<PartialArticle>(createEmptyArticle());
+    const [articles, setArticles] = useState<PartialArticle[]>([]);
     const [searchVal, setSearchVal] = useState("");
     const [tags, setTags] = useState<string[]>([]);
     const [allTags, setAllTags] = useState<string[]>([]);
@@ -78,6 +79,16 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
     }, []);
 
     useEffect(() => {
+        if (updateArticles) {
+            getArticles();
+            getTags();
+            loadPrivileges();
+        } else {
+            setUpdateArticles(false);
+        }
+    }, [updateArticles]);
+
+    useEffect(() => {
         handleSearch()
     }, [tags])
 
@@ -104,10 +115,8 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
         });
 
         const data = await response.json();
-        console.log(data)
 
         setAllTags(data.Tags.map((tag: PartialTag) => tag.TagName))
-        console.log(allTags)
     }
 
     const getArticles = async () => {
@@ -120,7 +129,6 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
         });
 
         const data = await response.json();
-        console.log(data)
 
         setArticles(data.articlesJSON as PartialArticle[])
     }
@@ -256,6 +264,7 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
                         open={editModalOpen}
                         article={selectedArticle}
                         onClose={handleCloseModal}
+                        setUpdateArticles={setUpdateArticles}
                         />
                     )}
                     

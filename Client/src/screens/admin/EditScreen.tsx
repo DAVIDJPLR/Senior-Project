@@ -17,9 +17,10 @@ interface Props{
     open: boolean;
     article: PartialArticle;
     onClose: () => void;
+    setUpdateArticles: (update: boolean) => void;
 }
 
-function EditArticleModal({ open, article, onClose }: Props) {
+function EditArticleModal({ open, article, onClose, setUpdateArticles }: Props) {
     const articleID = article.ID
     return (
         <Dialog fullScreen open={open} onClose={onClose} TransitionComponent={Transition}>
@@ -34,7 +35,7 @@ function EditArticleModal({ open, article, onClose }: Props) {
                 </Toolbar>
             </AppBar>
             <div style={{padding: "16px"}}>
-                <TextEditor articleID={articleID}/>
+                <TextEditor articleID={articleID} setUpdateArticles={setUpdateArticles}/>
             </div>
         </Dialog>
     )

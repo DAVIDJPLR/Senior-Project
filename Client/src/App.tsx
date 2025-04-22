@@ -1,7 +1,7 @@
 import { Screen, StudentScreen, AdminScreen } from "./custom_objects/Screens";
 import { useState, useEffect, StrictMode } from "react";
 
-import { loginRequest } from './authConfig';
+import { loginRequest } from './utils/authConfig';
 import { APIBASE } from "./ApiBase";
 
 import { AuthenticatedTemplate, UnauthenticatedTemplate, useMsal } from '@azure/msal-react';
@@ -12,8 +12,8 @@ import StudentRecent from "./screens/student/Recently_Viewed";
 import AdminAnalysis from "./screens/admin/AnalysisScreen";
 import AdminArticles from "./screens/admin/ArticlesScreen";
 import AdminBacklog from "./screens/admin/BacklogScreen";
-import AdminHome from "./screens/admin/SplashScreen";
-import AdminUsers from "./screens/admin/UsersScreen";
+import AdminSplashScreen from "./screens/admin/SplashScreen";
+import UsersScreen from "./screens/admin/UsersScreen";
 import { SignInRedirect } from "./components/SignInRedirect";
 import './global.css';
 import { PartialAdminPrivilege } from "./custom_objects/models";
@@ -135,11 +135,11 @@ function App() {
                 );
             case AdminScreen.Splash:
                 return(
-                    <AdminHome currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></AdminHome>
+                    <AdminSplashScreen currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></AdminSplashScreen>
                 );
             case AdminScreen.Users:
                 return(
-                    <AdminUsers currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></AdminUsers>
+                    <UsersScreen currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}></UsersScreen>
                 );
             case StudentScreen.Browse:
                 return(

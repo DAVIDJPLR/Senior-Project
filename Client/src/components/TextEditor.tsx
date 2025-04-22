@@ -31,10 +31,11 @@ type CustomElement = {
 type CustomEditor = BaseEditor & ReactEditor & HistoryEditor
 
 interface TextEditorProps {
-  articleID: number
+  articleID: number;
+  setUpdateArticles: (x: boolean) => void;
 }
 
-export const TextEditor = ({articleID}: TextEditorProps) => {
+export const TextEditor = ({articleID, setUpdateArticles}: TextEditorProps) => {
   const editor = useMemo(() => withImages(withHistory(withReact(createEditor()))), [])
 
   const [value, setValue] = useState<CustomElement[]>([
@@ -78,6 +79,8 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
           }
           setTitle(data.article.Title || "Untitled Article")
           setDescription(data.article.Article_Description || "")
+          setCurrentTag(data.articleTagName || "")
+          setCurrentCategory(data.articleCategoryName || "")
         }
       })
       .catch(error => {
@@ -105,12 +108,11 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
         return;
       }
     }
-
     if (currentTag !== "") {
-      articlePayload.tag = currentTag
+      articlePayload.Tag = currentTag
     }
     if (currentCategory !== "") {
-      articlePayload.metatag = currentCategory
+      articlePayload.MetaTag = currentCategory
     }
 
     let url = APIBASE + '/api/v1/article'
@@ -139,6 +141,7 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
           setNotPrivileged(true);
           throw new Error ('Failed to save article')
         }
+        setUpdateArticles(true);
         return response.json()
       })
       .then(data => {
@@ -153,14 +156,9 @@ export const TextEditor = ({articleID}: TextEditorProps) => {
       const payload: any = {
         title: title,
         content: content,
-        desc: description
-      }
-
-      if (currentTag !== "") {
-        payload.tag = currentTag
-      }
-      if (currentCategory !== "") {
-        payload.metatag = currentCategory
+        desc: description,
+        tag: currentTag,
+        metatag: currentCategory
       }
 
       fetch(url, {

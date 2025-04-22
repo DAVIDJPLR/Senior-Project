@@ -9,6 +9,7 @@ from build_dictionary import build_custom_dictionary
 from semantic_embedding import build_embeddings, hybrid_search
 from spellcheck import correct_query
 from threading import Thread
+from PIL import Image
 
 from auth import TENANT_ID, CLIENT_ID
 from search import tfidf_search
@@ -172,7 +173,7 @@ class Articles(MethodView):
     # There are different codes for different errors and different 
     # actions that have taken place.
     # 
-    # You should always wrap the entire methof in a try except block
+    # You should always wrap the entire method in a try except block
     # and return a code 500 in the except block, but make sure to always
     # handle errors as thoroughly as possible within the try block. The
     # Try Except block is just there to catch any anomolies we have not 
@@ -263,17 +264,20 @@ class Article(MethodView):
                 id = request.args.get("articleID")
                 if id:
                     if int(id) >= 0:
-                        article = models.Article.query.filter(models.Article.ID == id).all()
-                        returnableArticle = article[0].toJSONPartial()
+                        article: models.Article = models.Article.query.filter(models.Article.ID == id).first()
+                        returnableArticle = article.toJSONPartial()
+                        articleTagName = article.Tags[0].TagName
+                        articleCategoryName = article.MetaTags[0].TagName
 
-                        userID = session.get('current_user_id')
-                        time = datetime.now()
-                        vh = models.ViewHistory(ArticleID=id, UserID=userID,
-                                                View_Time=time)     
-                        db.session.add(vh)
-                        db.session.commit()
+                        if len(session['current_user_privileges']) > 0:
+                            userID = session.get('current_user_id')
+                            time = datetime.now()
+                            vh = models.ViewHistory(ArticleID=id, UserID=userID,
+                                                    View_Time=time)     
+                            db.session.add(vh)
+                            db.session.commit()
                         
-                        return {'article': returnableArticle}, 200
+                        return {'article': returnableArticle, 'articleTagName': articleTagName, 'articleCategoryName': articleCategoryName}, 200
                     else:
                         return {'msg': "Creating Article"}, 200
                 else:
@@ -324,6 +328,8 @@ class Article(MethodView):
                     db.session.add(article)
                     if addTag:
                         article.Tags = [addTag]
+                    else:
+                        return {'msg', 'Article cannot be created without a tag attribute'}, 400
                     if addMetaTag:
                         article.MetaTags = [addMetaTag]
                     
@@ -386,6 +392,8 @@ class Article(MethodView):
 
                         if updateTag:
                             article.Tags = [updateTag]
+                        else:
+                            return {'msg': 'Article must be tagged'}, 400
                         if updateMetaTag:
                             article.MetaTags = [updateMetaTag]
 
@@ -479,7 +487,7 @@ class UserSearch(MethodView):
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
         
-@apiv1.route("/user", methods=["OPTIONS", "GET", "POST", "PUT"])
+@apiv1.route("/user", methods=["OPTIONS", "GET", "PUT", "DELETE"])
 class User(MethodView):
     def options(self):
         return '', 200
@@ -508,47 +516,7 @@ class User(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-    def post(self): # useless?
-        try:
-            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
-                data = request.json
-                if data:
-                    email = data.get("Email")
-                    if email:
-                        user: models.User = models.User(Email=email)
-                        
-                        db.session.add(user)
-                        
-                        # Device = db.Column(db.Unicode, nullable=True)
-                        if data.get("Device"):
-                            user.Device = data.get("Device")
-                        # Major = db.Column(db.Unicode, nullable=True)
-                        if data.get("Major"):
-                            user.Major = data.get("Major")
-                        # GradYear = db.Column(db.Integer, nullable=True)
-                        if data.get("GradYear"):
-                            user.GradYear = data.get("GradYear")
-                        # LName = db.Column(db.Unicode, nullable=True)
-                        if data.get("LName"):
-                            user.LName = data.get("LName")
-                        # FName = db.Column(db.Unicode, nullable=True)
-                        if data.get("FName"):
-                            user.FName = data.get("FName")
-                            
-                        db.session.commit()
-                        return {'user': user.toJSONPartial()}, 201
-                        
-                    else:
-                        return {'msg': 'No email included to create user with'}, 400
-                else:
-                    return {'msg': 'No body in the request'}, 400
-            else:
-                return {'msg': 'Unauthorized access'}, 401
-        except Exception as e:
-            print(f"Error: {e}")
-            traceback.print_exc()
-            return {'msg': f"Error: {e}"}, 500
-    def put(self): # admin only? where will this be used?
+    def put(self):
         try:
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 if 5 in session['current_user_privileges']:
@@ -590,7 +558,7 @@ class User(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-    def delete(self): # unused?
+    def delete(self):
         try:
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 if 5 in session['current_user_privileges']:
@@ -1104,17 +1072,18 @@ class Search(MethodView):
                 searchQuery: str = request.args.get("searchQuery")
 
                 if len(searchQuery) > 3:
-                    searchQuery = correct_query(searchQuery)
-                    smartSearchQuery = [term.lower() for term in searchQuery.split(" ")]
+                    correctedQuery = correct_query(searchQuery)
+                    smartSearchQuery = [term.lower() for term in correctedQuery.split(" ")]
 
-                    for term in searchQuery.lower().split(" "):
+                    for term in correctedQuery.lower().split(" "):
                         if term in stopWords:
                             smartSearchQuery.remove(term)
 
                     search_results = tfidf_search(smartSearchQuery)
-                    search_results = hybrid_search(search_results, searchQuery)
-
-                    all_articles: list[models.Article] = models.Article.query.all()
+                    search_results = hybrid_search(search_results, correctedQuery)
+                    
+                    publishedTag: models.Tag = models.Tag.query.filter_by(TagName="Published").first()
+                    all_articles: list[models.Article] = models.Article.query.filter(models.Article.Tags.any(models.Tag.ID == publishedTag.ID)).all()
 
                     articles = list()
                     for articleID, importance in search_results:
@@ -1122,11 +1091,15 @@ class Search(MethodView):
                         if a is not None:
                             articles.append(a)
                 else:
+                    publishedTag: models.Tag = models.Tag.query.filter_by(TagName="Published").first()
                     articles = models.Article.query.filter(
-                        or_(
-                            models.Article.Title.ilike(f"%{searchQuery}%"),
-                            models.Article.Content.ilike(f"%{searchQuery}%"),
-                            models.Article.Article_Description.ilike(f"%{searchQuery}%")
+                        and_(
+                            or_(
+                                models.Article.Title.ilike(f"%{searchQuery}%"),
+                                models.Article.Content.ilike(f"%{searchQuery}%"),
+                                models.Article.Article_Description.ilike(f"%{searchQuery}%")
+                            ),
+                            models.Article.Tags.any(models.Tag.ID == publishedTag.ID)
                         )
                     ).all()
 
@@ -1605,53 +1578,35 @@ class SystemUsage(MethodView):
                     time4 = time3 - timedelta(hours=24)
                     time5 = time4 - timedelta(hours=24)
                     
-                    searches1_count = models.Search.query.filter(
-                        models.Search.SearchTime >= time1
-                    ).with_entities(func.count()).scalar()
+                    
                     viewHistory1_count = models.ViewHistory.query.filter(
                         models.ViewHistory.View_Time >= time1
                     ).with_entities(func.count()).scalar()
-                    usageVal1 = (searches1_count*3) + viewHistory1_count
+                    usageVal1 = viewHistory1_count
 
-                    searches2_count = models.Search.query.filter(
-                        models.Search.SearchTime >= time2,
-                        models.Search.SearchTime < time1
-                    ).with_entities(func.count()).scalar()
                     viewHistory2_count = models.ViewHistory.query.filter(
                         models.ViewHistory.View_Time >= time2,
                         models.ViewHistory.View_Time < time1
                     ).with_entities(func.count()).scalar()
-                    usageVal2 = (searches2_count*3) + viewHistory2_count
+                    usageVal2 = viewHistory2_count
 
-                    searches3_count = models.Search.query.filter(
-                        models.Search.SearchTime >= time3,
-                        models.Search.SearchTime < time2
-                    ).with_entities(func.count()).scalar()
                     viewHistory3_count = models.ViewHistory.query.filter(
                         models.ViewHistory.View_Time >= time3,
                         models.ViewHistory.View_Time < time2
                     ).with_entities(func.count()).scalar()
-                    usageVal3 = (searches3_count*3) + viewHistory3_count
+                    usageVal3 = viewHistory3_count
 
-                    searches4_count = models.Search.query.filter(
-                        models.Search.SearchTime >= time4,
-                        models.Search.SearchTime < time3
-                    ).with_entities(func.count()).scalar()
                     viewHistory4_count = models.ViewHistory.query.filter(
                         models.ViewHistory.View_Time >= time4,
                         models.ViewHistory.View_Time < time3
                     ).with_entities(func.count()).scalar()
-                    usageVal4 = (searches4_count*3) + viewHistory4_count
+                    usageVal4 = viewHistory4_count
 
-                    searches5_count = models.Search.query.filter(
-                        models.Search.SearchTime >= time5,
-                        models.Search.SearchTime < time4
-                    ).with_entities(func.count()).scalar()
                     viewHistory5_count = models.ViewHistory.query.filter(
                         models.ViewHistory.View_Time >= time5,
                         models.ViewHistory.View_Time < time4
                     ).with_entities(func.count()).scalar()
-                    usageVal5 = (searches5_count*3) + viewHistory5_count
+                    usageVal5 = viewHistory5_count
                     
                     return {
                         "usage_data": [
@@ -1929,6 +1884,8 @@ class TrendingArticles(MethodView):
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 articles: list[models.Article] = (
                     db.session.query(models.Article)
+                    .join(models.Article.Tags)
+                    .filter(models.Tag.TagName == 'Published')
                     .all()  # Execute the query and return the results
                 )
 
@@ -2048,6 +2005,10 @@ class SystemStatsSearch(MethodView):
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
 
+
+def allowed_extension(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
 @apiv1.route("/image", methods=["OPTIONS", "GET", "PUT", "POST", "DELETE"])
 class ImageUpload(MethodView):
     def options(self):
@@ -2059,12 +2020,22 @@ class ImageUpload(MethodView):
             file = request.files['image']
             if file.filename == '':
                 return {'msg': 'No file selected'}, 400
+            
+            if not allowed_extension(file.filename):
+                return {'msg': 'Unsupported file type'}, 400
+            
             articleID = request.form.get("articleID")
             article: models.Article = models.Article.query.get(articleID)
             filename = secure_filename(os.path.basename(file.filename))
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            print(filepath)
-            file.save(filepath)
+            ## filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            filepath = f"/static/{filename}"
+
+            image = Image.open(file)
+            image = image.convert("RGB")
+            image.thumbnail((1200, 1200))
+            image.save(filepath, format="JPEG", optimize=True, quality=85)
+            
+            ## file.save(filepath)
             article.Image = filepath
             db.session.commit()
             image_url = url_for('uploaded_file', filename=filename, _external=True)
