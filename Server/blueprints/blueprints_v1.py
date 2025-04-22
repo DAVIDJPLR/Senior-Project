@@ -172,7 +172,7 @@ class Articles(MethodView):
     # There are different codes for different errors and different 
     # actions that have taken place.
     # 
-    # You should always wrap the entire methof in a try except block
+    # You should always wrap the entire method in a try except block
     # and return a code 500 in the except block, but make sure to always
     # handle errors as thoroughly as possible within the try block. The
     # Try Except block is just there to catch any anomolies we have not 
@@ -483,7 +483,7 @@ class UserSearch(MethodView):
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
         
-@apiv1.route("/user", methods=["OPTIONS", "GET", "POST", "PUT"])
+@apiv1.route("/user", methods=["OPTIONS", "GET", "PUT", "DELETE"])
 class User(MethodView):
     def options(self):
         return '', 200
@@ -512,47 +512,7 @@ class User(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-    def post(self): # useless?
-        try:
-            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
-                data = request.json
-                if data:
-                    email = data.get("Email")
-                    if email:
-                        user: models.User = models.User(Email=email)
-                        
-                        db.session.add(user)
-                        
-                        # Device = db.Column(db.Unicode, nullable=True)
-                        if data.get("Device"):
-                            user.Device = data.get("Device")
-                        # Major = db.Column(db.Unicode, nullable=True)
-                        if data.get("Major"):
-                            user.Major = data.get("Major")
-                        # GradYear = db.Column(db.Integer, nullable=True)
-                        if data.get("GradYear"):
-                            user.GradYear = data.get("GradYear")
-                        # LName = db.Column(db.Unicode, nullable=True)
-                        if data.get("LName"):
-                            user.LName = data.get("LName")
-                        # FName = db.Column(db.Unicode, nullable=True)
-                        if data.get("FName"):
-                            user.FName = data.get("FName")
-                            
-                        db.session.commit()
-                        return {'user': user.toJSONPartial()}, 201
-                        
-                    else:
-                        return {'msg': 'No email included to create user with'}, 400
-                else:
-                    return {'msg': 'No body in the request'}, 400
-            else:
-                return {'msg': 'Unauthorized access'}, 401
-        except Exception as e:
-            print(f"Error: {e}")
-            traceback.print_exc()
-            return {'msg': f"Error: {e}"}, 500
-    def put(self): # admin only? where will this be used?
+    def put(self):
         try:
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 if 5 in session['current_user_privileges']:
@@ -594,7 +554,7 @@ class User(MethodView):
             print(f"Error: {e}")
             traceback.print_exc()
             return {'msg': f"Error: {e}"}, 500
-    def delete(self): # unused?
+    def delete(self):
         try:
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 if 5 in session['current_user_privileges']:
@@ -1108,15 +1068,15 @@ class Search(MethodView):
                 searchQuery: str = request.args.get("searchQuery")
 
                 if len(searchQuery) > 3:
-                    searchQuery = correct_query(searchQuery)
-                    smartSearchQuery = [term.lower() for term in searchQuery.split(" ")]
+                    correctedQuery = correct_query(searchQuery)
+                    smartSearchQuery = [term.lower() for term in correctedQuery.split(" ")]
 
-                    for term in searchQuery.lower().split(" "):
+                    for term in correctedQuery.lower().split(" "):
                         if term in stopWords:
                             smartSearchQuery.remove(term)
 
                     search_results = tfidf_search(smartSearchQuery)
-                    search_results = hybrid_search(search_results, searchQuery)
+                    search_results = hybrid_search(search_results, correctedQuery)
                     
                     publishedTag: models.Tag = models.Tag.query.filter_by(TagName="Published").first()
                     all_articles: list[models.Article] = models.Article.query.filter(models.Article.Tags.any(models.Tag.ID == publishedTag.ID)).all()
