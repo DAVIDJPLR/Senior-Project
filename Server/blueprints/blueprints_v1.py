@@ -1148,13 +1148,13 @@ class ArticleCategories(MethodView):
     def options(self):
         return '', 200
     
-    def get(self): # not used in any student only routes, but doesn't seem like it needs to be admin only?
+    def get(self):
         try:
-            if 'current_user_id' in session and 'current_user_roles' in session and 'current_user_privileges' in session:
+            if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 category = request.args.get("category")
-                metaTag: models.MetaTag = models.MetaTag.query.filter_by(tagName=category).first()
+                metaTag: models.MetaTag = models.MetaTag.query.filter_by(TagName=category).first()
                 articles: list[models.Article] = metaTag.Articles
-                returnableArticles = [article.toJSONPartial() for article in articles]
+                returnableArticles = [article.toJSONPartial() for article in articles if article.Tags[0].ID == 1]
                 return {'articles': returnableArticles}, 200
             else:
                 return {'msg': 'Unauthorized access'}, 401
