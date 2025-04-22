@@ -20,7 +20,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config['UPLOAD_FOLDER'] = static_path
 os.makedirs(static_path, exist_ok=True)
-app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg'}
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'webp'}
+app.config['MAX_CONTENT_SIZE'] = 5 * 1024 * 1024 # 5 MB
 
 # TODO: Change secret key to something more secure at some point
 app.config['SECRET_KEY'] = 'correcthorsebatterystaple'
