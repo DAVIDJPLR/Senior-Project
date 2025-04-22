@@ -32,7 +32,7 @@ type CustomEditor = BaseEditor & ReactEditor & HistoryEditor
 
 interface TextEditorProps {
   articleID: number;
-  setUpdateArticles: (x: boolean) => void;
+  setUpdateArticles?: (x: boolean) => void;
 }
 
 export const TextEditor = ({articleID, setUpdateArticles}: TextEditorProps) => {
@@ -141,7 +141,9 @@ export const TextEditor = ({articleID, setUpdateArticles}: TextEditorProps) => {
           setNotPrivileged(true);
           throw new Error ('Failed to save article')
         }
-        setUpdateArticles(true);
+        if (setUpdateArticles) {
+          setUpdateArticles(true);
+        }
         return response.json()
       })
       .then(data => {
