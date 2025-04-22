@@ -18,7 +18,7 @@ CORS(app, supports_credentials=True, origins=['http://localhost:5173', 'https://
 app.config['SQLALCHEMY_DATABASE_URI'] = DB_LOGIN
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
-app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'Server', 'static')
+app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static')
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'webp'}
 app.config['MAX_CONTENT_SIZE'] = 5 * 1024 * 1024 # 5 MB
 
