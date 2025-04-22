@@ -1821,7 +1821,7 @@ class ArticleThumbsDownDates(MethodView):
                                                         db.session.query(models.Article)
                                                         .filter(models.Article.ThumbsDown > 0)  # Only include articles with more than 0 thumbs down
                                                         .order_by(desc(models.Article.ThumbsDown))  # Sort by ThumbsDown in descending order
-                                                        .limit(10)  # Limit to the top 10 articles
+                                                        .limit(20)  # Limit to the top 10 articles
                                                         .all()  # Execute the query and return the results
                                                     )
                         
@@ -1842,8 +1842,6 @@ class ArticleThumbsDownDates(MethodView):
                         milliDates = []
 
                         for date in dates:
-                            print(article.ID)
-                            print(date.timestamp())
                             milliDates.append(date.timestamp())
 
                         timeNow = datetime.now().timestamp()
@@ -1855,7 +1853,6 @@ class ArticleThumbsDownDates(MethodView):
                         articles_to_thumbs_down[articleID] = weight
 
                     sorted_dict_desc = dict(sorted(articles_to_thumbs_down.items(), key=lambda item: item[1], reverse=True))
-                    print(sorted_dict_desc)
                     sorted_article_ids = list(sorted_dict_desc.keys())
 
                     sorted_articles = []                        
