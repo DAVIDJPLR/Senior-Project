@@ -263,17 +263,20 @@ class Article(MethodView):
                 id = request.args.get("articleID")
                 if id:
                     if int(id) >= 0:
-                        article = models.Article.query.filter(models.Article.ID == id).all()
-                        returnableArticle = article[0].toJSONPartial()
+                        article: models.Article = models.Article.query.filter(models.Article.ID == id).first()
+                        returnableArticle = article.toJSONPartial()
+                        articleTagName = article.Tags[0].TagName
+                        articleCategoryName = article.MetaTags[0].TagName
 
-                        userID = session.get('current_user_id')
-                        time = datetime.now()
-                        vh = models.ViewHistory(ArticleID=id, UserID=userID,
-                                                View_Time=time)     
-                        db.session.add(vh)
-                        db.session.commit()
+                        if len(session['current_user_privileges']) > 0:
+                            userID = session.get('current_user_id')
+                            time = datetime.now()
+                            vh = models.ViewHistory(ArticleID=id, UserID=userID,
+                                                    View_Time=time)     
+                            db.session.add(vh)
+                            db.session.commit()
                         
-                        return {'article': returnableArticle}, 200
+                        return {'article': returnableArticle, 'articleTagName': articleTagName, 'articleCategoryName': articleCategoryName}, 200
                     else:
                         return {'msg': "Creating Article"}, 200
                 else:
