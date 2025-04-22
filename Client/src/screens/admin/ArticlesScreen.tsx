@@ -29,9 +29,10 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
     },
     };
 
-    const [editModalOpen, setEditModalOpen] = useState(false)
-    const [selectedArticle, setSelectedArticle] = useState<PartialArticle>(createEmptyArticle())
-    const [articles, setArticles] = useState<PartialArticle[]>([])
+    const [updateArticles, setUpdateArticles] = useState(false);
+    const [editModalOpen, setEditModalOpen] = useState(false);
+    const [selectedArticle, setSelectedArticle] = useState<PartialArticle>(createEmptyArticle());
+    const [articles, setArticles] = useState<PartialArticle[]>([]);
     const [searchVal, setSearchVal] = useState("");
     const [tags, setTags] = useState<string[]>([]);
     const [allTags, setAllTags] = useState<string[]>([]);
@@ -76,6 +77,16 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
         getTags()
         loadPrivileges()
     }, []);
+
+    useEffect(() => {
+        if (updateArticles) {
+            getArticles();
+            getTags();
+            loadPrivileges();
+        } else {
+            setUpdateArticles(false);
+        }
+    }, [updateArticles]);
 
     useEffect(() => {
         handleSearch()
@@ -253,6 +264,7 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
                         open={editModalOpen}
                         article={selectedArticle}
                         onClose={handleCloseModal}
+                        setUpdateArticles={setUpdateArticles}
                         />
                     )}
                     
