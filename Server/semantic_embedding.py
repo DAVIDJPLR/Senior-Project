@@ -81,6 +81,27 @@ def hybrid_search(tfidf_scores: list[tuple], query: str, alpha=0.6, min_score = 
     print(top_matches)
     return top_matches
 
+def hybrid_search_v2(tfidf_scores: list[tuple], query: str, semantic_threshold=0.75, boost_factor=0.2, top_n=10) -> list[tuple]:
+    '''Combine tf-idf scores with semantic match scores to find matches we could have otherwise missed'''
+    tfidf_score_dict = {id: score for id, score in tfidf_scores}
+    norm_tfidf_score_dict = normalize_scores(tfidf_score_dict)
+    
+    semantic_score_dict = find_match(query)
+    norm_semantic_score_dict = normalize_scores(semantic_score_dict)
+
+    boosted_scores = {}
+    for id, tfidf_score in norm_tfidf_score_dict.items():
+        semantic_score = norm_semantic_score_dict.get(id, 0.0)
+        if semantic_score >= semantic_threshold:
+            boosted_score = tfidf_score + boost_factor * semantic_score
+        else:
+            boosted_score = tfidf_score
+        boosted_scores[id] = boosted_score
+    
+    top_matches = sorted(boosted_scores.items(), key=lambda x: x[1], reverse=True)[:top_n]
+    return top_matches
+
+
 def normalize_scores(results: dict[int, float]) -> dict[int, float]:
     scores = list(results.values())
     min_score = min(scores)
