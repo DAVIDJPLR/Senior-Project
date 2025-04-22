@@ -337,7 +337,10 @@ class Article(MethodView):
                     build_custom_dictionary()
                     Thread(target=build_embeddings()).start()
 
-                    return {"msg": "Article Added successfully"}, 200
+                    return {
+                        "msg": "Article Added successfully",
+                        "articleID": article.ID,
+                        }, 200
 
                 else:
                     if session['current_user_role'] == "student":

@@ -45,9 +45,10 @@ export const TextEditor = ({articleID, setUpdateArticles}: TextEditorProps) => {
     },
   ])
 
+  const [currentArticleID, setCurrentArticleID] = useState(articleID);
   const [title, setTitle] = useState("Untitled Article")
   const [description, setDescription] = useState("")
-  const [loading, setLoading] = useState<boolean>(!!articleID)
+  const [loading, setLoading] = useState<boolean>(!!currentArticleID)
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false)
   const [emptyField, setEmptyField] = useState<boolean>(false)
   const [notPrivileged, setNotPrivileged] = useState<boolean>(false)
@@ -57,8 +58,8 @@ export const TextEditor = ({articleID, setUpdateArticles}: TextEditorProps) => {
 
   // If we were given an articleID then we load that article from the DB
   useEffect(() => {
-    if (articleID >= 0) {
-      const url = APIBASE + `/api/v1/article?articleID=${articleID}`
+    if (currentArticleID >= 0) {
+      const url = APIBASE + `/api/v1/article?articleID=${currentArticleID}`
       console.log("Fetching article from URL: ", url)
       fetch(url, {
         method: 'GET',
@@ -89,10 +90,10 @@ export const TextEditor = ({articleID, setUpdateArticles}: TextEditorProps) => {
       .finally(() => {
         setLoading(false)
       })
-    } else if (articleID == -1){
+    } else if (currentArticleID == -1){
       setLoading(false)
     }
-  }, [articleID])
+  }, [currentArticleID])
 
   // Save an article
   const handleSave = () => {
@@ -116,13 +117,13 @@ export const TextEditor = ({articleID, setUpdateArticles}: TextEditorProps) => {
     let method = 'POST'
 
     // If the article already exists we use PUT
-    if (articleID >= 0) {
+    if (currentArticleID >= 0) {
       method = 'PUT'
-      articlePayload.ID = articleID
-      url = APIBASE + `/api/v1/article?articleID=${articleID}`
+      articlePayload.ID = currentArticleID
+      url = APIBASE + `/api/v1/article?articleID=${currentArticleID}`
     }
 
-    if (articleID >= 0) {
+    if (currentArticleID >= 0) {
       fetch(url, {
         method: method,
         headers: {
@@ -176,6 +177,7 @@ export const TextEditor = ({articleID, setUpdateArticles}: TextEditorProps) => {
       })
       .then(data => {
         console.log("Article saved successfully ", data)
+        setCurrentArticleID(data.articleID);
         setSaveSuccess(true)
       })
       .catch(error => {
@@ -241,7 +243,7 @@ export const TextEditor = ({articleID, setUpdateArticles}: TextEditorProps) => {
       }}
     
     >
-      <Toolbar editor={editor} articleID={articleID} setCurrentTag={setCurrentTag} setCurrentCategory={setCurrentCategory}/>
+      <Toolbar editor={editor} articleID={currentArticleID} setCurrentTag={setCurrentTag} setCurrentCategory={setCurrentCategory}/>
       <Editable
         label="Content"
         style={{
