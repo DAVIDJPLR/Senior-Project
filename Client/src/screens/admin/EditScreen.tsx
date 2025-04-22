@@ -17,7 +17,7 @@ interface Props{
     open: boolean;
     article: PartialArticle;
     onClose: () => void;
-    setUpdateArticles: (update: boolean) => void;
+    setUpdateArticles?: (update: boolean) => void;
 }
 
 function EditArticleModal({ open, article, onClose, setUpdateArticles }: Props) {
