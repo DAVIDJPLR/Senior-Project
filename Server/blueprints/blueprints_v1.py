@@ -6,8 +6,8 @@ from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
 from app import app, db
 from build_dictionary import build_custom_dictionary
-from semantic_embedding import build_embeddings, hybrid_search
-from spellcheck import correct_query
+from semantic_embedding import build_embeddings, hybrid_search, hybrid_search_v2
+from spellcheck import correct_query, expand_query
 from threading import Thread
 from PIL import Image
 
@@ -1078,9 +1078,11 @@ class Search(MethodView):
                     for term in correctedQuery.lower().split(" "):
                         if term in stopWords:
                             smartSearchQuery.remove(term)
+                    
+                    smartSearchQuery = expand_query(smartSearchQuery)
 
                     search_results = tfidf_search(smartSearchQuery)
-                    search_results = hybrid_search(search_results, correctedQuery)
+                    search_results = hybrid_search_v2(search_results, correctedQuery)
                     
                     publishedTag: models.Tag = models.Tag.query.filter_by(TagName="Published").first()
                     all_articles: list[models.Article] = models.Article.query.filter(models.Article.Tags.any(models.Tag.ID == publishedTag.ID)).all()
@@ -1679,12 +1681,14 @@ class SystemStatsSearch(MethodView):
             if 'current_user_id' in session and 'current_user_role' in session and 'current_user_privileges' in session:
                 if len(session['current_user_privileges']) >= 0:
                     searchQuery = request.args.get("searchQuery")
+                    searchQuery = correct_query(searchQuery)
                     smartSearchQuery = [term.lower() for term in searchQuery.split(" ")]
 
                     for term in searchQuery.split(" "):
                         if term in stopWords or len(term) == 0:
                             smartSearchQuery.remove(term)
 
+                    smartSearchQuery = expand_query(smartSearchQuery)
                     tags = request.args.get("tags")
                     if len(tags) > 0:
                         tagNames = tags.split(",")
@@ -1695,7 +1699,7 @@ class SystemStatsSearch(MethodView):
 
                     if len(smartSearchQuery) > 0:
                         search_results = tfidf_search(smartSearchQuery)
-                        search_results = hybrid_search(search_results, searchQuery)
+                        search_results = hybrid_search_v2(search_results, searchQuery)
                         all_articles: list[models.Article] = models.Article.query.all()
 
                         tagIds: list[int] = []
@@ -2034,10 +2038,10 @@ class ImageUpload(MethodView):
             image.thumbnail((1200, 1200))
             image.save(filepath, format="JPEG", optimize=True, quality=85)
             
-            ## file.save(filepath)
             article.Image = filepath
             db.session.commit()
-            image_url = url_for('uploaded_file', filename=filename, _external=True)
+            ## image_url = url_for('uploaded_file', filename=filename, _external=True)
+            image_url = f"/static/{filename}"
             return {'msg': 'Image saved successfully', 'url': image_url}, 200
         except Exception as e:
             traceback.print_exc()
