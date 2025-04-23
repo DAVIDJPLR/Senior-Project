@@ -134,7 +134,7 @@ function UsersScreen({ currentScreen, setCurrentScreen }: Props){
     if (privilegeIDs[0] !== 0) {
         return (
             
-            <div style={{ width: "100vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "center", backgroundColor: theme.palette.secondary.main }}>
+            <div style={{ width: "100%", height: "100%", maxHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", backgroundColor: theme.palette.secondary.main }}>
                 {!isMobile && (
                     <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
                         <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
@@ -144,11 +144,11 @@ function UsersScreen({ currentScreen, setCurrentScreen }: Props){
 
                 <div style={{ width: "100%", height: "95%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto" }}>
                     <div style={{height: "3%"}}></div>
-                    <div style={{ width: "100%", height: "10%", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-evenly"}}>
+                    <div style={{ width: "100%", minHeight: "90px", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-evenly"}}>
                         <SearchBar setSearchVal={setSearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={'small'} />
                         {privilegeIDs.includes(5) && (
                             <Button
-                                aria-label="Add admin User"
+                                aria-label="Add Admin User"
                                 variant="outlined"
                                 sx={{ height: "40px", width: "40px", borderWidth: "0px", padding: 0, borderRadius: "50%", display: "flex", justifyContent: "center", minWidth: 0, zIndex: 9000 }}
                                 onClick={handleClick}
@@ -302,7 +302,7 @@ function AdminModal({ open, handleClose, selectedAdmin, setRefresh, currentAdmin
                 style={{height: '70%', width: '60%', backgroundColor: 'white', padding: '10px', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}
             >
                 <Typography sx={{fontSize: "22px", fontWeight: "600"}}>{selectedAdmin?.FName} {selectedAdmin?.LName}</Typography>
-                <Typography   sx={{fontSize: "12px", fontweight: "500", textDecoration: "underline", color: "secondary.main", cursor: "pointer"}}>{selectedAdmin?.Email.toUpperCase()}</Typography>
+                <Typography component="a" href={`mailto:${selectedAdmin?.Email}`} sx={{fontSize: "12px", fontweight: "500", textDecoration: "underline", color: "secondary.main", cursor: "pointer"}}>{selectedAdmin?.Email.toUpperCase()}</Typography>
                 <TableContainer sx={{ maxHeight: '70%', width: '90%', margin: "10px", border: "1px solid grey" }}>
                     <Table>
                         <TableBody>
