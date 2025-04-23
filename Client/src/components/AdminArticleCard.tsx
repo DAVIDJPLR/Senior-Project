@@ -8,10 +8,11 @@ interface Props{
     article: PartialArticle,
     lineNumber: number,
     onClick: (article: PartialArticle) => void,
-    userPrivileges: number[]
+    userPrivileges: number[],
+    refreshArticle: number
 }
 
-function AdminArticleCard({ article, lineNumber, onClick, userPrivileges }: Props){
+function AdminArticleCard({ article, lineNumber, onClick, userPrivileges, refreshArticle }: Props){
 
     const lineNumberString: string = lineNumber.toString();
     const height: number = (18*1.5) + ((lineNumber)*(16*1.5)) + 15;
@@ -68,7 +69,7 @@ function AdminArticleCard({ article, lineNumber, onClick, userPrivileges }: Prop
 
     useEffect(() => {
         getTagsInfo()
-    }, [])
+    }, [refreshArticle])
 
     return (
         <div onClick={() => {onClick(article)}}

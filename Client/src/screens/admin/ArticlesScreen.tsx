@@ -39,6 +39,7 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
 
     const [privileges, setPrivileges] = useState<PartialAdminPrivilege[]>([]);
     const [privilegeIDs, setPrivilegesIDs] = useState([0])
+    const [refreshArticle, setRefreshArticle] = useState<number>(0);
 
     const isMobile = useMediaQuery({ maxWidth: 767 });
 
@@ -70,6 +71,7 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
         setEditModalOpen(false)
         setSelectedArticle(createEmptyArticle())
         handleSearch()
+        setRefreshArticle(prev => prev + 1);
     };
     
     useEffect(() => {
@@ -256,6 +258,7 @@ function AdminArticles({ currentScreen, setCurrentScreen }: Props){
                             lineNumber={3}
                             onClick={handleEditArticle}
                             userPrivileges={privilegeIDs}
+                            refreshArticle={refreshArticle}
                         />
                     ))}
                     
