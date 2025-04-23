@@ -134,15 +134,23 @@ function UsersScreen({ currentScreen, setCurrentScreen }: Props){
     if (privilegeIDs[0] !== 0) {
         return (
             
-            <div style={{ width: "100%", height: "100%", maxHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", backgroundColor: theme.palette.secondary.main }}>
+            <div style={{
+                width: "100vw",
+                height: "100vh",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                overflow: "hidden"
+            }}>
+
                 {!isMobile && (
-                    <div style={{height: "5%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                    <div style={{width: "100%"}}>
                         <AdminAppBar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} ></AdminAppBar>
                     </div>
                 )}
                 
 
-                <div style={{ width: "100%", height: "95%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto" }}>
+                <div style={{ width: "100%", height: "95%", display: "flex", flexDirection: "column", alignItems: "center", overflow: "auto", backgroundColor: theme.palette.secondary.main}}>
                     <div style={{height: "3%"}}></div>
                     <div style={{ width: "100%", minHeight: "90px", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-evenly"}}>
                         <SearchBar setSearchVal={setSearchVal} searchVal={searchVal} handleKeyUp={handleKeyUp} size={'small'} />
