@@ -302,7 +302,7 @@ function AdminModal({ open, handleClose, selectedAdmin, setRefresh, currentAdmin
                 style={{height: '70%', width: '60%', backgroundColor: 'white', padding: '10px', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}
             >
                 <Typography sx={{fontSize: "22px", fontWeight: "600"}}>{selectedAdmin?.FName} {selectedAdmin?.LName}</Typography>
-                <Typography   sx={{fontSize: "12px", fontweight: "500", textDecoration: "underline", color: "secondary.main", cursor: "pointer"}}>{selectedAdmin?.Email.toUpperCase()}</Typography>
+                <Typography component="a" href={`mailto:${selectedAdmin?.Email}`} sx={{fontSize: "12px", fontweight: "500", textDecoration: "underline", color: "secondary.main", cursor: "pointer"}}>{selectedAdmin?.Email.toUpperCase()}</Typography>
                 <TableContainer sx={{ maxHeight: '70%', width: '90%', margin: "10px", border: "1px solid grey" }}>
                     <Table>
                         <TableBody>
